@@ -29,65 +29,66 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utilities.DriveUtil2025;
 
+/*
+ * Demonstrates an empty iterative OpMode
+ */
+@TeleOp(name = "Basic Drive op mode", group = "Concept")
 
-@TeleOp(name="Basic: Linear OpMode2", group="Linear OpMode")
+public class BasicDriveTeleop extends OpMode {
+  private static final double DRIVE_SPEED = .85;
+  private DriveUtil2025 drive;
+  private ElapsedTime runtime = new ElapsedTime();
 
-public class BasicOpMode_Linear extends LinearOpMode {
+  /**
+   * This method will be called once, when the INIT button is pressed.
+   */
+  @Override
+  public void init() {
+    drive = new DriveUtil2025(this);
+    drive.init(hardwareMap,telemetry); //initialize the drive subsystem
+    telemetry.addData("Status", "Initialized");
+  }
 
-    private static final double DRIVE_SPEED = .75;
-    // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-    private DriveUtil2025 drive;
+  /**
+   * This method will be called repeatedly during the period between when
+   * the INIT button is pressed and when the START button is pressed (or the
+   * OpMode is stopped).
+   */
+  @Override
+  public void init_loop() {
+  }
 
+  /**
+   * This method will be called once, when the START button is pressed.
+   */
+  @Override
+  public void start() {
+    runtime.reset();
+  }
 
-    @Override
-    public void runOpMode() throws InterruptedException {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+  /**
+   * This method will be called repeatedly during the period between when
+   * the START button is pressed and when the OpMode is stopped.
+   */
+  @Override
+  public void loop() {
+    drive.arcadeDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x,gamepad1.right_stick_y,DRIVE_SPEED);
+    telemetry.addData("Status", "Run Time: " + runtime.toString());
+  }
 
-        // Initialize hardware here
+  /**
+   * This method will be called once, when this OpMode is stopped.
+   * <p>
+   * Your ability to control hardware from this method will be limited.
+   */
+  @Override
+  public void stop() {
 
-        drive = new DriveUtil2025(this);
-        initializeHardware();
-
-        // Wait for the game to start (driver presses START)
-        waitForStart();
-        runtime.reset();
-
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            doDriveControls();
-            doTelemetry();
-
-        }
-    }
-
-    private void doTelemetry() {
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.update();
-
-    }
-
-
-
-    private void doDriveControls() {
-// Use scaled inputs for driving
-        drive.arcadeDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, DRIVE_SPEED);
-
-        //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
-
-    }
-
-
-    private void initializeHardware() throws InterruptedException {
-        Thread.sleep(250); //give enough time to initialize and set light colors
-        drive.init(hardwareMap,telemetry); //initialize the drive subsystem
-    }
+  }
 }

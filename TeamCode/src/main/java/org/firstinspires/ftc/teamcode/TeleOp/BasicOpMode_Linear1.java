@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -36,8 +37,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.utilities.DriveUtil2025;
 
 
-@TeleOp(name="Basic: Linear OpMode1", group="Linear OpMode")
-
+@TeleOp(name="Basic: Linear OpMode", group="Concept")
+@Disabled
 public class BasicOpMode_Linear1 extends LinearOpMode {
 
     private static final double DRIVE_SPEED = .85;

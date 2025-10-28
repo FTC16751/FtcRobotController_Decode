@@ -9,8 +9,8 @@ import org.firstinspires.ftc.teamcode.utilities.Drivetrain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="drivetrainTest", group="TESTS")
-public class drivetrainTest extends OpMode{
+@TeleOp(name="Pedro Path DrivetrainTest", group="Concept")
+public class PedroPatchDrivetrainTest extends OpMode{
 
     private Follower follower;
     double driveCoefficient = 1.0;
