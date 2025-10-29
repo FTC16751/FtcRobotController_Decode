@@ -19,30 +19,16 @@ import com.qualcomm.robotcore.hardware.Servo;
  * stop it, and retrieve its current status.
  */
 public class IntakeUtil {
-    /**
-     * The default hardware map name for the intake motor.
-     */
     public static final String INTAKE_MOTOR_NAME = "intake";
     private final DcMotor intakeMotor;
-    private final CRServo intakeServo;
     private Servo diverter = null;
-
-    /**
-     * Constructs an IntakeUtil object.
-     *
-     * @param hardwareMap The HardwareMap from the OpMode, used to retrieve the intake motor.
-     * @throws IllegalArgumentException if hardwareMap is null.
-     */
-
 
     public IntakeUtil(@NonNull HardwareMap hardwareMap) { // Pass HardwareMap in constructor
         //Intake Motor (new bot)
         intakeMotor = hardwareMap.get(DcMotor.class, INTAKE_MOTOR_NAME);
-        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        //intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
         diverter = hardwareMap.get(Servo.class, "diverter");
         setDiverterCenter();
     }
@@ -81,10 +67,8 @@ public class IntakeUtil {
     /**
      * Stops the intake motor by setting its power to zero.
      */
-
     public void setIntakeMotorPower(double power) {
         intakeMotor.setPower(power);
-        intakeServo.setPower(-power);
     }
 
 }

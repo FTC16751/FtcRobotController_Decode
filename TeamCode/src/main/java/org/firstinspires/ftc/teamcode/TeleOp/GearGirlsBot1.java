@@ -295,6 +295,12 @@ public class GearGirlsBot1 extends OpMode {
             launcherSystemState = LauncherSystemState.IDLE;
         }
 
+        if (gamepad1.left_trigger > 0.2) {
+            robot.feeder.setLeftFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
+        }
+        if (gamepad1.right_trigger > 0.2) {
+            robot.feeder.setRightFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
+        }
 
         // --- Step 2: Perform Actions Based on State ---
         // This section reads the current state and commands the hardware.
