@@ -316,7 +316,7 @@ public class DriveUtil2026 {
          *  The Y pod offset refers to how far forwards from the tracking point the Y (strafe) odometry pod is.
          *  Forward of center is a positive number, backwards is a negative number.
          */
-        pinpoint.setOffsets(-0.0, -0.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
+        pinpoint.setOffsets(-0.0, -150.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
          * Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -343,7 +343,7 @@ public class DriveUtil2026 {
          * This is recommended before you run your autonomous, as a bad initial calibration can cause
          * an incorrect starting value for x, y, and heading.
          */
-        pinpoint.resetPosAndIMU();
+        //pinpoint.resetPosAndIMU();
     }
 
     /**
@@ -938,7 +938,65 @@ public class DriveUtil2026 {
         }
     }
 
-      public void pinpointDrive(double targetX, double targetY, double targetHeading, int maxTime) {
+
+
+    /**
+     * Drives the robot a specified distance and angle RELATIVE to its current position.
+     * This is a BLOCKING method that wraps the core driveTo() logic. It is ideal
+     * for building paths from a sequence of simple movements.
+     *
+     * @param driveInches  The distance to drive forward (positive) or backward (negative).
+     * @param strafeInches The distance to strafe right (positive) or left (negative).
+     * @param turnDegrees  The angle to turn clockwise (positive) or counter-clockwise (negative).
+     * @param power        The maximum power for the movement.
+     * @param holdTime     The time to hold the final position.
+     * @return             `true` if the movement succeeded, `false` if it timed out or was interrupted.
+     */
+    private boolean relActive = false;
+    private Pose2D relTarget = null;
+    public boolean driveRelative(Pose2D currentPosition,double driveInches, double strafeInches, double turnDegrees, double power, double holdTime) {
+        // 1) create target once:
+        if (!relActive) {
+
+            double startX = currentPosition.getX(DistanceUnit.INCH);
+            double startY = currentPosition.getY(DistanceUnit.INCH);
+            double startHeadingRad = currentPosition.getHeading(AngleUnit.RADIANS);
+
+            // --- 2. Calculate the Target Position ---
+            // We need to rotate the relative drive/strafe commands by the robot's current heading
+            // to find the change in world coordinates (deltaX, deltaY).
+            double deltaX = driveInches * Math.cos(startHeadingRad) - strafeInches * Math.sin(startHeadingRad);
+            double deltaY = driveInches * Math.sin(startHeadingRad) + strafeInches * Math.cos(startHeadingRad);
+
+            // The new absolute target coordinates are the starting position plus the calculated deltas.
+            double targetX = startX + deltaX;
+            double targetY = startY + deltaY;
+            double targetHeadingDeg = AngleUnit.normalizeDegrees(currentPosition.getHeading(AngleUnit.DEGREES) + turnDegrees);
+
+            // --- 4. Create the Target Pose2D ---
+            // Create the final absolute target pose that our driveTo() method can understand.
+            // The Pose2D constructor uses base units: inches and radians.
+            relTarget = new Pose2D(DistanceUnit.INCH, targetX, targetY, AngleUnit.DEGREES, targetHeadingDeg);
+
+            relActive = true;
+
+            telemetry.addData("DriveRelative", "Start: (%.1f, %.1f) H: %.1f", startX, startY, currentPosition.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("DriveRelative", "Target: (%.1f, %.1f) H: %.1f", targetX, targetY, targetHeadingDeg);
+            telemetry.update();
+        }
+
+        // --- 5. Execute the Movement by Calling the Existing driveTo() Method ---
+        // This reuses all your existing, tested PID logic!
+        boolean atTarget =  driveTo(currentPosition, relTarget, power, holdTime);
+
+        if(atTarget) {
+            relActive = false;
+            relTarget = null;
+        }
+        return atTarget;
+    }
+
+    public void pinpointDrive(double targetX, double targetY, double targetHeading, int maxTime) {
 
         pathComplete = false;
         double drive, strafe, turn;
@@ -1569,6 +1627,61 @@ public class DriveUtil2026 {
         }
 
     }
+    public double distanceTo(Pose2D currPose, Pose2D trgtPose,DistanceUnit distanceUnit) {
+        double dx = trgtPose.getX(distanceUnit) - currPose.getX(distanceUnit);
+        double dy = trgtPose.getY(distanceUnit) - currPose.getY(distanceUnit);
+        return Math.hypot(dx, dy);
+    }
+
+    public double bearingTo(Pose2D currPose, Pose2D trgtPose) {
+        double dx =trgtPose.getX(MM) - currPose.getX(MM);
+        double dy = trgtPose.getY(MM) - currPose.getY(MM);
+        return Math.atan2(dy, dx); // radians, world-frame
+    }
+
+    public double headingError(Pose2D currPose, Pose2D tgt) {
+        return Angle.normDelta(tgt.getHeading(RADIANS) - currPose.getHeading(RADIANS));
+    }
+
+    public Vec2 robotFrameError(Pose2D currPose, Pose2D tgt) {
+        double dx = tgt.getX(MM) - currPose.getX(MM);
+        double dy = tgt.getY(MM) - currPose.getY(MM);
+        double th = currPose.getHeading(RADIANS);
+        double ex =  Math.cos(-th)*dx - Math.sin(-th)*dy;
+        double ey =  Math.sin(-th)*dx + Math.cos(-th)*dy;
+        return new Vec2(ex, ey);
+    }
+    public static  class Angle {
+        /**
+         * Wraps an angle difference into the range -PI to +PI.
+         * Example: normDelta(3.5π) → -0.5π
+         */
+        public static double normDelta(double radians) {
+            while (radians > Math.PI)  radians -= 2 * Math.PI;
+            while (radians < -Math.PI) radians += 2 * Math.PI;
+            return radians;
+        }
+
+        /** Degrees version if you ever need it. */
+        public double normDeltaDeg(double degrees) {
+            while (degrees > 180)  degrees -= 360;
+            while (degrees < -180) degrees += 360;
+            return degrees;
+        }
+    }
+    public static class Vec2 {
+        public final double x;
+        public final double y;
+
+        public Vec2(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public double magnitude() { return Math.hypot(x, y); }
+        public double angle()     { return Math.atan2(y, x); }
+        public String toString()  { return String.format("(%.2f, %.2f)", x, y); }
+    }
 }
 
 //****************************************************************************************************
@@ -1733,6 +1846,7 @@ class PIDLoop{
 
         return output;
     }
+
 
 }
 

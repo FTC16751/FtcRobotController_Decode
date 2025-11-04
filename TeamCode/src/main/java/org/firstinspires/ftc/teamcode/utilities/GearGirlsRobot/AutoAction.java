@@ -16,6 +16,7 @@ public final class AutoAction {
     public enum ActionType {
         DRIVE_TO_POINT, // A Pinpoint-based drive action
         SHOOT,          // A launching action
+        DRIVE_AND_INTAKE,        // Our new, complex action
         CUSTOM          // For other actions like running an intake (for the future)
     }
 
@@ -25,13 +26,16 @@ public final class AutoAction {
     // --- Fields for different action types ---
     public final Pose2D targetPose; // For DRIVE_TO_POINT actions
     public final FeederSide feederSide; // For SHOOT actions
+    // --- NEW FIELD ---
+    public final double intakeDriveDistance; // The distance to drive forward while intaking
 
     // --- Private constructor ---
-    private AutoAction(ActionType type, String description, @Nullable Pose2D targetPose, @Nullable FeederSide feederSide) {
+    private AutoAction(ActionType type, String description, @Nullable Pose2D targetPose, @Nullable FeederSide feederSide, double intakeDriveDist) {
         this.type = type;
         this.description = description;
         this.targetPose = targetPose;
         this.feederSide = feederSide;
+        this.intakeDriveDistance = intakeDriveDist;
     }
     /**
      * Constructor for a DRIVE_TO_POINT action.
@@ -41,6 +45,7 @@ public final class AutoAction {
         this.description = description;
         this.targetPose = targetPose;
         this.feederSide = null; // Not used for this action type
+        this.intakeDriveDistance = 0;
     }
 
     /**
@@ -51,6 +56,8 @@ public final class AutoAction {
         this.description = description;
         this.targetPose = null; // Not used for this action type
         this.feederSide = feederSide;
+        this.intakeDriveDistance = 0;
+
     }
 
 
@@ -63,7 +70,7 @@ public final class AutoAction {
     public static AutoAction createDriveAction(@NonNull String description, @NonNull Pose2D targetPose) {
         Objects.requireNonNull(description, "Description cannot be null");
         Objects.requireNonNull(targetPose, "targetPose cannot be null for a drive action");
-        return new AutoAction(ActionType.DRIVE_TO_POINT, description, targetPose, null);
+        return new AutoAction(ActionType.DRIVE_TO_POINT, description, targetPose, null, 0);
     }
 
 
@@ -75,6 +82,15 @@ public final class AutoAction {
      */
     public static AutoAction createShootAction(@NonNull String description, @NonNull FeederSide feederSide) {
         Objects.requireNonNull(feederSide, "feederSide cannot be null for a shoot action");
-        return new AutoAction(ActionType.SHOOT, description, null, feederSide);
+        return new AutoAction(ActionType.SHOOT, description, null, feederSide, 0);
+    }
+
+    // --- NEW FACTORY METHOD for the Drive-and-Intake action ---
+    /**
+     * Creates a DRIVE_AND_INTAKE action.
+     * The robot will drive forward a specified distance while running the intake.
+     */
+    public static AutoAction createDriveAndIntakeAction(@NonNull String description, double driveDistanceInches) {
+        return new AutoAction(ActionType.DRIVE_AND_INTAKE, description, null, null, driveDistanceInches);
     }
 }

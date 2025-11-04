@@ -23,10 +23,15 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
+import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LauncherMotors;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2025;
@@ -82,6 +87,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 public class GearGirlsBot1 extends OpMode {
     //Declare SubSystems
     private GGRobot robot;
+    private double manualLauncherVelocity;
 
     private enum LauncherSystemState {
         IDLE,
@@ -102,7 +108,11 @@ public class GearGirlsBot1 extends OpMode {
 
     // Declare the launcherDistance variable using the enum from the constants file.
     private GGRobotConstants.LauncherDistance launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
-
+    public double distanceToGoal;
+    public double calculatedTargetVelocity;
+    /**
+     * Code to run ONCE when the driver hits INIT
+     */
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -170,6 +180,14 @@ public class GearGirlsBot1 extends OpMode {
         handleDiverterControls();
         handleIntakeControls();
         handleLauncherControls();
+        if (gamepad1.startWasPressed()) {
+            robot.drive.pinpoint.resetPosAndIMU();
+        }
+
+        // 1. Get the distance to the goal by calling the new method on the robot object.
+        distanceToGoal = robot.getDistanceToGoal();
+        // 2. Get the calculated target velocity using the other new method.
+        calculatedTargetVelocity = robot.getTargetVelocityForDistance(distanceToGoal);
 
         displayTelemetry();
     }
@@ -278,13 +296,31 @@ public class GearGirlsBot1 extends OpMode {
     private void handleLauncherControls() {
         // --- Step 1: Handle Inputs and Update State ---
         // Handle the distance toggle.
+//        if (gamepad1.dpadUpWasPressed()) {
+//            if (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) {
+//                launcherDistance = GGRobotConstants.LauncherDistance.FAR;
+//            } else {
+//                launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
+//            }
+//        }
+        // Handle the automatic distance toggle (gamepad1)
         if (gamepad1.dpadUpWasPressed()) {
-            if (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) {
-                launcherDistance = GGRobotConstants.LauncherDistance.FAR;
-            } else {
-                launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
-            }
+            launcherDistance = (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) ?
+                    GGRobotConstants.LauncherDistance.FAR : GGRobotConstants.LauncherDistance.CLOSE;
+            // When toggling, update the manual velocity to match the new preset
+            manualLauncherVelocity = launcherDistance.targetVelocity;
         }
+
+        // --- NEW: Manual Velocity Control (gamepad2) ---
+        // Increase target velocity by 100 RPM when d-pad up is pressed
+        if (gamepad2.dpadUpWasPressed()) {
+            manualLauncherVelocity += 10;
+        }
+        // Decrease target velocity by 100 RPM when d-pad down is pressed
+        if (gamepad2.dpadDownWasPressed()) {
+            manualLauncherVelocity -= 10;
+        }
+        // --- End of New Code ---
 
         // Press 'Y' to activate the launcher, 'B' to deactivate it.
         // Using separate 'if' statements makes the logic more robust.
@@ -302,6 +338,13 @@ public class GearGirlsBot1 extends OpMode {
             robot.feeder.setRightFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
         }
 
+        if (gamepad2.aWasPressed()) {
+            robot.feeder.setLeftFeederPower(1.0);
+        }
+        if (gamepad2.b) {
+            robot.feeder.setRightFeederPower(1);
+        }
+
         // --- Step 2: Perform Actions Based on State ---
         // This section reads the current state and commands the hardware.
         boolean isLauncherReady = false;
@@ -311,11 +354,13 @@ public class GearGirlsBot1 extends OpMode {
                 break;
             case ACTIVE:
                 // Always command the motors to the target velocity.
-                robot.launcher.setMotorVelocity(launcherDistance.targetVelocity, launcherDistance.targetVelocity);
+                robot.launcher.setMotorVelocity(calculatedTargetVelocity, calculatedTargetVelocity);
+
+               // robot.launcher.setMotorVelocity(launcherDistance.targetVelocity, launcherDistance.targetVelocity);
 
                 // Check if the motors are currently ready for a shot.
                 // This check happens every loop, so it knows if velocity has dropped.
-                if (robot.launcher.getLeftMotorVelocity() > launcherDistance.minVelocity && robot.launcher.getRightMotorVelocity() > launcherDistance.minVelocity) {
+                if (robot.launcher.getLeftMotorVelocity() > (calculatedTargetVelocity-25) && robot.launcher.getRightMotorVelocity() > (calculatedTargetVelocity-25)) {
                     isLauncherReady = true;
                 }
                 break;
@@ -323,19 +368,18 @@ public class GearGirlsBot1 extends OpMode {
 
         // --- Step 3: Handle Feeder (Shot) Requests ---
         // A shot is only allowed if the system is active AND the motors are up to speed.
-        if (isLauncherReady) {
+        //if (isLauncherReady) {
             if (gamepad1.leftBumperWasPressed()) {
-                // Trigger the left feeder for a set duration
-                // The OpMode's only job is to TELL the feeder to start.
                 robot.feeder.triggerLeftFeeder();
             }
             if (gamepad1.rightBumperWasPressed()) {
                 // Trigger the right feeder for a set duration
-                robot.feeder.triggerRightFeeder();
+               robot.feeder.triggerRightFeeder();
             }
-        }
+        //}
 
     }
+
 
 
     /**
@@ -351,12 +395,17 @@ public class GearGirlsBot1 extends OpMode {
         telemetry.addData("State", launcherSystemState);
         telemetry.addData("Distance Setting", launcherDistance);
         telemetry.addData("Target Velocity", launcherDistance.targetVelocity);
+        telemetry.addData("MANUAL Target Velocity", "%.0f RPM", manualLauncherVelocity);
+        telemetry.addData("MANUAL Target Velocity", manualLauncherVelocity);
+
         telemetry.addData("Left Velocity", "%.2f", robot.launcher.getLeftMotorVelocity());
         telemetry.addData("Right Velocity", "%.2f", robot.launcher.getRightMotorVelocity());
 
         telemetry.addData("--- Intake ---", "");
         telemetry.addData("Intake State", intakeState);
         telemetry.addData("Diverter Position", diverterDirection);
+        telemetry.addData("distance to Goal ", distanceToGoal);
+        telemetry.addData("Target Velocity", calculatedTargetVelocity);
 
         // This command sends all queued telemetry data to the Driver Station.
         telemetry.update();
