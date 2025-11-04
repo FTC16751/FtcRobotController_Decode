@@ -29,6 +29,9 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -60,6 +63,16 @@ public class P3_BasicIterativeTeleop extends OpMode
     private DriveUtil2025 drive;
     private P3_IntakeUtil intake;
     private P3_LauncherUtil launcher;
+
+    enum allianceColor {
+        RED,
+        BLUE
+    }
+
+
+
+    // TODO: set this at init
+    allianceColor alliance = allianceColor.RED;
 
     private enum IntakeState {
         ON,
@@ -117,7 +130,7 @@ public class P3_BasicIterativeTeleop extends OpMode
     }
     private void doDriveControls() {
 // Use scaled inputs for driving
-        drive.arcadeDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, .85);
+        drive.arcadeDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, .85);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
@@ -138,6 +151,21 @@ public class P3_BasicIterativeTeleop extends OpMode
         }
     }
 
+    private double calcShooterVelocity() {
+        Pose goal;
+        switch (alliance) {
+            case RED:
+                goal = new Pose(140, 140);
+            case BLUE:
+            default:
+                goal = new Pose(4, 140);
+        }
+        Pose robotPose = follower.getPose();
+        double distance = robotPose.distanceFrom(goal);
+        return 10*distance;
+
+    }
+
     private void handleLauncherControls() {
         if (gamepad1.right_trigger > 0.8) {
             launcher.setIndexerServoPower(-1.0);
@@ -149,6 +177,7 @@ public class P3_BasicIterativeTeleop extends OpMode
         }
         if (gamepad1.yWasPressed()) {
             launcher.setShooterMotorVelocity(1000);
+            // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
         if (gamepad1.xWasPressed()) {
             launcher.setShooterMotorVelocity(0);

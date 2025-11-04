@@ -16,7 +16,18 @@ public class P3_LauncherUtil {
     private final CRServo indexerServo;
     private final Servo stopperServo;
 
-    /** The default hardware map name for the intake motor. */
+    private double m_speed;
+
+    enum shooterStates {
+        OFF,
+        SPINNING_UP,
+        FLYWHEEL_SPUN,
+        LAUNCHING
+    }
+    private shooterStates shooterState = shooterStates.OFF;
+
+
+    /* The default hardware map name for the intake motor. */
     /**
      * Constructs an IntakeUtil object.
      *
@@ -55,11 +66,11 @@ public class P3_LauncherUtil {
     /**
      * Sets the power of the intake motor.
      *
-     * @param /power The desired power level, typically between -1.0 and 1.0.
+     * @param speed The desired power level, typically between -1.0 and 1.0.
      */
-    public void setShooterMotorVelocity(double power) {
-        shooterMotorLeft.setVelocity(power);
-        shooterMotorRight.setVelocity(power);
+    public void setShooterMotorVelocity(double speed) {
+        shooterMotorLeft.setVelocity(speed);
+        shooterMotorRight.setVelocity(speed);
 
     }
 
@@ -96,8 +107,41 @@ public class P3_LauncherUtil {
     }
 
     public void setShootingPosition() {
-        stopperServo.setPosition(0.25);
+        stopperServo.setPosition(0.20);
         // FIX THIS LATER
+    }
+
+    public void spinUp(double speed) {
+        setShooterMotorVelocity(m_speed = speed);
+        shooterState = shooterStates.SPINNING_UP;
+    }
+    public void launch() {
+        if(shooterState == shooterStates.FLYWHEEL_SPUN) {
+            setIndexerServoPower(.25);
+            setShootingPosition();
+            shooterState = shooterStates.LAUNCHING;
+        }
+        else if (shooterState == shooterStates.SPINNING_UP) {
+            if(getShooterMotorVelocity() > .99 * m_speed) {
+                shooterState= shooterStates.FLYWHEEL_SPUN;
+            }
+        }
+
+    }
+
+    // LEFT OFF HERE WITH MATTHEW
+    // CHECK WITH HIM TO MAKE SURE LOGIC IS RIGHT
+    public void stopLaunching() {
+        setIndexerServoPower(0);
+        setStopPosition();
+        shooterState = shooterStates.FLYWHEEL_SPUN;
+
+}
+
+    public void launchingOff() {
+        setShooterMotorVelocity(0);
+        setIndexerServoPower(0);
+        shooterState=shooterStates.OFF;
     }
 }
 //end program
