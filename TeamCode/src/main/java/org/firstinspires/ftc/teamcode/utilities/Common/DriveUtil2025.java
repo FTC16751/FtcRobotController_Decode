@@ -4,7 +4,19 @@ package org.firstinspires.ftc.teamcode.utilities.Common;
 import static android.os.SystemClock.sleep;
 
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
+import static java.lang.Math.toDegrees;
+
+import com.pedropathing.control.KalmanFilter;
+import com.pedropathing.control.KalmanFilterParameters;
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.localization.PoseTracker;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -22,6 +34,22 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.FollowerBuilder;
+import com.pedropathing.ftc.drivetrains.MecanumConstants;
+import com.pedropathing.ftc.localization.Encoder;
+import com.pedropathing.ftc.localization.constants.DriveEncoderConstants;
+import com.pedropathing.ftc.localization.constants.PinpointConstants;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.PathConstraints;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
 public class DriveUtil2025 {
@@ -104,6 +132,15 @@ public class DriveUtil2025 {
     GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
     private DistanceSensor sensorDistance;
 
+    // limelight camera stuff
+    private Limelight3A limelight; //any camera here
+
+    private final KalmanFilterParameters kfParams = new KalmanFilterParameters(6,1); // todo: tune?
+
+    private final KalmanFilter xFilter =  new KalmanFilter(kfParams);
+    private final KalmanFilter yFilter = new KalmanFilter(kfParams);
+    private final KalmanFilter thetaFilter = new KalmanFilter(kfParams);
+
     /* local OpMode members. */
     HardwareMap hardwareMap = null;
 
@@ -121,6 +158,10 @@ public class DriveUtil2025 {
         //initOtos(ahwMap);
         initOdo(ahwMap);
         runtime = new ElapsedTime();
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.start();
+
 
         // you can use this as a regular DistanceSensor.
       //  sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
@@ -1208,7 +1249,7 @@ public class DriveUtil2025 {
             telemetry.addData("Target Y", targetY);
             telemetry.addData("Target Heading", targetHeading);
             telemetry.addData("Distance to Target", distanceToTarget);
-            telemetry.addData("Relative Bearing", Math.toDegrees(relativeBearing));
+            telemetry.addData("Relative Bearing", toDegrees(relativeBearing));
             telemetry.addData("Yaw Error", yawError);
             telemetry.update();
 
@@ -1290,7 +1331,7 @@ public class DriveUtil2025 {
             telemetry.addData("Target Y", targetY);
             telemetry.addData("Target Heading", targetHeading);
             telemetry.addData("Distance to Target", distanceToTarget);
-            telemetry.addData("Relative Bearing", Math.toDegrees(relativeBearing));
+            telemetry.addData("Relative Bearing", toDegrees(relativeBearing));
             telemetry.addData("Yaw Error", yawError);
             telemetry.update();
 
@@ -1347,7 +1388,7 @@ public class DriveUtil2025 {
 
             // **Relative bearing** (difference between where we want to go and where we're pointing)
             relativeBearing = angleToTarget - Math.toRadians(currentPos.getHeading(AngleUnit.DEGREES));
-            relativeBearing = normalizeAngle(Math.toDegrees(relativeBearing)); // Normalize relative bearing
+            relativeBearing = normalizeAngle(toDegrees(relativeBearing)); // Normalize relative bearing
             relativeBearing = Math.toRadians(relativeBearing);
 
             // Correct yaw error relative to global frame
@@ -1380,7 +1421,7 @@ public class DriveUtil2025 {
             telemetry.addData("Target Y", targetY);
             telemetry.addData("Target Heading", targetHeading);
             telemetry.addData("Distance to Target", distanceToTarget);
-            telemetry.addData("Relative Bearing", Math.toDegrees(relativeBearing));
+            telemetry.addData("Relative Bearing", toDegrees(relativeBearing));
             telemetry.addData("Yaw Error", yawError);
             telemetry.update();
 
@@ -1513,5 +1554,37 @@ public class DriveUtil2025 {
 
 
 
+    }
+
+    private void updateRobotPoseOffsetFromLimeLight() {
+        //get the camera
+        limelight.updateRobotOrientation(toDegrees(follower.getPoseTracker().getIMUHeadingEstimate()));
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid()) {
+            // have a camera pose
+            Pose3D botPose_mt2 = result.getBotpose_MT2();
+
+            if (botPose_mt2 != null) {
+                PoseTracker poseTracker = follower.getPoseTracker();
+                // good bot pose
+                double x = botPose_mt2.getPosition().x;
+                double y = botPose_mt2.getPosition().y;
+                double theta = botPose_mt2.getOrientation().getYaw();
+                Pose botPose2d = new Pose(x, y, theta);
+
+                // get difference between vision bot pose and odo bot pose
+                Pose diff = poseTracker.getRawPose().minus(botPose2d);
+
+                //kalman filter the difference between the vision and odometry
+                xFilter.update(diff.getX(), 0);
+                yFilter.update(diff.getX(), 0);
+                thetaFilter.update(diff.getHeading(), 0);
+
+                //update pose tracker offsets
+                poseTracker.setXOffset(xFilter.getState());
+                poseTracker.setYOffset(yFilter.getState());
+                poseTracker.setHeadingOffset(thetaFilter.getState());
+            }
+        }
     }
 }
