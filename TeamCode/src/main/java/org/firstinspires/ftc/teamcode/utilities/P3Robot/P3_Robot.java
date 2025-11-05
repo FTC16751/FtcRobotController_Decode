@@ -4,7 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
+import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
 
 /**
  * P3_Robot is the central hub that orchestrates all of the P3 robot's subsystems.
@@ -19,7 +21,7 @@ public class P3_Robot {
     public final P3_LauncherUtil launcher;
     public final LimeLightVisionUtil vision;
     public final Telemetry telemetry;
-
+    private InterpolatingLookupTable flywheelTable;
     /**
      * Constructor for the P3_Robot class.
      */
@@ -32,6 +34,18 @@ public class P3_Robot {
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
         vision = new LimeLightVisionUtil(hardwareMap, telemetry);
+
+        flywheelTable = new InterpolatingLookupTable();
+        flywheelTable.add(30.0, 700.0);
+        flywheelTable.add(40.0, 750.0);
+        flywheelTable.add(50.0, 820.0);
+        flywheelTable.add(60.0, 850.0);
+        flywheelTable.add(70.0, 920.0);
+        flywheelTable.add(80.0, 980.0);
+        flywheelTable.add(100.0, 1090.0);
+        flywheelTable.add(120.0, 1120.0);
+        flywheelTable.add(130.0, 1370.0);
+        flywheelTable.add(140.0, 1175.0);
     }
 
     /**
@@ -54,7 +68,10 @@ public class P3_Robot {
         launcher.setShooterMotorVelocity(0);
         vision.stop();
     }
-
+    public double getTargetVelocityForDistance(double distanceInches) {
+        // This method safely accesses the private flywheelTable.
+        return flywheelTable.get(distanceInches);
+    }
     /**
      * A consolidated method for displaying common robot telemetry.
      */

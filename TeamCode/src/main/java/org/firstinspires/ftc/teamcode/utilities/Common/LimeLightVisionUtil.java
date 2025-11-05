@@ -20,6 +20,7 @@ public class LimeLightVisionUtil {
 
     private double lastTagDistanceMeters = -1.0;
     private int lastTagId = -1;
+    private boolean isTargetVisible = false;
 
     public LimeLightVisionUtil(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -39,20 +40,25 @@ public class LimeLightVisionUtil {
      * This method MUST be called in every loop of an OpMode to get the latest data.
      */
     public void update() {
-        if (limelight == null) return;
+        if (limelight == null) {
+            isTargetVisible = false;
+            return;
+        }
 
         LLResult result = limelight.getLatestResult();
         if (result == null || !result.isValid()) {
             resetTracking();
+            isTargetVisible = false;
             return;
         }
 
         List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
         if (tags == null || tags.isEmpty()) {
+            isTargetVisible = false;
             resetTracking();
             return;
         }
-
+        isTargetVisible = true;
         // For now, use the first detected tag.
         LLResultTypes.FiducialResult tag = tags.get(0);
 
@@ -99,5 +105,8 @@ public class LimeLightVisionUtil {
     private void resetTracking() {
         this.lastTagId = -1;
         this.lastTagDistanceMeters = -1.0;
+    }
+    public boolean isTargetVisible() {
+        return isTargetVisible;
     }
 }

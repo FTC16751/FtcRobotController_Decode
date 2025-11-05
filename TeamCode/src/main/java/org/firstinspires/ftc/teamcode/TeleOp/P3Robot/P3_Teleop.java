@@ -38,8 +38,10 @@ public class P3_Teleop extends OpMode
     private IntakeState intakeState = IntakeState.OFF;
     private boolean isShooterOn = false;
     private static final double DRIVE_SPEED = 1.0;
+    private static final double JOYSTICK_DEADBAND = 0.05;
     private static final double INTAKE_POWER = 1.0;
-
+    private double targetVelocityForDistance;
+    private double lastKnownGoodVelocity = 0.0;
 
     @Override
     public void init() {
@@ -69,10 +71,17 @@ public class P3_Teleop extends OpMode
         doDriveControls();
         handleIntakeControls();
         handleLauncherControls();
-
+        calcShooterVelocity();
         // 3. Display telemetry
         robot.addTelemetry();
+        doTelemetry();
         telemetry.update();
+    }
+
+    private void doTelemetry() {
+        telemetry.addData("targetVelocityForDistance", targetVelocityForDistance);
+        telemetry.addData("distanceToTagMeters", robot.vision.getDistanceToTagMeters());
+
     }
 
     @Override
@@ -85,7 +94,28 @@ public class P3_Teleop extends OpMode
         double driveInput = gamepad1.left_stick_y;
         double strafeInput = gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
-        robot.drive.arcadeDrive(strafeInput, driveInput, -turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
+        //robot.drive.arcadeDrive(strafeInput, driveInput, -turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
+
+        // --- 2. Apply Deadband ---
+        // If the raw input is less than the deadband, treat it as zero.
+        double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
+        double deadbandedStrafe = Math.abs(strafeInput) > JOYSTICK_DEADBAND ? strafeInput : 0.0;
+        double deadbandedTurn = Math.abs(turnInput) > JOYSTICK_DEADBAND ? turnInput : 0.0;
+
+        // --- 3. Apply Scaling Curve (Cubic) for Smoothing ---
+        // Cubing the input provides finer control at low speeds.
+        double smoothedDrive = Math.pow(deadbandedDrive, 3);
+        double smoothedStrafe = Math.pow(deadbandedStrafe, 3);
+        double smoothedTurn = Math.pow(deadbandedTurn, 3);
+
+        // --- 4. Call arcadeDrive with Smoothed Inputs ---
+        // Note: The 'gamepad1.right_stick_y' parameter is still present but its purpose is unclear.
+        // It's often used for a speed modifier or to toggle field-centric control.
+        robot.drive.arcadeDrive(smoothedStrafe, smoothedDrive, smoothedTurn, gamepad1.right_stick_y, DRIVE_SPEED);
+
+        // Add telemetry to see the effect
+        telemetry.addData("Raw Drive", "%.2f", driveInput);
+        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
     }
 
     private void handleIntakeControls() {
@@ -105,19 +135,14 @@ public class P3_Teleop extends OpMode
     }
 
     private double calcShooterVelocity() {
-        Pose goal;
-        switch (alliance) {
-            case RED:
-                goal = new Pose(140, 140);
-                break;
-            case BLUE:
-            default:
-                goal = new Pose(4, 140);
-                break;
+        if (robot.vision.isTargetVisible()) {
+            double distanceInches = robot.vision.getDistanceToTagMeters()* 39.3701;;
+            targetVelocityForDistance = robot.getTargetVelocityForDistance(distanceInches);
+            lastKnownGoodVelocity = targetVelocityForDistance;
+            return targetVelocityForDistance;
+        } else {
+            return lastKnownGoodVelocity;
         }
-        Pose robotPose = follower.getPose();
-        double distance = robotPose.distanceFrom(goal);
-        return 10 * distance;
     }
 
     private void handleLauncherControls() {
@@ -136,7 +161,7 @@ public class P3_Teleop extends OpMode
 
         if (isShooterOn) {
             // TODO: Replace 1000 with a call to a dynamic velocity calculation method
-            robot.launcher.setShooterMotorVelocity(1000);
+            robot.launcher.setShooterMotorVelocity(calcShooterVelocity());
         } else {
             robot.launcher.setShooterMotorVelocity(0);
         }
