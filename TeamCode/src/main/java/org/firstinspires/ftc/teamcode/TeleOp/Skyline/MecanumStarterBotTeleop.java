@@ -75,7 +75,7 @@ public class MecanumStarterBotTeleop extends OpMode {
      * velocity. Here we are setting the target, and minimum velocity that the launcher should run
      * at. The minimum velocity is a threshold for determining when to fire.
      */
-    final double LAUNCHER_TARGET_VELOCITY = 1600;
+    final double LAUNCHER_TARGET_VELOCITY = 1400;
     final double LAUNCHER_MIN_VELOCITY = 1550;
 
     // Declare OpMode members.
@@ -194,7 +194,7 @@ public class MecanumStarterBotTeleop extends OpMode {
          * both motors work to rotate the robot. Combinations of these inputs can be used to create
          * more complex maneuvers.
          */
-        drive.arcadeDrive(gamepad1.left_stick_x, gamepad1.left_stick_y,
+        drive.arcadeDrive(-gamepad1.left_stick_x, -gamepad1.left_stick_y,
                 gamepad1.right_stick_x,
                 gamepad1.right_stick_x,
                 DRIVE_SPEED);

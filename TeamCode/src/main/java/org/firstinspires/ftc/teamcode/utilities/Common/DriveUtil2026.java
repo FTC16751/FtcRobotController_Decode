@@ -3,9 +3,19 @@ package org.firstinspires.ftc.teamcode.utilities.Common;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.RADIANS;
 import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
+import static java.lang.Math.toDegrees;
+
+import com.pedropathing.control.KalmanFilter;
+import com.pedropathing.control.KalmanFilterParameters;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.localization.PoseTracker;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -231,6 +241,17 @@ public class DriveUtil2026 {
 
     private DriveType selectedDriveType = DriveType.MECANUM;
 
+
+    // P3-specific members (will only be initialized if it's the P3 bot)
+    private Follower pedroFollower;
+    // limelight camera stuff
+    private Limelight3A limelight; //any camera here
+
+    private final KalmanFilterParameters kfParams = new KalmanFilterParameters(6,1); // todo: tune?
+
+    private final KalmanFilter xFilter =  new KalmanFilter(kfParams);
+    private final KalmanFilter yFilter = new KalmanFilter(kfParams);
+    private final KalmanFilter thetaFilter = new KalmanFilter(kfParams);
     public DriveUtil2026(HardwareMap hardwareMap, Telemetry telemetry, OpMode opMode) {
         myOpMode = opMode;
 
@@ -1681,6 +1702,38 @@ public class DriveUtil2026 {
         public double magnitude() { return Math.hypot(x, y); }
         public double angle()     { return Math.atan2(y, x); }
         public String toString()  { return String.format("(%.2f, %.2f)", x, y); }
+    }
+
+    private void updateRobotPoseOffsetFromLimeLight() {
+        //get the camera
+        limelight.updateRobotOrientation(toDegrees(follower.getPoseTracker().getIMUHeadingEstimate()));
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid()) {
+            // have a camera pose
+            Pose3D botPose_mt2 = result.getBotpose_MT2();
+
+            if (botPose_mt2 != null) {
+                PoseTracker poseTracker = follower.getPoseTracker();
+                // good bot pose
+                double x = botPose_mt2.getPosition().x;
+                double y = botPose_mt2.getPosition().y;
+                double theta = botPose_mt2.getOrientation().getYaw();
+                Pose botPose2d = new Pose(x, y, theta);
+
+                // get difference between vision bot pose and odo bot pose
+                Pose diff = poseTracker.getRawPose().minus(botPose2d);
+
+                //kalman filter the difference between the vision and odometry
+                xFilter.update(diff.getX(), 0);
+                yFilter.update(diff.getX(), 0);
+                thetaFilter.update(diff.getHeading(), 0);
+
+                //update pose tracker offsets
+                poseTracker.setXOffset(xFilter.getState());
+                poseTracker.setYOffset(yFilter.getState());
+                poseTracker.setHeadingOffset(thetaFilter.getState());
+            }
+        }
     }
 }
 

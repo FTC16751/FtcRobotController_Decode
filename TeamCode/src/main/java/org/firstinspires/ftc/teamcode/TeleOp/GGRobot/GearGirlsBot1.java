@@ -75,12 +75,6 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
  * part of the robot. This keeps the main loop clean and organized. Real-time data is sent to the
  * Driver Station via the doTelemetry() method for debugging and monitoring.
  *
- *
- * @see GGRobotConstants
- * @see DriveUtil2025
- * @see IntakeUtil
- * @see LauncherMotors
- * @see LaunchIndexer
  */
 @TeleOp(name = "Gear Girls Bot 1.1", group = " _ arealTeleop")
 //@Disabled

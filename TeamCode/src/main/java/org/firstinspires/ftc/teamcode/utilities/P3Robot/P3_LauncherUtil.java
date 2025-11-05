@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -41,15 +42,18 @@ public class P3_LauncherUtil {
         //Intake Motor (new bot)
         shooterMotorLeft = hardwareMap.get(DcMotorEx.class, "left_shooter");
         shooterMotorRight = hardwareMap.get(DcMotorEx.class, "right_shooter");
+
         shooterMotorLeft.setDirection(DcMotorEx.Direction.FORWARD);
-        shooterMotorLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         shooterMotorRight.setDirection(DcMotorEx.Direction.REVERSE);
+
+        shooterMotorLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         shooterMotorRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
-        //set mode to run using encoder
+        shooterMotorLeft.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+        shooterMotorRight.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+
         shooterMotorLeft.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooterMotorRight.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-
 
         indexerServo = hardwareMap.get(CRServo.class, "indexerServo");
         stopperServo = hardwareMap.get(Servo.class, "stopperServo");
