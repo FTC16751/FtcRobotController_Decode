@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.Other;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -39,7 +40,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2025;
  * Demonstrates an empty iterative OpMode
  */
 @TeleOp(name = "Basic Drive op mode", group = "Concept")
-
+@Disabled
 public class BasicDriveTeleop extends OpMode {
   private static final double DRIVE_SPEED = .85;
   private DriveUtil2025 drive;

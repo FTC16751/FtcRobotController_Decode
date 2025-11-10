@@ -14,8 +14,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.function.Supplier;
 @Configurable
-@TeleOp
+@TeleOp(name="Example PedroPath Teleop", group="PedroPath")
 public class ExampleTeleOp extends OpMode {
+
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
     private boolean automatedDrive;

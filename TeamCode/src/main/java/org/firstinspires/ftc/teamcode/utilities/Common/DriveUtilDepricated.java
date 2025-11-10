@@ -42,7 +42,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class DriveUtil2026 {
+public class DriveUtilDepricated {
     // Robot Constants
     private static double ROBOT_SIZE_DIAMETER = 60; //in cm
     private static final double ENCODER_COUNTS_PER_INCH = 45.33;
@@ -252,7 +252,7 @@ public class DriveUtil2026 {
     private final KalmanFilter xFilter =  new KalmanFilter(kfParams);
     private final KalmanFilter yFilter = new KalmanFilter(kfParams);
     private final KalmanFilter thetaFilter = new KalmanFilter(kfParams);
-    public DriveUtil2026(HardwareMap hardwareMap, Telemetry telemetry, OpMode opMode) {
+    public DriveUtilDepricated(HardwareMap hardwareMap, Telemetry telemetry, OpMode opMode) {
         myOpMode = opMode;
 
         this.telemetry = telemetry;
@@ -1309,7 +1309,7 @@ public class DriveUtil2026 {
         stopRobot();
     }
 
-    // Add these methods to DriveUtil2026.java
+    // Add these methods to DriveUtilDepricated.java
 
     /**
      * Starts a non-blocking movement to align the robot to a specific AprilTag.
@@ -1704,6 +1704,12 @@ public class DriveUtil2026 {
         public String toString()  { return String.format("(%.2f, %.2f)", x, y); }
     }
 
+    /************ GRAND EXPERIMENTS ******
+    * experimental code to use at your own risk :-)
+    * good luck
+     *
+     */
+
     private void updateRobotPoseOffsetFromLimeLight() {
         //get the camera
         limelight.updateRobotOrientation(toDegrees(follower.getPoseTracker().getIMUHeadingEstimate()));
@@ -1735,12 +1741,45 @@ public class DriveUtil2026 {
             }
         }
     }
+
+    /**
+     * Calculates the turn power required to automatically aim the robot at a target.
+     * This uses a simple Proportional (P) controller based on heading error.
+     *
+     * @param headingErrorDegrees The heading error from the vision system in degrees.
+     * @return The calculated turn power, from -1.0 to 1.0.
+     */
+    public double calculateAutoAimTurn(double headingErrorDegrees) {
+        // These constants could be moved to your RobotConfig if they differ between robots
+        final double kP_TURN = 0.03;  // Proportional gain for turning
+        final double MIN_TURN_POWER = 0.05; // Minimum power to overcome friction
+        final double HEADING_TOLERANCE_DEG = 1.0; // Deadband to prevent "buzzing"
+
+        // Deadband: If we are close enough, don't apply any power.
+        if (Math.abs(headingErrorDegrees) < HEADING_TOLERANCE_DEG) {
+            return 0.0;
+        }
+
+        // Calculate the raw turn command using the P-controller.
+        // The negative sign ensures a positive error (tag is to the right) causes a positive (clockwise) turn.
+        double turnCmd = -kP_TURN * headingErrorDegrees;
+
+        // Apply a minimum power if the robot needs to move but the command is too small.
+        if (Math.abs(turnCmd) < MIN_TURN_POWER) {
+            turnCmd = Math.copySign(MIN_TURN_POWER, turnCmd);
+        }
+
+        // Clamp the output to the valid motor power range [-1.0, 1.0].
+        return Range.clip(turnCmd, -1.0, 1.0);
+    }
+
 }
 
 //****************************************************************************************************
 //****************************************************************************************************
 
-/***
+/***  sub-class used by simplified odometry movements (a step beyond deadreckoning with encoders, but not
+ * advanced path planning or the pinpoint computer
  * This class is used to implement a proportional controller which can calculate the desired output power
  * to get an axis to the desired setpoint value.
  * It also implements an acceleration limit, and a max power output.
@@ -1860,6 +1899,7 @@ class DriveUtilProportionalControl {
     }
 }
 
+/* sub classs using the pinpoint pid movments*/
 class PIDLoop{
     private double previousError;
     private double previousTime;

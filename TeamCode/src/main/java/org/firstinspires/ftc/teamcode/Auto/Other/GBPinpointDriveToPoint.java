@@ -1,20 +1,22 @@
-package org.firstinspires.ftc.teamcode.utilities.Common;
+package org.firstinspires.ftc.teamcode.Auto.Other;
 
-import static org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026.DriveType.MECANUM;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 
 import java.util.Locale;
 
 @Autonomous(name="Modified Pinpoint Navigation Example", group="Pinpoint")
-
+@Disabled
 public class GBPinpointDriveToPoint extends LinearOpMode {
-    DriveUtil2026 drive;
+    DriveUtil2026b drive;
 
     enum StateMachine {
         WAITING_FOR_START,
@@ -35,9 +37,12 @@ public class GBPinpointDriveToPoint extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        drive = new DriveUtil2026(hardwareMap,telemetry,null);
+        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        // Initialize all subsystems
+        drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 
-        drive.setDriveType(MECANUM);
+
+        //drive.setDriveType(MECANUM);
 
         StateMachine stateMachine;
         stateMachine = StateMachine.WAITING_FOR_START;

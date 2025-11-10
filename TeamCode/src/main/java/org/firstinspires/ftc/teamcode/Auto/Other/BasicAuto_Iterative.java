@@ -33,23 +33,26 @@
 package org.firstinspires.ftc.teamcode.Auto.Other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
-
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 
 @Autonomous(name="Basic Auto", group="StarterBot")
-//@Disabled
+@Disabled
 public class BasicAuto_Iterative extends OpMode
 {
-private DriveUtil2026 drive;
+private DriveUtil2026b drive;
 
     /*
      * This code runs ONCE when the driver hits INIT.
      */
     @Override
     public void init() {
-        drive = new DriveUtil2026(hardwareMap, telemetry,null);
+        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        // Initialize all subsystems
+        drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");

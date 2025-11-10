@@ -9,7 +9,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-@Autonomous(name = "Example Pedro Path Auto", group = "Examples")
+@Autonomous(name = "Example Pedro Path Auto", group = "Z Examples")
 public class AutoPedroPathExample extends OpMode{
 
         private Follower follower;

@@ -26,14 +26,15 @@ package org.firstinspires.ftc.teamcode.TeleOp.Concepts.Tests;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 
 
-@TeleOp(name = "MechanumWheelTestDriveUtil", group = " _ arealTeleop")
+@TeleOp(name = "MechanumWheelTestDriveUtil", group = "Concepts")
 //@Disabled
 public class MechanumWheelTestDriveUtil extends OpMode {
     //Declare SubSystems
-    private DriveUtil2026 drive;
+    private DriveUtil2026b drive;
 
 
     /*
@@ -41,9 +42,9 @@ public class MechanumWheelTestDriveUtil extends OpMode {
      */
     @Override
     public void init() {
-
+        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
         // --- DRIVE ---
-        drive = new DriveUtil2026(hardwareMap, telemetry, null);
+        drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 
         // --- Tell the driver that initialization is complete.---
         telemetry.addData("Status", "Initialized");

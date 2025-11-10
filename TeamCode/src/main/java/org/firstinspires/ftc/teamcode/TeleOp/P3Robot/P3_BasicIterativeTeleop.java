@@ -54,7 +54,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: p3 opmode", group="Iterative OpMode")
+@TeleOp(name="P3: Teleop (Team Version)", group=" _P3opmodes")
 
 public class P3_BasicIterativeTeleop extends OpMode
 {

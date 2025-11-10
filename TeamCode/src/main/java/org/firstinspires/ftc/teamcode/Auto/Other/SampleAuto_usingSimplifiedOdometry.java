@@ -4,10 +4,14 @@
     See the readme for a link to a video tutorial explaining the operation and limitations of the code.
  */
 
-package org.firstinspires.ftc.teamcode.utilities.Common;
+package org.firstinspires.ftc.teamcode.Auto.Other;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 
 /*
  * This OpMode illustrates an autonomous opmode using Essential Mecanum functions
@@ -16,19 +20,22 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * The IMU gyro is used to stabilize the heading during all motions
  */
 
-@Autonomous(name="Sample Autonomous", group = "Mr. Phil")
-public class SampleMecanumAutonomous extends LinearOpMode
+@Autonomous(name="Sample Autonomous UsingSimplifiedOdometry", group = "Mr. Phil")
+@Disabled
+public class SampleAuto_usingSimplifiedOdometry extends LinearOpMode
 {
     // get an instance of the "Robot" class.
     //private EssentialMecanumRobot robot = new EssentialMecanumRobot(this);
-    private DriveUtil2026 robot;
+    private DriveUtil2026b robot;
 
 
     @Override public void runOpMode()
     {
         // Initialize the robot hardware & Turn on telemetry
-        //robot.initialize(true);
-        robot = new DriveUtil2026(hardwareMap, telemetry,this);
+        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+
+        // Initialize all subsystems
+        robot = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
         // Wait for driver to press start
         telemetry.addData(">", "Touch Play to run Auto");
         telemetry.update();

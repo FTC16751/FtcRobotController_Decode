@@ -1,29 +1,15 @@
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 // LIMELIGHT imports
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2025;
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_IntakeUtil;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
-import java.util.List;
-
-@TeleOp(name="coaches p3 opmode", group="Iterative OpMode")
-public class P3_Teleop extends OpMode
+@TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
+public class P3_CoachesTeleop extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();

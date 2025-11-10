@@ -1,20 +1,16 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.earlyIdeas;
 
-import com.acmerobotics.dashboard.message.redux.StopOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.AutoAction;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Autonomous(name="GG Pinpoint Action xy tet", group="GGBot")
+@Disabled
 public class GGAuto_TestPinpoint_XY_Movements extends OpMode {
 
     // --- Subsystems ---

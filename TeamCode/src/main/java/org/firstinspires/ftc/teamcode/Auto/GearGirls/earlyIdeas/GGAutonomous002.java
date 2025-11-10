@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.earlyIdeas;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Autonomous(name="GG Pinpoint Action Auto", group="GGBot")
+@Disabled
 public class GGAutonomous002 extends OpMode {
 
     // --- Subsystems ---
@@ -46,7 +48,7 @@ public class GGAutonomous002 extends OpMode {
     @Override
     public void init() {
         robot = new GGRobot(hardwareMap, telemetry);
-        vision = new VisionUtil(hardwareMap, "limelight");
+        vision = new VisionUtil(hardwareMap, telemetry);
         vision.setPipeline(0);
 
         telemetry.addData(">", "Robot Initialized. Detecting Motif...");

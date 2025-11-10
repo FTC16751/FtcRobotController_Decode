@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -32,6 +33,7 @@ import java.util.Map;
  * @author Your Team Name
  */
 @TeleOp(name = "Test: Intake Sensors", group = "Test")
+@Disabled
 public class IntakeSensorTest extends OpMode {
 
     // A map to hold our sensor objects, pairing the configuration name with the sensor object.

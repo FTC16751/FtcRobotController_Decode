@@ -7,6 +7,8 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.Collections;
@@ -28,34 +30,57 @@ import java.util.List;
 public class VisionUtil {
 
     private Limelight3A limelight;
-    private LLResult lastValidResult;
+    private final Telemetry telemetry;
 
-    /**
-     * An enum to represent the detected spike mark position based on AprilTag IDs.
-     * This makes the code in the OpMode much more readable.
-     */
+    // --- State variables to hold the latest processed data ---
+    private boolean isTargetVisible = false;
+    private int lastTagId = -1;
+    private double lastTagDistanceMeters = -1.0;
+    private double lastTx = 0.0; // Horizontal angle
+    private LLResult lastValidResult = null;
+
     public enum MotifPattern {
-        GPP21,
-        PGP22,
-        PPG23,
-        UNKNOWN // A default value if no valid tag is seen
+        GPP21, PGP22, PPG23, UNKNOWN
     }
+    double x_meters ;
+    double z_meters ;
+    double y_meters;
+    // --- MegaTag2 field pose state ---
+    private boolean hasFieldPose = false;
+    private double fieldX_m = 0.0;
+    private double fieldY_m = 0.0;
+    private double  fieldZ_m = 0.0;
+    private double fieldHeadingRad = 0.0;   // yaw
 
+    private static double normalizeRad(double a) {
+        while (a > Math.PI)  a -= 2.0 * Math.PI;
+        while (a < -Math.PI) a += 2.0 * Math.PI;
+        return a;
+    }
+    public static final double BLUE_TAG20_X_M = -1.482;
+    public static final double BLUE_TAG20_Y_M = -1.413;
+
+    public static final double RED_TAG24_X_M  = -1.482;
+    public static final double RED_TAG24_Y_M  =  1.413;
+    Pose3D botposeMT2;
+    private static final int MOTIF_PIPELINE = 0;
+    private static final int RED_AIM_PIPELINE = 1;
+    private static final int BLUE_AIM_PIPELINE = 2;
     /**
      * Initializes the Limelight 3A vision system.
      * @param hardwareMap The HardwareMap from the OpMode, used to find the Limelight.
-     * @param limelightName The name of the Limelight as configured in the robot's configuration file.
+     * @param telemetry The Telemetry object used for logging.
      */
-    public VisionUtil(@NonNull HardwareMap hardwareMap, @NonNull String limelightName) {
-        // Safely initialize the hardware to prevent crashes if it's not configured.
+    public VisionUtil(@NonNull HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
         try {
-            limelight = hardwareMap.get(Limelight3A.class, limelightName);
-            limelight.pipelineSwitch(0); // Default to pipeline 0
-            limelight.start(); // Start polling for data immediately
-            Log.i("VisionUtil", "Limelight '" + limelightName + "' initialized successfully.");
+            limelight = hardwareMap.get(Limelight3A.class, "limelight");
+            limelight.pipelineSwitch(0);
+            limelight.start();
+            telemetry.addData("Limelight", "Initialized Successfully");
         } catch (Exception e) {
-            Log.e("VisionUtil", "Could not initialize Limelight '" + limelightName + "'. Check configuration. Error: " + e.getMessage());
-            limelight = null; // Ensure limelight is null if initialization fails
+            telemetry.addData("Limelight ERROR", "NOT found in config. Check name.");
+            this.limelight = null; // Ensure limelight is null if initialization fails
         }
     }
 
@@ -65,25 +90,91 @@ public class VisionUtil {
      * for all other methods in this class.
      */
     public void update() {
+
+        // Calculate horizontal distance from the robot's pose in the tag's reference frame.
+        telemetry.addData("LL PoseTag (x,y,z m)", "%.2f, %.2f, %.2f", x_meters, y_meters, z_meters);
+        telemetry.addData("Debug lastTx", lastTx);
         if (limelight == null) {
+            resetTracking();
             return;
         }
 
         LLResult currentResult = limelight.getLatestResult();
 
-        // If we don't have a result yet, get the first valid one.
-        if (lastValidResult == null) {
-            if (currentResult.isValid()) {
-                lastValidResult = currentResult;
-            }
+        // 1. Check for a valid result packet from the Limelight
+        if (currentResult == null || !currentResult.isValid()) {
+            resetTracking();
             return;
         }
 
-        // After the first assignment, only update if the new result is valid AND newer.
-        if (currentResult.isValid() && currentResult.getTimestamp() != lastValidResult.getTimestamp()) {
-            lastValidResult = currentResult;
+        // We have a valid packet, so store it.
+        this.lastValidResult = currentResult;
+        this.lastTx = currentResult.getTx();
+
+        // 2. Check if the valid packet contains any AprilTags
+        List<LLResultTypes.FiducialResult> tags = currentResult.getFiducialResults();
+        if (tags == null || tags.isEmpty()) {
+            resetTracking();
+            return;
+        }
+
+        // 3. If we reach here, we have a visible target. Process it.
+        this.isTargetVisible = true;
+
+        // For now, use the first detected tag as the primary target.
+        // In the future, you could add logic here to find a specific ID.
+        LLResultTypes.FiducialResult primaryTag = tags.get(0);
+        this.lastTagId = primaryTag.getFiducialId();
+
+        // Calculate horizontal distance from the robot's pose in the tag's reference frame.
+        Pose3D robotPoseInTagSpace = primaryTag.getRobotPoseTargetSpace();
+        x_meters = robotPoseInTagSpace.getPosition().x; // Side-to-side distance from tag center
+        z_meters = robotPoseInTagSpace.getPosition().z; // Forward/backward distance from tag
+        y_meters = robotPoseInTagSpace.getPosition().y;
+        this.lastTagDistanceMeters = Math.hypot(x_meters, z_meters);
+
+        // --- FIELD POSE FROM MEGATAG2 ---
+        botposeMT2 = currentResult.getBotpose_MT2();
+        if (botposeMT2 != null) {
+            fieldX_m = botposeMT2.getPosition().x;                 // meters
+            fieldY_m = botposeMT2.getPosition().y;                 // meters
+            fieldZ_m = botposeMT2.getPosition().z;
+            //fieldHeadingRad = botposeMT2.getOrientation().getYaw(); // radians
+            hasFieldPose = true;
+        } else {
+            hasFieldPose = false;
+        }
+
+    }
+
+    public void updateRobotOrientation(double imuHeadingDegrees) {
+        this.fieldHeadingRad = Math.toRadians(imuHeadingDegrees);
+        if (limelight != null) {
+            limelight.updateRobotOrientation(imuHeadingDegrees);
         }
     }
+
+    /**
+     * Sets the vision system's targeting mode based on the alliance color.
+     * This is the primary method OpModes should use to configure vision targeting.
+     * @param alliance The alliance color to target.
+     */
+    public void setTargetingAlliance(GGRobotConstants.Alliance alliance) {
+        if (alliance == GGRobotConstants.Alliance.RED) {
+            setPipeline(RED_AIM_PIPELINE);
+        } else {
+            setPipeline(BLUE_AIM_PIPELINE);
+        }
+    }
+
+    /**
+     * Sets the vision system to the generic motif detection mode.
+     * This should be used during the autonomous init_loop.
+     */
+    public void setMotifDetectionMode() {
+        setPipeline(MOTIF_PIPELINE);
+    }
+
 
     // =================================================================================
     // GAME-SPECIFIC HIGH-LEVEL METHODS
@@ -95,33 +186,22 @@ public class VisionUtil {
      *
      * @return The detected {@link MotifPattern}, or UNKNOWN if no relevant tag is visible.
      */
-    public MotifPattern getMotifPattern() {
-        List<LLResultTypes.FiducialResult> detections = getFiducialDetections();
-
-        if (detections.isEmpty()) {
+        public MotifPattern getMotifPattern() {
+        if (!isTargetVisible) {
             return MotifPattern.UNKNOWN;
         }
-
-        // Iterate through the detected tags to find the one we care about.
-        for (LLResultTypes.FiducialResult detection : detections) {
-            int tagId = detection.getFiducialId();
-            switch (tagId) {
-                case 21:
-                    return MotifPattern.GPP21;
-                case 22:
-                    return MotifPattern.PGP22;
-                case 23:
-                    return MotifPattern.PPG23;
-            }
+        // The getFiducialDetections() method is no longer needed, as we can just check lastTagId
+        switch (lastTagId) {
+            case 21: return MotifPattern.GPP21;
+            case 22: return MotifPattern.PGP22;
+            case 23: return MotifPattern.PPG23;
+            default: return MotifPattern.UNKNOWN;
         }
-
-        // If we get here, it means we saw tags, but none of them were 21, 22, or 23.
-        return MotifPattern.UNKNOWN;
     }
 
 
     // =================================================================================
-    // GENERAL-PURPOSE LOW-LEVEL METHODS
+    // PUBLIC "GETTER" METHODS - The clean API for your OpModes
     // =================================================================================
 
     /**
@@ -184,4 +264,106 @@ public class VisionUtil {
         }
         return null;
     }
+
+    public Pose3D getBotPose_MT2() {
+        return botposeMT2;
+    }
+
+    /**
+     * Gets the ID of the primary detected AprilTag.
+     * @return The tag ID, or -1 if no target is visible.
+     */
+    public int getDetectedTagId() {
+        return lastTagId;
+    }
+
+    public double getDistanceToTagMeters() {
+        return lastTagDistanceMeters;
+    }
+
+    /**
+     * Gets the calculated horizontal distance to the primary tag.
+     * @return The distance in INCHES, or a negative value if no target is visible.
+     */
+    public double getDistanceToTagInches() {
+        if (!isTargetVisible) {
+            return -1.0;
+        }
+        return lastTagDistanceMeters * 39.3701;
+    }
+
+    /**
+     * Gets the horizontal angle (tx) to the target. Useful for auto-aiming.
+     * @return The angle in degrees. Positive is right, negative is left.
+     */
+    public double getTargetAngleX() {
+        return lastTx;
+    }
+
+    private void resetTracking() {
+        this.isTargetVisible = false;
+        this.lastTagId = -1;
+        this.lastTagDistanceMeters = -1.0;
+        this.lastTx = 0.0;
+        // Do NOT set lastValidResult to null here, so we can still access stale data if needed.
+    }
+    /**
+     * Checks if a valid AprilTag was visible during the last update cycle.
+     * @return true if a target is currently visible, false otherwise.
+     */
+    public boolean isTargetVisible() {
+        return isTargetVisible;
+    }
+
+    /**
+     * Adds relevant vision data to the telemetry stream for debugging.
+     */
+    public void addTelemetry() {
+        telemetry.addLine("--- Limelight Vision ---");
+        if (isTargetVisible) {
+            telemetry.addData("LL Status", "Target Visible");
+            telemetry.addData("LL Tag ID", lastTagId);
+            telemetry.addData("LL Distance (in)", "%.1f", getDistanceToTagInches());
+            telemetry.addData("LL Angle (tx)", "%.2f", lastTx);
+        } else {
+            telemetry.addData("LL Status", "No Targets Visible");
+        }
+        telemetry.addData("Heading Error to red Tag: ", getHeadingErrorToRedTag24Deg());
+        telemetry.addLine("--- Limelight Vision MT2 Data---");
+        telemetry.addData("fieldX_m ", fieldX_m);
+        telemetry.addData("fieldY_m ", fieldY_m);
+        telemetry.addData("fieldZ_m ", fieldZ_m);
+
+        telemetry.addData("fieldHeading ",Math.toDegrees(fieldHeadingRad));   // yaw
+    }
+    public boolean hasFieldPose() {
+        return hasFieldPose;
+    }
+
+    // Heading error (radians) from robot's current heading to a field-space target (goalX_m, goalY_m)
+    public double getHeadingErrorToFieldPointRad(double goalX_m, double goalY_m) {
+        if (!hasFieldPose) return 0.0;
+
+        double dx = goalX_m - fieldX_m;
+        double dy = goalY_m - fieldY_m;
+
+        double desiredHeadingRad = Math.atan2(dy, dx);
+        double errorRad = normalizeRad(desiredHeadingRad - this.fieldHeadingRad);
+
+        return errorRad;
+    }
+
+    public double getHeadingErrorToFieldPointDeg(double goalX_m, double goalY_m) {
+        return Math.toDegrees(getHeadingErrorToFieldPointRad(goalX_m, goalY_m));
+    }
+    // Convenience wrappers
+    public double getHeadingErrorToRedTag24Deg() {
+        return getHeadingErrorToFieldPointDeg(RED_TAG24_X_M, RED_TAG24_Y_M);
+    }
+
+    public double getHeadingErrorToBlueTag20Deg() {
+        return getHeadingErrorToFieldPointDeg(BLUE_TAG20_X_M, BLUE_TAG20_Y_M);
+    }
+
+
 }

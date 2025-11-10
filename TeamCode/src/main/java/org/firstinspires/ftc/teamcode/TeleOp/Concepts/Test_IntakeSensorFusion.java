@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -29,6 +30,7 @@ import java.util.List;
  * @author Your Team Name
  */
 @TeleOp(name = "Test: Intake Sensor FUSION", group = "Test")
+@Disabled
 public class Test_IntakeSensorFusion extends OpMode {
 
     // The single instance of our sensor fusion utility class.

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.earlyIdeas;
 
 
 import static com.qualcomm.robotcore.util.ElapsedTime.Resolution.SECONDS;
@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 
 @Autonomous(name="Score 2 Specimen", group="Right", preselectTeleOp = "Driver Control - Into The Deep")
-
+@Disabled
 public class Score2SpecimenPinPointAuto extends LinearOpMode {
     GoBildaPinpointDriver pinpoint;
     MecanumDrive pinPointDrive;

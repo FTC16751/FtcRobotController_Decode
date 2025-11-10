@@ -28,6 +28,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
 
 /*
  * This OpMode illustrates how to use the GoBildaPinpoint
@@ -39,7 +40,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  *
  * See the sensor's product page: https://www.gobilda.com/pinpoint-odometry-computer-imu-sensor-fusion-for-2-wheel-odometry/
  */
-@TeleOp(name = "Sensor: GoBilda Pinpoint", group = "Sensor")
+@TeleOp(name = "Sensor: GoBilda Pinpoint", group = "Concepts")
 public class SensorGoBildaPinpoint extends OpMode {
     // Create an instance of the sensor
     GoBildaPinpointDriver pinpoint;
@@ -48,21 +49,31 @@ public class SensorGoBildaPinpoint extends OpMode {
     public void init() {
         // Get a reference to the sensor
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
-
         // Configure the sensor
         configurePinpoint();
 
         // Set the location of the robot - this should be the place you are starting the robot from
-        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        //pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0));
+
     }
 
     @Override
     public void loop() {
         telemetry.addLine("Push your robot around to see it track");
-        telemetry.addLine("Press A to reset the position");
+        telemetry.addLine("Press A to reset the position...to auto init");
+        telemetry.addLine("Press B to reset the position just before 1st spike mark");
+        telemetry.addLine("Press Y to reset the position just after collecting ball 1st spike mark");
+        telemetry.addLine("Press C to reset the position just before 3rd ball from spike mark");
+
+
+
         if(gamepad1.a){
             // You could use readings from April Tags here to give a new known position to the pinpoint
             pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        }
+        if (gamepad1.b) {
+            pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,-30, -31, AngleUnit.DEGREES,90));
         }
         pinpoint.update();
         Pose2D pose2D = pinpoint.getPosition();
@@ -70,6 +81,7 @@ public class SensorGoBildaPinpoint extends OpMode {
         telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
         telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
         telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
+
     }
 
     public void configurePinpoint(){

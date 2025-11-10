@@ -30,26 +30,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.earlyIdeas;
 
-import static org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026.DriveType.MECANUM;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 
 import java.util.Locale;
 
 
 @Autonomous(name="GG Auto Pathing using Pinpoint", group="StarterBot")
-//@Disabled
+@Disabled
 public class GGAutonomousPathing002 extends OpMode
 {
-    DriveUtil2026 drive;
+
+    private GGRobot robot;
 
     private enum AutonomousState {
         WAITING_FOR_START,
@@ -72,16 +73,15 @@ public class GGAutonomousPathing002 extends OpMode
      */
     @Override
     public void init() {
-        drive = new DriveUtil2026(hardwareMap,telemetry,null);
-        drive.setDriveType(MECANUM);
+        robot = new GGRobot(hardwareMap, telemetry);
 
         stateMachine = AutonomousState.WAITING_FOR_START;
 
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("X offset", drive.pinpoint.getXOffset(DistanceUnit.INCH));
-        telemetry.addData("Y offset", drive.pinpoint.getYOffset(DistanceUnit.INCH));
-        telemetry.addData("Device Version Number:", drive.pinpoint.getDeviceVersion());
-        telemetry.addData("Device Scalar", drive.pinpoint.getYawScalar());
+        telemetry.addData("X offset", robot.drive.pinpoint.getXOffset(DistanceUnit.INCH));
+        telemetry.addData("Y offset", robot.drive.pinpoint.getYOffset(DistanceUnit.INCH));
+        telemetry.addData("Device Version Number:", robot.drive.pinpoint.getDeviceVersion());
+        telemetry.addData("Device Scalar", robot.drive.pinpoint.getYawScalar());
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -109,7 +109,7 @@ public class GGAutonomousPathing002 extends OpMode
      */
     @Override
     public void loop() {
-        drive.pinpoint.update();
+        robot.drive.pinpoint.update();
 
         switch (stateMachine){
             case WAITING_FOR_START:
@@ -122,32 +122,32 @@ public class GGAutonomousPathing002 extends OpMode
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                if (drive.driveTo(drive.pinpoint.getPosition(), TARGET_1, 0.5, 2)){
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), TARGET_1, 0.5, 2)){
                     telemetry.addLine("at position #1!");
                     stateMachine = AutonomousState.AT_TARGET;
                 }
                 break;
             case DRIVE_TO_TARGET_2:
                 //drive to the second target
-                if (drive.driveTo(drive.pinpoint.getPosition(), TARGET_2, 0.5, 2)){
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), TARGET_2, 0.5, 2)){
                     telemetry.addLine("at position #2!");
                     stateMachine = AutonomousState.DRIVE_TO_TARGET_3;
                 }
                 break;
             case DRIVE_TO_TARGET_3:
-                if(drive.driveTo(drive.pinpoint.getPosition(), TARGET_3, 0.5, 2)){
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), TARGET_3, 0.5, 2)){
                     telemetry.addLine("at position #3");
                     stateMachine = AutonomousState.DRIVE_TO_TARGET_4;
                 }
                 break;
             case DRIVE_TO_TARGET_4:
-                if(drive.driveTo(drive.pinpoint.getPosition(),TARGET_4,0.5,2)){
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(),TARGET_4,0.5,2)){
                     telemetry.addLine("at position #4");
                     stateMachine = AutonomousState.DRIVE_TO_TARGET_5;
                 }
                 break;
             case DRIVE_TO_TARGET_5:
-                if(drive.driveTo(drive.pinpoint.getPosition(),TARGET_5,0.5,0)){
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(),TARGET_5,0.5,0)){
                     telemetry.addLine("There!");
                     stateMachine = AutonomousState.AT_TARGET;
                 }
@@ -156,7 +156,7 @@ public class GGAutonomousPathing002 extends OpMode
 
         telemetry.addData("current state:",stateMachine);
 
-        Pose2D pos = drive.pinpoint.getPosition();
+        Pose2D pos = robot.drive.pinpoint.getPosition();
         String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Position", data);
         telemetry.update();

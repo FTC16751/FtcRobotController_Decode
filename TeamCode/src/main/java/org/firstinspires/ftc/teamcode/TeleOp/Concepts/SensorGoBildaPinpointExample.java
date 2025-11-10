@@ -20,9 +20,10 @@
  *   SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode.utilities.GBP2P;
+package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -30,6 +31,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 
 import java.util.Locale;
 
@@ -59,8 +61,8 @@ For support, contact tech@gobilda.com
 -Ethan Doak
  */
 
-@TeleOp(name="goBILDA® PinPoint Odometry Example", group="Linear OpMode")
-//@Disabled
+@TeleOp(name="goBILDA® PinPoint Odometry Example", group="Concepts")
+@Disabled
 
 public class SensorGoBildaPinpointExample extends LinearOpMode {
 
@@ -115,7 +117,6 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
          */
         //odo.recalibrateIMU();
         odo.resetPosAndIMU();
-
         telemetry.addData("Status", "Initialized");
         telemetry.addData("X offset", odo.getXOffset(DistanceUnit.INCH));
         telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.INCH));

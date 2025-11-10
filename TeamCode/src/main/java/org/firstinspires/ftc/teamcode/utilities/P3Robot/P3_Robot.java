@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026;
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
 
 /**
@@ -16,7 +17,7 @@ public class P3_Robot {
 
     // --- PUBLIC SUBSYSTEMS ---
     // These are public so the OpMode can access them directly (e.g., robot.drive.arcadeDrive(...))
-    public final DriveUtil2026 drive;
+    public final DriveUtil2026b drive;
     public final P3_IntakeUtil intake;
     public final P3_LauncherUtil launcher;
     public final LimeLightVisionUtil vision;
@@ -27,10 +28,10 @@ public class P3_Robot {
      */
     public P3_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
+        RobotConfig config = RobotConfig.createDefaultP3Config();
 
         // Initialize all subsystems
-        // We pass 'opMode' itself, which contains hardwareMap and telemetry
-        drive = new DriveUtil2026(hardwareMap, telemetry, null);
+        drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
         vision = new LimeLightVisionUtil(hardwareMap, telemetry);

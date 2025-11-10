@@ -30,9 +30,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.earlyIdeas;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -46,7 +47,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Autonomous(name="GG Sample Decode Auto", group="GGBot")
-//@Disabled
+@Disabled
 public class GGAutonomous001 extends OpMode
 {
     private static final double LAUNCHER_TARGET_VELOCITY = GGRobotConstants.Launcher.CLOSE_TARGET_VELOCITY;
@@ -144,7 +145,7 @@ public class GGAutonomous001 extends OpMode
         // -- Robot --
         robot = new GGRobot(hardwareMap, telemetry);
 
-        vision = new VisionUtil(hardwareMap, "limelight");
+        vision = new VisionUtil(hardwareMap, telemetry);
 
         robot.drive.resetHeading();  // Reset heading to set a baseline for Auto
 
