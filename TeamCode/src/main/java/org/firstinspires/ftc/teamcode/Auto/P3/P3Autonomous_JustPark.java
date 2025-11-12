@@ -1,24 +1,24 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.P3;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
+//import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-
-@Autonomous(name="GG AUTO: Just Parka", group="GGBot")
-public class GGAutonomous_JustPark extends OpMode {
+@Autonomous(name="P3 AUTO: Just Park", group="P3Bot")
+public class P3Autonomous_JustPark extends OpMode {
 
     // --- Subsystems ---
-    private GGRobot robot;
+    private P3_Robot robot;
 
     // --- OpMode State and Configuration ---
-    private GGRobotConstants.Alliance alliance = GGRobotConstants.Alliance.RED;
-    private GGRobotConstants.Location location = GGRobotConstants.Location.CLOSE;
-    private VisionUtil.MotifPattern detectedMotif = VisionUtil.MotifPattern.UNKNOWN;
+    private P3RobotConstants.Alliance alliance = P3RobotConstants.Alliance.RED;
+    private P3RobotConstants.Location location = P3RobotConstants.Location.CLOSE;
+
 
     // --- Master State Machine ---
     private enum AutonomousState { PRE_START, RUNNING_PATH, COMPLETE }
@@ -43,21 +43,18 @@ public class GGAutonomous_JustPark extends OpMode {
 
     @Override
     public void init() {
-        robot = new GGRobot(hardwareMap, telemetry);
-        robot.vision.setPipeline(0); // Ensure correct pipeline is active
+        robot = new P3_Robot(hardwareMap, telemetry);
         telemetry.addData(">", "Robot Initialized. Ready for selections.");
     }
 
     @Override
     public void init_loop() {
-        robot.vision.setMotifDetectionMode();
-        robot.vision.update(); // Continuously update vision to detect the motif
-
+        robot.update();
         // --- Driver Selections ---
-        if (gamepad1.x) { alliance = GGRobotConstants.Alliance.BLUE; }
-        if (gamepad1.b) { alliance = GGRobotConstants.Alliance.RED; }
-        if (gamepad1.y) { location = GGRobotConstants.Location.CLOSE; }
-        if (gamepad1.a) { location = GGRobotConstants.Location.FAR; }
+        if (gamepad1.x) { alliance = P3RobotConstants.Alliance.BLUE; }
+        if (gamepad1.b) { alliance = P3RobotConstants.Alliance.RED; }
+        if (gamepad1.y) { location = P3RobotConstants.Location.CLOSE; }
+        if (gamepad1.a) { location = P3RobotConstants.Location.FAR; }
 
 
         // --- Telemetry Feedback ---
@@ -65,20 +62,20 @@ public class GGAutonomous_JustPark extends OpMode {
         telemetry.addData("Alliance", "%s (X=Blue, B=Red)", alliance);
         telemetry.addData("Location", "%s (Y=Close, A=Far)", location);
         telemetry.addLine("Ready to Start!");
+        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
         telemetry.update();
     }
 
     @Override
     public void start() {
         // Set the robot's starting position based on the final selections
-        if (location == GGRobotConstants.Location.CLOSE) {
-            robot.drive.pinpoint.setPosition((alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.START_RED_CLOSE : GGRobotConstants.Waypoints.START_BLUE_CLOSE);
+        if (location == P3RobotConstants.Location.CLOSE) {
+            robot.drive.pinpoint.setPosition((alliance == P3RobotConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_CLOSE : P3RobotConstants.Waypoints.START_BLUE_CLOSE);
         } else { // FAR
-            robot.drive.pinpoint.setPosition((alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.START_RED_FAR : GGRobotConstants.Waypoints.START_BLUE_FAR);
+            robot.drive.pinpoint.setPosition((alliance == P3RobotConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_FAR : P3RobotConstants.Waypoints.START_BLUE_FAR);
         }
-
-        // Set the pipeline to ONLY look for our alliance's scoring tags.
-        robot.vision.setTargetingAlliance(alliance);
 
         // Transition to the main execution state
         autonomousState = AutonomousState.RUNNING_PATH;
@@ -91,58 +88,53 @@ public class GGAutonomous_JustPark extends OpMode {
     @Override
     public void loop() {
         robot.update();
-
         switch (autonomousState) {
             case RUNNING_PATH:
-                robot.intake.setIntakeMotorPower(1);
-                if (alliance == GGRobotConstants.Alliance.RED) {
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                if (alliance == P3RobotConstants.Alliance.RED) {
+                    if (location == P3RobotConstants.Location.CLOSE) {
                         runRedClosePath();
                     } else { // FAR
                         runRedFarPath();
                     }
                 } else { // BLUE
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                    if (location == P3RobotConstants.Location.CLOSE) {
                         runBlueClosePath();
                     } else { // FAR
                         runBlueFarPath();
                     }
                 }
                 break;
-
             case COMPLETE:
-                // Path is done. Stop all motors and end the OpMode.
                 robot.stopAll();
                 requestOpModeStop();
                 break;
         }
-
-        // Add telemetry from the robot object
         robot.addTelemetry();
+        telemetry.addData("imu heading: ", robot.drive.heading);
+        telemetry.addData("Path State Complete", blueCloseState);
+        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
         telemetry.update();
     }
 
     @Override
     public void stop() {
         // Save the selected alliance for TeleOp to use.
-        SharedState.alliance = this.alliance;
+        //SharedState.alliance = this.alliance;
         if (robot != null) {
             robot.stopAll();
         }
     }
 
-
     private void runRedClosePath() {
         telemetry.addData("Current Path", "Red Close");
-
         switch (redCloseState) {
             case START:
                 redCloseState = RedCloseState.PARK;
                 break;
             case PARK:
-                // Drive to the final parking position.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_PARK, 0.5, 0.25)) {
-                    // Once parking is complete, the entire autonomous routine is done.
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_PARK, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -154,12 +146,13 @@ public class GGAutonomous_JustPark extends OpMode {
         telemetry.addData("Current Path", "Red Far");
         switch (redFarState) {
             case START:
-                blueCloseState = BlueCloseState.PARK;
+                redFarState = RedFarState.PARK;
                 break;
             case PARK:
-                // Drive to the final parking position.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
-                autonomousState = AutonomousState.COMPLETE;
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
+
+                    autonomousState = AutonomousState.COMPLETE;
+
                 }
                 break;
         }
@@ -173,8 +166,7 @@ public class GGAutonomous_JustPark extends OpMode {
                 blueCloseState = BlueCloseState.PARK;
                 break;
             case PARK:
-                // Drive to the final parking position.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -187,13 +179,14 @@ public class GGAutonomous_JustPark extends OpMode {
         telemetry.addData("Current Path", "Blue Far");
         switch (blueFarState) {
             case START:
-                blueCloseState = BlueCloseState.PARK;
+                blueFarState = BlueFarState.PARK;
                 break;
             case PARK:
-                // Drive to the final parking position.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
+//                robot.drive.turnTo(45,0.5,.25);
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
+                autonomousState = AutonomousState.COMPLETE;
                 break;
         }
     }

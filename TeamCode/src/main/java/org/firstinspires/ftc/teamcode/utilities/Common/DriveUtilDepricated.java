@@ -119,9 +119,9 @@ public class DriveUtilDepricated {
     public double heading           = 0; // Latest Robot heading from IMU
 
     // Establish a proportional controller for each axis to calculate the required power to achieve a setpoint.
-    public DriveUtilProportionalControl driveController     = new DriveUtilProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
-    public DriveUtilProportionalControl strafeController    = new DriveUtilProportionalControl(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
-    public DriveUtilProportionalControl yawController       = new DriveUtilProportionalControl(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
+    public DriveUtilProportionalControldepricated driveController     = new DriveUtilProportionalControldepricated(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated strafeController    = new DriveUtilProportionalControldepricated(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated yawController       = new DriveUtilProportionalControldepricated(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
 
     // Hardware interface Objects
     private int encoderLF;              // Encoder value for front left wheel
@@ -233,11 +233,11 @@ public class DriveUtilDepricated {
 
     private LinearOpMode myLinearOpMode; //todo: consider if this is required
 
-    private final PIDLoop xPID = new PIDLoop();
-    private final PIDLoop yPID = new PIDLoop();
-    private final PIDLoop hPID = new PIDLoop();
+    private final PIDLoopDepricated xPID = new PIDLoopDepricated();
+    private final PIDLoopDepricated yPID = new PIDLoopDepricated();
+    private final PIDLoopDepricated hPID = new PIDLoopDepricated();
 
-    private final PIDLoop xTankPID = new PIDLoop();
+    private final PIDLoopDepricated xTankPID = new PIDLoopDepricated();
 
     private DriveType selectedDriveType = DriveType.MECANUM;
 
@@ -1784,7 +1784,7 @@ public class DriveUtilDepricated {
  * to get an axis to the desired setpoint value.
  * It also implements an acceleration limit, and a max power output.
  */
-class DriveUtilProportionalControl {
+class DriveUtilProportionalControldepricated {
     double  lastOutput;
     double  gain;
     double  accelLimit;
@@ -1806,7 +1806,7 @@ class DriveUtilProportionalControl {
      * @param deadband      Absolute error less than this value causes zero output
      * @param circular      set True if working with circular heading that wraps at 0/360
      */
-    public DriveUtilProportionalControl(double gain, double accelLimit, double outputLimit, double tolerance, double deadband, boolean circular) {
+    public DriveUtilProportionalControldepricated(double gain, double accelLimit, double outputLimit, double tolerance, double deadband, boolean circular) {
         this.gain = gain;
         this.accelLimit = accelLimit;
         this.defaultOutputLimit = outputLimit;
@@ -1900,7 +1900,7 @@ class DriveUtilProportionalControl {
 }
 
 /* sub classs using the pinpoint pid movments*/
-class PIDLoop{
+class PIDLoopDepricated {
     private double previousError;
     private double previousTime;
     private double previousOutput;

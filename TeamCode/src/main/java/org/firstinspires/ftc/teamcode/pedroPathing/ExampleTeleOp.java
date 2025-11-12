@@ -72,8 +72,8 @@ public class ExampleTeleOp extends OpMode {
             if (!slowMode) follower.setTeleOpDrive(
                     -gamepad1.left_stick_y,
                     -gamepad1.left_stick_x,
-                    -gamepad1.right_stick_x,
-                    true // Robot Centric
+                    gamepad1.right_stick_x,
+                    false // Robot Centric
             );
                 //This is how it looks with slowMode on
             else follower.setTeleOpDrive(

@@ -30,7 +30,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 
 /**
  * This class implements the TeleOp (driver-controlled) program for the "Gear Girls Bot 1.1" robot

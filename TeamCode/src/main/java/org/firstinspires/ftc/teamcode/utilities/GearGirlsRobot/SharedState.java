@@ -1,6 +1,5 @@
-package org.firstinspires.ftc.teamcode.utilities.Common;
+package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 public class SharedState {
     // This variable belongs to the CLASS and will persist between OpMode runs.
     // We initialize it to a safe default value.

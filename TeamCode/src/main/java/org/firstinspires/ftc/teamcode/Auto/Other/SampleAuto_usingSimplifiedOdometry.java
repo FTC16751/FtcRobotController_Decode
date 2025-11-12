@@ -48,7 +48,7 @@ public class SampleAuto_usingSimplifiedOdometry extends LinearOpMode
         if (opModeIsActive())
         {
             // Drive a small rectangle, turning at each corner
-            robot.drive(  6, 0.60, 0.25);
+            robot.simplifiedOdometryDrive(  6, 0.60, 0.25);
             robot.turnTo(90, 0.45, 0.5);
 //            robot.drive(  24, 0.60, 0.25);
 //            robot.turnTo(180, 0.45, 0.5);

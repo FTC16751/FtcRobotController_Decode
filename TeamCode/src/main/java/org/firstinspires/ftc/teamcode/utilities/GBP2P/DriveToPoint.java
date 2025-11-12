@@ -42,7 +42,7 @@ public class DriveToPoint {
     private static double yawTolerance = 0.0349066;
 
     private static double pGain = 0.008;
-    private static double dGain = 0.00001;
+    private static double dGain = 0.00003;
     private static double accel = 10.0;
 
     private static double yawPGain = 5.0;

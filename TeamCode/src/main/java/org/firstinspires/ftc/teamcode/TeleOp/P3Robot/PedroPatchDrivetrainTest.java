@@ -4,7 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.follower.Follower;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.utilities.PriorSeason.Drivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;

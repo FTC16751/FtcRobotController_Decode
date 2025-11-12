@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.Auto.GearGirls;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchIndexer;
@@ -228,20 +228,23 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 break;
 
             case SHOOT_SEQUENCE:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25);
                 // This state handles firing all three pre-loaded artifacts.
                 // We keep the launcher spinning throughout the sequence.
                 robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
 
                 // Only start a new shot if the previous one is finished.
-                if (shotsFired < 3) {
-                    LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
-                    if(robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.AUTO)) {
-                        shotsFired++;
+                if(!robot.feeder.isBusy()) {
+                    if (shotsFired < 3) {
+                        LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                        if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.AUTO)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        // All 3 shots are fired. Turn off the launcher and move to the park state.
+                        robot.launcher.setMotorVelocity(0, 0);
+                        blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN;
                     }
-                } else {
-                    // All 3 shots are fired. Turn off the launcher and move to the park state.
-                    robot.launcher.setMotorVelocity(0, 0);
-                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN;
                 }
                 break;
 
@@ -260,7 +263,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 break;
             case GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL2:
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_BALL2, 0.25, 0.25)) {
-                    robot.feeder.setFeederPower(-.5);
+                    robot.feeder.reverseLeftFeeder();
                     robot.intake.setDiverterCenter();
                     blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3a;
                 }
@@ -291,6 +294,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 }
                 break;
             case SHOOT_SEQUENCE2:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25);
                 // This state handles firing all three pre-loaded artifacts.
                 // We keep the launcher spinning throughout the sequence.
                 robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);

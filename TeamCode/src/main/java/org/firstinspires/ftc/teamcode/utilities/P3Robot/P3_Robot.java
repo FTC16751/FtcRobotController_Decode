@@ -8,7 +8,8 @@ import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
-
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
 /**
  * P3_Robot is the central hub that orchestrates all of the P3 robot's subsystems.
  * It owns all the hardware and utility classes, providing a clean interface for OpModes.
@@ -23,6 +24,24 @@ public class P3_Robot {
     public final LimeLightVisionUtil vision;
     public final Telemetry telemetry;
     private InterpolatingLookupTable flywheelTable;
+
+    private enum LaunchState {
+        IDLE,         // The sequence is not running.
+        SPIN_UP,      // Flywheels are accelerating to target speed.
+        FEEDING,      // Feeder/indexer is running to push artifact into flywheels.
+        COOLDOWN      // A brief pause after a shot before the next one can start.
+    }
+
+    private LaunchState launchState = LaunchState.IDLE;
+    private final ElapsedTime launchTimer = new ElapsedTime();
+
+    // These constants define the timing of the launch sequence. They belong here
+    // as they define a robot-level behavior.
+    private static final double FEED_TIME_SECONDS = 2.5; // How long to run the indexer for each shot.
+    private static final double COOLDOWN_TIME_SECONDS = 0.25; // Brief pause between shots.
+    // ---------------------------------------------------
+
+
     /**
      * Constructor for the P3_Robot class.
      */
@@ -37,16 +56,24 @@ public class P3_Robot {
         vision = new LimeLightVisionUtil(hardwareMap, telemetry);
 
         flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 700.0);
-        flywheelTable.add(40.0, 750.0);
-        flywheelTable.add(50.0, 820.0);
-        flywheelTable.add(60.0, 850.0);
-        flywheelTable.add(70.0, 920.0);
-        flywheelTable.add(80.0, 980.0);
-        flywheelTable.add(100.0, 1090.0);
-        flywheelTable.add(120.0, 1120.0);
-        flywheelTable.add(130.0, 1370.0);
-        flywheelTable.add(140.0, 1175.0);
+        flywheelTable.add(30.0, 1000.0);
+        flywheelTable.add(40.0, 1050.0);
+        flywheelTable.add(45.0, 1100.0);
+        flywheelTable.add(50.0, 1030.0);
+        flywheelTable.add(55.0, 1070.0);
+        flywheelTable.add(60.0, 1110.0);
+        flywheelTable.add(65.0, 1150.0);
+        flywheelTable.add(70.0, 1180.0);
+        flywheelTable.add(75.0, 1220.0);
+        flywheelTable.add(80.0, 1260.0);
+        flywheelTable.add(90.0, 1320.0);
+        flywheelTable.add(100.0, 1390.0);
+        flywheelTable.add(110.0, 1440.0);
+        flywheelTable.add(120.0, 1500.0);
+        flywheelTable.add(125.0, 1530.0);
+        flywheelTable.add(130.0, 1560.0);
+        flywheelTable.add(135.0, 1580.0);
+        flywheelTable.add(140.0, 1600.0);
     }
 
     /**
@@ -58,6 +85,8 @@ public class P3_Robot {
         // For now, it's a placeholder.
         // e.g., drive.update();
         vision.update();
+        drive.update();
+
     }
 
     /**
@@ -69,10 +98,29 @@ public class P3_Robot {
         launcher.setShooterMotorVelocity(0);
         vision.stop();
     }
+
     public double getTargetVelocityForDistance(double distanceInches) {
         // This method safely accesses the private flywheelTable.
         return flywheelTable.get(distanceInches);
     }
+
+    public double getFlywheelRpmForDistance(double distanceInches) {
+        // Quadratic fit: RPM = a*d^2 + b*d + c
+        double a = -0.022687;   // distance^2 coefficient
+        double b = 12.2017;     // distance coefficient
+        double c = 717.276;     // constant term
+
+        double rpm = a * distanceInches * distanceInches
+                + b * distanceInches
+                + c;
+
+        // Optional: clamp to your tested range
+        if (distanceInches < 40.0) distanceInches = 40.0;
+        if (distanceInches > 140.0) distanceInches = 140.0;
+
+        return rpm;
+    }
+
     /**
      * A consolidated method for displaying common robot telemetry.
      */
@@ -82,5 +130,84 @@ public class P3_Robot {
         vision.addTelemetry();
         // You can add more telemetry from other subsystems here
         // e.g., telemetry.addData("Shooter Velocity", launcher.getShooterMotorVelocity());
+    }
+
+    public boolean launchSequence(boolean shootCommand, double targetVelocity) {
+        telemetry.addData("launch sequence: ", shootCommand);
+        switch (launchState) {
+            case IDLE:
+                telemetry.addData("launch sequence state: ", launchState);
+
+                if (shootCommand) {
+                    // A shot is requested. Start spinning up the motors.
+                    launcher.setShooterMotorVelocity(targetVelocity);
+                    launchState = LaunchState.SPIN_UP;
+                }
+                break;
+
+            case SPIN_UP:
+                telemetry.addData("launch sequence state: ", launchState);
+
+                // Continuously command the velocity to ensure it gets there.
+                launcher.setShooterMotorVelocity(targetVelocity);
+
+                // Check if the flywheels are at the required speed (e.g., 98% of target).
+                if (launcher.getShooterMotorVelocity() >= targetVelocity * 0.98) {
+                    // Ready to feed. Start the feeder/indexer and open the stopper.
+                    launcher.setIndexerServoPower(-1.0); // As per your TeleOp example
+                    launcher.setShootingPosition();
+
+                    launchTimer.reset(); // Start the timer for the feeding duration.
+                    launchState = LaunchState.FEEDING;
+                }
+                break;
+
+            case FEEDING:
+                telemetry.addData("launch sequence state: ", launchState);
+
+                // The feeder runs for a specific amount of time.
+                if (launchTimer.seconds() > FEED_TIME_SECONDS) {
+                    launcher.setIndexerServoPower(0.0);
+                    launcher.setStopPosition();
+
+                    launchTimer.reset(); // Start the timer for the cooldown period.
+                    launchState = LaunchState.COOLDOWN;
+                } else {
+                    launcher.setIndexerServoPower(-1.0);
+                    launcher.setShootingPosition();
+                }
+                break;
+
+            case COOLDOWN:
+                // A brief pause to allow systems to settle before the next shot.
+                if (launchTimer.seconds() > COOLDOWN_TIME_SECONDS) {
+                    launchState = LaunchState.IDLE; // The sequence is complete.
+                    return true; // Signal completion for one loop cycle.
+                }
+                break;
+        }
+        // Add telemetry to see what the state machine is doing
+        telemetry.addData("Launch State", launchState);
+
+        // If we haven't returned true yet, the sequence is still busy.
+        return false;
+    }
+    /**
+     * A helper method to let the OpMode know if the launch sequence is currently running.
+     * @return true if the state is not IDLE, otherwise false.
+     */
+    public boolean isLaunchSequenceBusy() {
+        return launchState != LaunchState.IDLE;
+    }
+
+    /**
+     * A helper method to manually turn off the launcher and reset the sequence.
+     * Useful for an emergency stop or when the driver deactivates the system.
+     */
+    public void stopLaunchSequence() {
+        launcher.setShooterMotorVelocity(0);
+        launcher.setIndexerServoPower(0.0);
+        launcher.setStopPosition();
+        launchState = LaunchState.IDLE;
     }
 }

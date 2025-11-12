@@ -237,7 +237,7 @@ public class GGAutonomous001 extends OpMode
          */
         switch (autonomousState) {
             case START_INITIAL_DRIVE:
-                robot.drive.drive(-24, 0.5, 0.25);
+                robot.drive.simplifiedOdometryDrive(-24, 0.5, 0.25);
                 //drive.drive_p3(-48,0,0,.5);
                 autonomousState = AutonomousState.LAUNCH;
                 break;

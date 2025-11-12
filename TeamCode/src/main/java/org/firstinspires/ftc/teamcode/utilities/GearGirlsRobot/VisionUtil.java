@@ -93,7 +93,7 @@ public class VisionUtil {
 
         // Calculate horizontal distance from the robot's pose in the tag's reference frame.
         telemetry.addData("LL PoseTag (x,y,z m)", "%.2f, %.2f, %.2f", x_meters, y_meters, z_meters);
-        telemetry.addData("Debug lastTx", lastTx);
+        //telemetry.addData("Debug lastTx", lastTx);
         if (limelight == null) {
             resetTracking();
             return;

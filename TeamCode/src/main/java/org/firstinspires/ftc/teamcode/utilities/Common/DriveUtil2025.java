@@ -172,6 +172,9 @@ public class DriveUtil2025 {
 
     }
 
+    public void update() {
+        odo.update();
+    }
     private void initMotors(HardwareMap hardwareMap) {
         leftFrontMotor = hardwareMap.get(DcMotor.class, "Front_Left");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "Front_Right");
@@ -230,7 +233,7 @@ public class DriveUtil2025 {
         // y: -0.58
         // at offset x: -2
         // ROTATE 360 DEGREES
-        odo.setOffsets(0, 0.0,DistanceUnit.INCH); //these are tuned for 3110-0002-0001 Product Insight #2
+        odo.setOffsets(38, -165,DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #2
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
         the goBILDA_SWINGARM_POD, or the goBILDA_4_BAR_POD.
@@ -247,7 +250,7 @@ public class DriveUtil2025 {
         you move the robot to the left.
          */
         //odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
 
         /*
@@ -1586,5 +1589,12 @@ public class DriveUtil2025 {
                 poseTracker.setHeadingOffset(thetaFilter.getState());
             }
         }
+    }
+    public Pose2D getOdoPosition() {
+        Pose2D currentPos  = odo.getPosition();
+        telemetry.addData("current X coordinate", currentPos.getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", currentPos.getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", currentPos.getHeading(AngleUnit.DEGREES));
+        return currentPos;
     }
 }

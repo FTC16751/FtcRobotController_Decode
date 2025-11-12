@@ -1,11 +1,18 @@
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 // LIMELIGHT imports
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 @TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
@@ -28,10 +35,34 @@ public class P3_CoachesTeleop extends OpMode
     private static final double INTAKE_POWER = 1.0;
     private double targetVelocityForDistance;
     private double lastKnownGoodVelocity = 0.0;
+    //private static final double JOYSTICK_DEADBAND = 0.05;
+    // --- NEW: Slew Rate Limiter Variables ---
+    // This constant defines how much the motor power can change per second.
+    // A value of 3.0 means it takes 1/3 of a second to go from 0% to 100% power.
+    // Smaller values = smoother/slower ramp. Larger values = more responsive.
+    private static final double SLEW_RATE_LIMIT = 4.0; // Units: Power per Second
 
+    // Variables to store the previous loop's power commands
+    private double prevSmoothedDrive = 0.0;
+    private double prevSmoothedStrafe = 0.0;
+    private double prevSmoothedTurn = 0.0;
+    private final ElapsedTime loopTimer = new ElapsedTime(); // Timer to measure loop time
+    private Follower follower;
+    double driveCoefficient = 1.0;
+    private Drivetrain dt;
+    private boolean isAutoOrienting;
     @Override
     public void init() {
         robot = new P3_Robot(hardwareMap,telemetry);
+
+        Pose startingPose = new Pose(9,9,0);
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose);
+        follower.update();
+
+        dt = new Drivetrain(gamepad1, follower, startingPose);
+        driveCoefficient = 0.5;
+        isAutoOrienting = false;
         telemetry.addData("Status", "Initialized P3 Robot");
     }
 
@@ -45,6 +76,7 @@ public class P3_CoachesTeleop extends OpMode
 
     @Override
     public void start() {
+        follower.startTeleopDrive(true);
         runtime.reset();
     }
 
@@ -67,6 +99,16 @@ public class P3_CoachesTeleop extends OpMode
     private void doTelemetry() {
         telemetry.addData("targetVelocityForDistance", targetVelocityForDistance);
         telemetry.addData("distanceToTagMeters", robot.vision.getDistanceToTagMeters());
+        telemetry.addData("distanceToTagInces", robot.vision.getDistanceToTagMeters()*39.3701);
+        telemetry.addData("distanceToTagInches", calcShooterVelocity());
+        telemetry.addData("calculated velocity: ", robot.getFlywheelRpmForDistance((robot.vision.getDistanceToTagMeters()*39.3701)));
+        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
 
     }
 
@@ -77,12 +119,15 @@ public class P3_CoachesTeleop extends OpMode
     }
 
     private void doDriveControls() {
+        if (gamepad1.backWasPressed()) {
+            robot.drive.resetPosAndIMU();
+        }
         double driveInput = gamepad1.left_stick_y;
-        double strafeInput = gamepad1.left_stick_x;
+        double strafeInput = -gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
         //robot.drive.arcadeDrive(strafeInput, driveInput, -turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
-        // --- 2. Apply Deadband ---
+                // --- 2. Apply Deadband ---
         // If the raw input is less than the deadband, treat it as zero.
         double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
         double deadbandedStrafe = Math.abs(strafeInput) > JOYSTICK_DEADBAND ? strafeInput : 0.0;
@@ -91,14 +136,33 @@ public class P3_CoachesTeleop extends OpMode
         // --- 3. Apply Scaling Curve (Cubic) for Smoothing ---
         // Cubing the input provides finer control at low speeds.
         double smoothedDrive = Math.pow(deadbandedDrive, 3);
-        double smoothedStrafe = Math.pow(deadbandedStrafe, 3);
-        double smoothedTurn = Math.pow(deadbandedTurn, 3);
+        double smoothedStrafe = Math.pow(deadbandedStrafe, 5);
+        double smoothedTurn = Math.pow(deadbandedTurn, 5);
 
-        // --- 4. Call arcadeDrive with Smoothed Inputs ---
-        // Note: The 'gamepad1.right_stick_y' parameter is still present but its purpose is unclear.
-        // It's often used for a speed modifier or to toggle field-centric control.
-        robot.drive.arcadeDrive(smoothedStrafe, smoothedDrive, smoothedTurn, gamepad1.right_stick_y, DRIVE_SPEED);
+        // =========================================================================
+        // --- 4. NEW: Apply Slew Rate Limiter for Dampening ---
+        // =========================================================================
+        // Get the time elapsed since the last loop, in seconds.
+        double loopTime = loopTimer.seconds();
+        loopTimer.reset(); // Reset the timer for the next loop
 
+        // Calculate the maximum change allowed in motor power for this loop cycle.
+        double maxDelta = SLEW_RATE_LIMIT * loopTime;
+
+        // Apply the limiter. Use Range.clip to constrain the new power to be
+        // within `maxDelta` of the previous power.
+        smoothedDrive  = Range.clip(smoothedDrive,  prevSmoothedDrive - maxDelta,  prevSmoothedDrive + maxDelta);
+        smoothedStrafe = Range.clip(smoothedStrafe, prevSmoothedStrafe - maxDelta, prevSmoothedStrafe + maxDelta);
+        smoothedTurn   = Range.clip(smoothedTurn,   prevSmoothedTurn - maxDelta,   prevSmoothedTurn + maxDelta);
+
+        // Store the new limited powers as the "previous" values for the next loop.
+        prevSmoothedDrive = smoothedDrive;
+        prevSmoothedStrafe = smoothedStrafe;
+        prevSmoothedTurn = smoothedTurn;
+        // =========================================================================
+
+        //robot.drive.arcadeDrive(smoothedStrafe, smoothedDrive, smoothedTurn, 0, 1.0);
+        robot.drive.fieldCentricDrive(smoothedStrafe, smoothedDrive, -smoothedTurn, 1.0);
         // Add telemetry to see the effect
         telemetry.addData("Raw Drive", "%.2f", driveInput);
         telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);

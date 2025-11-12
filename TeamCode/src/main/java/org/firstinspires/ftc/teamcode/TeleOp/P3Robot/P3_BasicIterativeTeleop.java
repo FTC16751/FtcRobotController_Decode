@@ -36,9 +36,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2025;
+import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_IntakeUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -60,9 +64,8 @@ public class P3_BasicIterativeTeleop extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DriveUtil2025 drive;
-    private P3_IntakeUtil intake;
-    private P3_LauncherUtil launcher;
+    private P3_Robot robot;
+
 
     enum allianceColor {
         RED,
@@ -87,11 +90,7 @@ public class P3_BasicIterativeTeleop extends OpMode
      */
     @Override
     public void init() {
-
-        drive = new DriveUtil2025(this);
-        drive.init(hardwareMap,telemetry); //initialize the drive subsystem
-        intake = new P3_IntakeUtil(hardwareMap);
-        launcher = new P3_LauncherUtil(hardwareMap);
+        robot = new P3_Robot(hardwareMap,telemetry);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -117,9 +116,17 @@ public class P3_BasicIterativeTeleop extends OpMode
      */
     @Override
     public void loop() {
+        robot.update();
         doDriveControls();
         handleIntakeControls();
         handleLauncherControls();
+        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
     }
 
     /*
@@ -130,7 +137,7 @@ public class P3_BasicIterativeTeleop extends OpMode
     }
     private void doDriveControls() {
 // Use scaled inputs for driving
-        drive.arcadeDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x, gamepad1.right_stick_y, .85);
+        robot.drive.arcadeDrive(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.right_stick_y, 1.0);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
@@ -142,10 +149,10 @@ public class P3_BasicIterativeTeleop extends OpMode
         }
         switch (intakeState) {
             case ON:
-                intake.setIntakeMotorPower(INTAKE_POWER);
+                robot.intake.setIntakeMotorPower(INTAKE_POWER);
                 break;
             case OFF:
-                intake.setIntakeMotorPower(0.0);
+                robot.intake.setIntakeMotorPower(0.0);
                 break;
 
         }
@@ -168,19 +175,19 @@ public class P3_BasicIterativeTeleop extends OpMode
 
     private void handleLauncherControls() {
         if (gamepad1.right_trigger > 0.8) {
-            launcher.setIndexerServoPower(-1.0);
-            launcher.setShootingPosition();
+            robot.launcher.setIndexerServoPower(-1.0);
+            robot.launcher.setShootingPosition();
         }
         else {
-            launcher.setIndexerServoPower(0.0);
-            launcher.setStopPosition();
+            robot.launcher.setIndexerServoPower(0.0);
+            robot.launcher.setStopPosition();
         }
         if (gamepad1.yWasPressed()) {
-            launcher.setShooterMotorVelocity(1000);
+            robot.launcher.setShooterMotorVelocity(1200);
             // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
         if (gamepad1.xWasPressed()) {
-            launcher.setShooterMotorVelocity(0);
+            robot.launcher.setShooterMotorVelocity(0);
         }
     }
 }

@@ -52,9 +52,9 @@ public class EssentialMecanumRobot {
     public double heading           = 0; // Latest Robot heading from IMU
 
     // Establish a proportional controller for each axis to calculate the required power to achieve a setpoint.
-    public DriveUtilProportionalControl driveController     = new DriveUtilProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
-    public DriveUtilProportionalControl strafeController    = new DriveUtilProportionalControl(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
-    public DriveUtilProportionalControl yawController       = new DriveUtilProportionalControl(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
+    public DriveUtilProportionalControldepricated driveController     = new DriveUtilProportionalControldepricated(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated strafeController    = new DriveUtilProportionalControldepricated(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated yawController       = new DriveUtilProportionalControldepricated(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
 
     // ---  Private Members
 

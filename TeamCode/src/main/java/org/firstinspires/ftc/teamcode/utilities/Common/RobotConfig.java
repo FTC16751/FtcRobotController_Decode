@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.utilities.Common;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+
 /**
  * A data class to hold all configuration values that are specific to a
  * particular robot's physical build. This object is created in a robot-specific
@@ -28,6 +28,17 @@ public class RobotConfig {
     public final RevHubOrientationOnRobot.LogoFacingDirection imuLogoDirection;
     public final RevHubOrientationOnRobot.UsbFacingDirection imuUsbDirection;
 
+    // === Drive Controller & PID Tuning ===
+    public final double xyTolerance;
+    public final double yawTolerance; // Storing in radians is common for math
+    public final double pGain;
+    public final double dGain;
+    public final double accel;
+    public final double yawPGain;
+    public final double yawDGain;
+    public final double yawAccel;
+    public final double iGain;
+
 
     /**
      * Constructor for the robot's physical configuration.
@@ -42,7 +53,10 @@ public class RobotConfig {
             GoBildaPinpointDriver.EncoderDirection pinpointXPodDirection,
             GoBildaPinpointDriver.EncoderDirection pinpointYPodDirection,
             RevHubOrientationOnRobot.LogoFacingDirection imuLogoDirection,
-            RevHubOrientationOnRobot.UsbFacingDirection imuUsbDirection
+            RevHubOrientationOnRobot.UsbFacingDirection imuUsbDirection,
+            // === new tuning parameters to the constructor ===
+            double xyTolerance, double yawTolerance, double pGain, double dGain,
+            double accel, double yawPGain, double yawDGain, double yawAccel, double iGain
     ) {
         this.leftFrontDirection = leftFrontDirection;
         this.rightFrontDirection = rightFrontDirection;
@@ -54,6 +68,18 @@ public class RobotConfig {
         this.pinpointYPodDirection = pinpointYPodDirection;
         this.imuLogoDirection = imuLogoDirection;
         this.imuUsbDirection = imuUsbDirection;
+
+        //Assign the new values inside the constructor
+        this.xyTolerance = xyTolerance;
+        this.yawTolerance = yawTolerance;
+        this.pGain = pGain;
+        this.dGain = dGain;
+        this.accel = accel;
+        this.yawPGain = yawPGain;
+        this.yawDGain = yawDGain;
+        this.yawAccel = yawAccel;
+        this.iGain = iGain;
+        // =======================================================
     }
 
     // =================================================================================
@@ -81,7 +107,18 @@ public class RobotConfig {
 
                 /* IMU Config */
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD,
+
+                /* === NEW: Add GG Bot's specific tuning values here === */
+                17,      // xyTolerance
+                0.0349066, // yawToleranceRadians (this is 2 degrees)
+                0.01905,   // pGain
+                0.00111,   // dGain
+                8.0,       // accel
+                5.0,       // yawPGain
+                0.0,       // yawDGain
+                20.0,       // yawAccel
+                0.000002 //iGain
         );
     }
 
@@ -98,14 +135,24 @@ public class RobotConfig {
                 DcMotorEx.Direction.FORWARD,   // Right Rear
 
                 /* Pinpoint Config */
-                -10.5,   // P3's X offset
-                -145.0,  // P3's Y offset
+                -38,   // P3's X offset (MM)
+                165.0,  // P3's Y offset (MM)
                 GoBildaPinpointDriver.EncoderDirection.REVERSED, // X Pod
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
 
                 /* IMU Config */
-                RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP,
+                /* === NEW: Add GG Bot's specific tuning values here === */
+                12.5,      // xyTolerance
+                0.05, // yawToleranceRadians (this is 3 degrees)
+                0.008,   // pGain
+                0.00003,   // dGain
+                10.0,       // accel
+                5.0,       // yawPGain
+                0.03,       // yawDGain
+                20.0,       // yawAccel
+                0.000002 //iGain
         );
     }
     public static RobotConfig createDefaultSkyLineConfig() {
@@ -124,7 +171,17 @@ public class RobotConfig {
 
                 /* IMU Config */
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT,
+                /* === NEW: Add GG Bot's specific tuning values here === */
+                15.5,      // xyTolerance
+                0.0349066, // yawToleranceRadians (this is 2 degrees)
+                0.01905,   // pGain
+                0.00111,   // dGain
+                8.0,       // accel
+                5.0,       // yawPGain
+                0.0,       // yawDGain
+                20.0,       // yawAccel
+                0.000002 //iGain
         );
     }
     /**
@@ -147,7 +204,17 @@ public class RobotConfig {
 
                     /* IMU Config */
                     RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                    RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                    RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD,
+                    /* === NEW: Add GG Bot's specific tuning values here === */
+                    15.5,      // xyTolerance
+                    0.0349066, // yawToleranceRadians (this is 2 degrees)
+                    0.01905,   // pGain
+                    0.00111,   // dGain
+                    8.0,       // accel
+                    5.0,       // yawPGain
+                    0.0,       // yawDGain
+                    20.0,       // yawAccel
+                    0.000002 //iGain
             );
 
     }

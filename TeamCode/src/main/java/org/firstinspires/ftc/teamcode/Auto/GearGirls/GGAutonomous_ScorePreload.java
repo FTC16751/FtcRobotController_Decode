@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.Auto.GearGirls;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchIndexer;

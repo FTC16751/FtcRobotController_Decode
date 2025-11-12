@@ -19,7 +19,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
 
 
@@ -78,35 +77,47 @@ public class DriveUtil2026b {
     private double lastGoodStrafePower = 0;
     private double lastGoodTurnPower = 0;
 
+
+    private final ElapsedTime GBholdTimer = new ElapsedTime();
+    private final ElapsedTime PIDTimer = new ElapsedTime();
+    private static double xyTolerance = 15.5;
+    private static double yawTolerance = 0.0349066;
+    private static double pGain = 0.01905;
+    private static double dGain = 0.00111;
+    private static double accel = 8.0;
+    private static double yawPGain = 5.0;
+    private static double yawDGain = 0.0;
+    private static double yawAccel = 20.0;
+    // === NEW CONSTANTS FOR ENCODER BASED AUTONOMOUS USING PID ===
+    private static final double DRIVE_GAIN          = 0.085;    // Strength of axial position control
+    private static final double DRIVE_ACCEL         = 2.0;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
+    private static final double DRIVE_TOLERANCE     = 1.0;     // Controller is is "inPosition" if position error is < +/- this amount
+    private static final double DRIVE_DEADBAND      = 0.2;     // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
+    private static final double DRIVE_MAX_AUTO      = 0.6;     // "default" Maximum Axial power limit during autonomous
+
+    private static final double STRAFE_GAIN         = 0.03;    // Strength of lateral position control
+    private static final double STRAFE_ACCEL        = 1.5;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
+    private static final double STRAFE_TOLERANCE    = 0.5;     // Controller is is "inPosition" if position error is < +/- this amount
+    private static final double STRAFE_DEADBAND     = 0.2;     // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
+    private static final double STRAFE_MAX_AUTO     = 0.6;     // "default" Maximum Lateral power limit during autonomous
+
+    private static final double YAW_GAIN            = 0.018;    // Strength of Yaw position control
+    private static final double YAW_ACCEL           = 3.0;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
+    private static final double YAW_TOLERANCE       = 1.0;     // Controller is is "inPosition" if position error is < +/- this amount
+    private static final double YAW_DEADBAND        = 0.25;    // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
+    private static final double YAW_MAX_AUTO        = 0.6;     // "default" Maximum Yaw power limit during autonomous
+
     // --- PID & Autonomous Control Members ---
     /* for gobildas pid control */
     private final PinpointPIDLoop xPID = new PinpointPIDLoop();
     private final PinpointPIDLoop yPID = new PinpointPIDLoop();
     private final PinpointPIDLoop hPID = new PinpointPIDLoop();
+
     /* for dr phils simplified odometry pid control */
     // Establish a proportional controller for each axis to calculate the required power to achieve a setpoint.
-    public SimplifiedOdoDriveUtilProportionalControl driveController     = new SimplifiedOdoDriveUtilProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
-    public SimplifiedOdoDriveUtilProportionalControl strafeController    = new SimplifiedOdoDriveUtilProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
-    public SimplifiedOdoDriveUtilProportionalControl yawController       = new SimplifiedOdoDriveUtilProportionalControl(yawPGain, yawAccel, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
-
-    private final ElapsedTime GBholdTimer = new ElapsedTime();
-    private final ElapsedTime PIDTimer = new ElapsedTime();
-    private static double DRIVE_TOLERANCE = 15.5;
-    private static double yawTolerance = 0.0349066;
-    private static double pGain = 0.01905;
-    private static double DRIVE_GAIN = 0.00111;
-    private static double DRIVE_ACCEL = 8.0;
-    private static double yawPGain = 5.0;
-    private static double yawDGain = 0.0;
-    private static double yawAccel = 20.0;
-    private static final double DRIVE_DEADBAND      = 0.2;
-    private static final double DRIVE_MAX_AUTO      = 0.6;
-    private static final double STRAFE_TOLERANCE    = 0.5;
-    private static final double STRAFE_DEADBAND     = 0.2;
-    private static final double STRAFE_MAX_AUTO     = 0.6;
-    private static final double YAW_TOLERANCE       = 1.0;
-    private static final double YAW_DEADBAND        = 0.25;    // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
-    private static final double YAW_MAX_AUTO        = 0.6;
+    public DriveUtilProportionalControldepricated driveController     = new DriveUtilProportionalControldepricated(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated strafeController    = new DriveUtilProportionalControldepricated(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
+    public DriveUtilProportionalControldepricated yawController       = new DriveUtilProportionalControldepricated(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
 
     // --- General Members ---
     private Telemetry telemetry;
@@ -173,7 +184,8 @@ public class DriveUtil2026b {
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         }
-        setMotorMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+        setMotorMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
     private void initializeIMU(HardwareMap hardwareMap) {
@@ -292,6 +304,17 @@ public class DriveUtil2026b {
     public double getHeading() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         return (orientation.getYaw(AngleUnit.DEGREES) - headingOffset);
+    }
+
+    public double getPinpointHeading() {
+        return pinpoint.getHeading(RADIANS);
+    }
+    public Pose2D getOdoPosition() {
+        Pose2D currentPos  = pinpoint.getPosition();
+        telemetry.addData("current X coordinate", currentPos.getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", currentPos.getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", currentPos.getHeading(AngleUnit.DEGREES));
+        return currentPos;
     }
 
     public boolean isBusy() {
@@ -460,6 +483,22 @@ public class DriveUtil2026b {
         // This is where you would apply smoothing/deadband if desired,
         // or just pass the raw values to moveRobot.
         moveRobot(drive * speed, strafe * speed, turn * speed);
+    }
+
+    public void fieldCentricDrive(double strafe, double drive, double turn, double speed) {
+        // 1. Get the robot's current heading from the IMU.
+        // We get it in radians because the Math functions work with radians.
+        double botHeading = getPinpointHeading();
+
+        // 2. The Field-Centric Transformation
+        // Rotate the joystick inputs by the negative of the robot's heading.
+        // This cancels out the robot's rotation from the control scheme.
+        double rotatedX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
+        double rotatedY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
+
+        // 3. Call the existing moveRobot method with the new, "rotated" inputs.
+        // The turn input remains the same.
+        moveRobot(rotatedY * speed, rotatedX * speed, turn * speed);
     }
 
     public void simpleTankDrive(double left_stick_x, double left_stick_y, double right_stick_x, double right_stick_y, double DRIVE_SPEED) {
@@ -659,6 +698,7 @@ public class DriveUtil2026b {
     // =================================================================================
 
     public void update() {
+        pinpoint.update();
         switch (driveState) {
             case DRIVING_TO_POINT_PINPOINT:
                 // updateDriveToPoint(); // Logic for non-blocking drive would go here
@@ -720,24 +760,35 @@ public class DriveUtil2026b {
     private double calculatePID(Pose2D currentPosition, Pose2D targetPosition, Direction direction){
         if(direction ==Direction.x){
             double xError = targetPosition.getX(MM) - currentPosition.getX(MM);
-            return xPID.calculateAxisPID(xError, pGain, DRIVE_GAIN, DRIVE_ACCEL,PIDTimer.seconds());
+            return xPID.calculateAxisPID(xError, config.pGain, config.dGain, config.accel,PIDTimer.seconds(), xyTolerance);
         }
         if(direction == Direction.y){
             double yError = targetPosition.getY(MM) - currentPosition.getY(MM);
-            return yPID.calculateAxisPID(yError, pGain, DRIVE_GAIN, DRIVE_ACCEL, PIDTimer.seconds());
+            return yPID.calculateAxisPID(yError, config.pGain, config.dGain, config.accel, PIDTimer.seconds(), xyTolerance);
         }
         if(direction == Direction.h){
-            double hError = targetPosition.getHeading(AngleUnit.RADIANS) - currentPosition.getHeading(AngleUnit.RADIANS);
-            return hPID.calculateAxisPID(hError, yawPGain, yawDGain, yawAccel, PIDTimer.seconds());
+            double targetH = targetPosition.getHeading(AngleUnit.RADIANS);
+            double currentH = currentPosition.getHeading(AngleUnit.RADIANS);
+            double hError = Angle.normDelta(targetH - currentH);
+            //double hError = targetPosition.getHeading(AngleUnit.RADIANS) - currentPosition.getHeading(AngleUnit.RADIANS);
+            if (Math.abs(hError) < config.yawTolerance) {
+                hPID.pidReset();
+                return 0.0;
+            }
+            return hPID.calculateAxisPID(hError, config.yawPGain, config.yawDGain, config.yawAccel, PIDTimer.seconds(), yawTolerance);
         }
         return 0;
     }
 
     private InBounds inBounds (Pose2D currPose, Pose2D trgtPose){
-        boolean xInBounds = currPose.getX(MM) > (trgtPose.getX(MM) - DRIVE_TOLERANCE) && currPose.getX(MM) < (trgtPose.getX(MM) + DRIVE_TOLERANCE);
-        boolean yInBounds = currPose.getY(MM) > (trgtPose.getY(MM) - DRIVE_TOLERANCE) && currPose.getY(MM) < (trgtPose.getY(MM) + DRIVE_TOLERANCE);
-        boolean hInBounds = currPose.getHeading(RADIANS) > (trgtPose.getHeading(RADIANS) - yawTolerance) &&
-                currPose.getHeading(RADIANS) < (trgtPose.getHeading(RADIANS) + yawTolerance);
+        boolean xInBounds = currPose.getX(MM) > (trgtPose.getX(MM) - config.xyTolerance) && currPose.getX(MM) < (trgtPose.getX(MM) + config.xyTolerance);
+        boolean yInBounds = currPose.getY(MM) > (trgtPose.getY(MM) - config.xyTolerance) && currPose.getY(MM) < (trgtPose.getY(MM) + config.xyTolerance);
+        double targetH = trgtPose.getHeading(RADIANS);
+        double currentH = currPose.getHeading(RADIANS);
+        double hError = Angle.normDelta(targetH - currentH);
+        boolean hInBounds = Math.abs(hError) < config.yawTolerance;
+        //boolean hInBounds = currPose.getHeading(RADIANS) > (trgtPose.getHeading(RADIANS) - config.yawTolerance) &&
+        //        currPose.getHeading(RADIANS) < (trgtPose.getHeading(RADIANS) + config.yawTolerance);
 
         if (xInBounds && yInBounds && hInBounds){
             return InBounds.IN_BOUNDS;
@@ -749,11 +800,14 @@ public class DriveUtil2026b {
             return InBounds.NOT_IN_BOUNDS;
     }
 
+    public void pidReset() {
+
+    }
     public double calculateTargetHeading(Pose2D currPose, Pose2D trgtPose){
         double xDelta = trgtPose.getX(MM) - currPose.getX(MM);
         double yDelta = trgtPose.getY(MM) - currPose.getY(MM);
 
-        if(Math.abs(xDelta) > DRIVE_TOLERANCE || Math.abs(yDelta) > DRIVE_TOLERANCE){
+        if(Math.abs(xDelta) > config.xyTolerance || Math.abs(yDelta) > config.xyTolerance){
             return Math.atan2(yDelta, xDelta);
         } else {
             return currPose.getHeading(RADIANS);
@@ -824,7 +878,7 @@ public class DriveUtil2026b {
      * @param power Maximum power to apply.  This number should always be positive.
      * @param holdTime Minimum time (sec) required to hold the final position.  0 = no hold.
      */
-    public void drive(double distanceInches, double power, double holdTime) {
+    public void simplifiedOdometryDrive(double distanceInches, double power, double holdTime) {
         startMotion();
 
         driveController.reset(distanceInches, power);   // achieve desired drive distance
@@ -1035,26 +1089,42 @@ public class DriveUtil2026b {
         private double previousOutput;
 
         private double errorR;
+        private double integralError = 0.0;
+        private static final double I_LIMIT = 0.3; // anti-windup clamp, tune as needed
+        private final double iGain = 0.000002; // start tiny
 
-        public double calculateAxisPID(double error, double pGain, double dGain, double accel, double currentTime) {
+
+        public double calculateAxisPID(double error, double pGain, double dGain, double accel, double currentTime, double tolerance) {
             double p = error * pGain;
             double cycleTime = currentTime - previousTime;
             double d = dGain * (previousError - error) / (cycleTime);
             double output = p - d;
             double dV = cycleTime * accel;
             double dVup = cycleTime * accel;
-            double dVdown = cycleTime * accel * 2;
+            double dVdown = cycleTime * accel *1.5;
+
+            // --- INTEGRAL UPDATE ---
+            // Only integrate when we're outside the "close enough" window
+            if (Math.abs(error) > tolerance) {
+                integralError += error * cycleTime;      // accumulate error over time
+                // Anti-windup clamp
+                if (integralError > I_LIMIT)  integralError = I_LIMIT;
+                if (integralError < -I_LIMIT) integralError = -I_LIMIT;
+            } else {
+                // When we're very close, reset so it doesn't keep pushing
+                integralError = 0.0;
+            }
+
+            double i = integralError * iGain;
+            output = p + i - d;
+
+            // --- NORMALIZE OUTPUT ---
 
             double max = Math.abs(output);
             if (max > 1.0) {
                 output /= max;
             }
 
-//        if((output - previousOutput) > dV){
-//            output = previousOutput + dV;
-//        } else if ((output - previousOutput) < -dV){
-//            output = previousOutput - dV;
-//        }
             if ((output - previousOutput) > dVup) {
                 output = previousOutput + dVup;
             } else if ((output - previousOutput) < -dVdown) {
@@ -1067,6 +1137,11 @@ public class DriveUtil2026b {
             errorR = error;
 
             return output;
+        }
+        public void pidReset() {
+            previousOutput = 0.0;
+            previousError = 0.0;
+            previousTime = 0.0;
         }
     }
     public class SimplifiedOdoDriveUtilProportionalControl {
