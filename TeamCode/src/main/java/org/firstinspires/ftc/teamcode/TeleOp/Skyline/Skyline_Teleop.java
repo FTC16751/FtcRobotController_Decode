@@ -66,7 +66,7 @@ public class Skyline_Teleop extends OpMode {
     // --- Constants for this OpMode ---
     private static final double DRIVE_SPEED = 0.80;
     private static final double FEED_TIME_SECONDS = 2.50;
-    private static final double LAUNCHER_TARGET_VELOCITY = 1400;
+    private static double LAUNCHER_TARGET_VELOCITY = 1400;
     private static final double LAUNCHER_MIN_VELOCITY = 1350; // Adjusted for a reasonable threshold
 
     // --- Main Robot Object ---
@@ -146,6 +146,7 @@ public class Skyline_Teleop extends OpMode {
     }
 
     private void handleManualLauncherControls() {
+
         if (gamepad1.y) {
             robot.launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
         } else if (gamepad1.b) {

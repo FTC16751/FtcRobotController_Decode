@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot; // Import the new robot class
+import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
 
 /*
  * This file includes an autonomous routine for the Skyline robot.
@@ -19,8 +19,8 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot; // Import
  * This OpMode is only responsible for the high-level sequence of events.
  */
 
-@Autonomous(name="SKYLINE: Score 3 Preloads", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
-public class Skyline_Autonomous_Score3Preloads extends OpMode
+@Autonomous(name="SKYLINE: PARK NEAR GOAL", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
+public class Skyline_Autonomous_Park extends OpMode
 {
     // --- Main Robot Object ---
     private Skyline_Robot robot;
@@ -44,7 +44,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
         DRIVING_AWAY_FROM_GOAL,
         ROTATING,
         DRIVING_OFF_LINE,
-        COMPLETE
+        PARK, COMPLETE
     }
     private AutonomousState autonomousState;
 
@@ -60,7 +60,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
         robot = new Skyline_Robot(hardwareMap, telemetry);
 
         // Set the starting state for our autonomous routine
-        autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+        autonomousState = AutonomousState.PARK;
 
         telemetry.addData("Status", "Initialized");
     }
@@ -96,64 +96,14 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
 
         // Run the main autonomous state machine
         switch (autonomousState){
-            case DRIVING_AWAY_FROM_GOAL:
-                // Note: The drive() and rotate() methods would ideally be moved into DriveUtil2026
-                // and be non-blocking. For this example, we assume they exist as before.
-                ;
-                if(drive(DRIVE_SPEED, -28, DistanceUnit.INCH, 1)){
-                    autonomousState = AutonomousState.REQUEST_SHOT;
-                }
-                break;
-            case REQUEST_SHOT:
-                telemetry.addData("REQUEST SHOT", "Shot %d of 3 requested...", (4 - shotsToFire));
+            case PARK:
+                if (alliance == Alliance.RED) {
+                    robot.drive.drive_p3(-12,-6,0,.5);
 
-                // This state runs only ONCE per shot.
-                if (shotsToFire > 0) {
-                    // Tell the robot to begin its launch sequence.
-                    // We only need to send the 'true' command once.
-                    robot.launchSequence(true, LAUNCHER_TARGET_VELOCITY, LAUNCHER_MIN_VELOCITY, FEED_TIME);
-
-                    telemetry.addData("Shooting", "Shot %d of 3 requested...", (4 - shotsToFire));
-
-                    // Immediately move to the waiting state.
-                    autonomousState = AutonomousState.WAIT_FOR_SHOT_COMPLETION;
                 } else {
-                    telemetry.addData("DONE SHOOTING", "Shot %d of 3 requested...", (4 - shotsToFire));
-
-                    // All shots have been fired, move on to driving.
-                    autonomousState = AutonomousState.ROTATING;
+                    robot.drive.drive_p3(-12,6,0,.5);
                 }
-                break;
-
-            case WAIT_FOR_SHOT_COMPLETION:
-                telemetry.addData("WAIT FOR SHOT COMPLETION", "Shot %d of 3 requested...", (4 - shotsToFire));
-
-                // In this state, we continuously "tick" the launch sequence by calling it
-                // with 'false'. It will return 'true' for one cycle when it's done.
-                boolean isShotComplete = robot.launchSequence(false, LAUNCHER_TARGET_VELOCITY, LAUNCHER_MIN_VELOCITY, FEED_TIME);
-
-                if (isShotComplete) {
-                    telemetry.addData("SHOT COMPLETE", "Shot %d of 3 requested...", (4 - shotsToFire));
-
-                    // The shot is finished! Decrement the counter and go back to request the next one.
-                    shotsToFire--;
-                    autonomousState = AutonomousState.REQUEST_SHOT;
-                }
-                // If not complete, we do nothing and just stay in this state, letting the sequence run.
-                break;
-
-
-            case ROTATING:
-                double robotRotationAngle = (alliance == Alliance.RED) ? 30 : -30;
-                if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
-                    autonomousState = AutonomousState.DRIVING_OFF_LINE;
-                }
-                break;
-
-            case DRIVING_OFF_LINE:
-                if(drive(DRIVE_SPEED, 12, DistanceUnit.INCH, 1)){
-                    autonomousState = AutonomousState.COMPLETE;
-                }
+                autonomousState = AutonomousState.COMPLETE;
                 break;
 
             case COMPLETE:

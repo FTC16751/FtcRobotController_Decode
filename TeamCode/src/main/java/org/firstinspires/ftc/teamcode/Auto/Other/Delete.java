@@ -30,9 +30,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.Auto.Skyline;
+package org.firstinspires.ftc.teamcode.Auto.Other;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -62,8 +63,8 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  */
 
 @Autonomous(name="SKYLINE AUTO", group="StarterBot")
-//@Disabled
-public class SkylineAutonomous_Score3Preloads extends OpMode
+@Disabled
+public class Delete extends OpMode
 {
     Skyline_Robot robot;
     final double FEED_TIME = 0.20; //The feeder servos run this long when a shot is requested.
