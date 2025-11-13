@@ -71,8 +71,7 @@ public class Skyline_Robot {
 
             case LAUNCH:
                 // Start the feeders and a timer
-                feeder.setLeftPower(-1.0); // These values seem specific, ensure they are correct
-                feeder.setRightPower(1.0);
+                feeder.setPower(1.0);
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;

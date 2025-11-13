@@ -182,11 +182,9 @@ public class P3Autonomous_JustPark extends OpMode {
                 blueFarState = BlueFarState.PARK;
                 break;
             case PARK:
-//                robot.drive.turnTo(45,0.5,.25);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
-                autonomousState = AutonomousState.COMPLETE;
                 break;
         }
     }

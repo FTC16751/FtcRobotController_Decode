@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
+import static org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil.RED_TAG24_X_M;
+import static org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil.RED_TAG24_Y_M;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
@@ -81,14 +85,14 @@ public class GGRobot {
         flywheelTable.add(30.0, 960.0*1.1);
         flywheelTable.add(40.0, 1010.0*1.05);
         flywheelTable.add(50.0, 1070.0*1.05);
-        flywheelTable.add(60.0, 1130.0*1.00);
-        flywheelTable.add(70.0, 1200.0*1.00);
-        flywheelTable.add(80.0, 1280.0*1.00);
-        flywheelTable.add(100.0, 1390.0*1.00);
-        flywheelTable.add(120.0, 1420.0*1.00);
-        flywheelTable.add(130.0, 1470.0*1.00);
-        flywheelTable.add(140.0, 1500.0*1.00);
-        // Set initial robot hardware states
+        flywheelTable.add(60.0, 1130.0);
+        flywheelTable.add(70.0, 1200.0);
+        flywheelTable.add(80.0, 1280.0);
+        flywheelTable.add(100.0, 1390.0);
+        flywheelTable.add(120.0, 1420.0);
+        flywheelTable.add(130.0, 1470.0);
+        flywheelTable.add(140.0, 1500.0);
+
         drive.resetHeading();
         //stopAll();
     }
@@ -107,7 +111,7 @@ public class GGRobot {
             vision.updateRobotOrientation(drive.getHeading());
 
         }
-        drive.pinpoint.update();
+        if (drive != null) drive.pinpoint.update();
         updateLedStatus();
     }
 
@@ -145,28 +149,9 @@ public class GGRobot {
     }
 
     private void updateLedStatus() {
-        // This is the top-level check: Is the driver trying to shoot?
-        // We infer this by checking if the launcher flywheels are spinning.
-        if (launcher.getLeftMotorVelocity() > 500) {
-            // --- LAUNCHER IS ACTIVE ---
-            // The driver's priority is shooting, so the LED should provide shooting feedback.
-
-            // 1. CHECK IF AN ARTIFACT IS READY TO BE SHOT
-            // We check if either of the two primary feeder slots are occupied.
-            // This assumes your feeders align with the LEFT_2 and RIGHT_2 sensor slots.
-            // Adjust these if your physical robot is different.
-            boolean isLeftFeederReady = intakeSensors.isSlotOccupied(IntakeSensorFusion.IntakeSlot.LEFT_2);
-            boolean isRightFeederReady = intakeSensors.isSlotOccupied(IntakeSensorFusion.IntakeSlot.RIGHT_2);
-
-            if (isLeftFeederReady || isRightFeederReady) {
-                // --- AIMING ASSIST LOGIC ---
-                // An artifact is ready. Now, help the driver aim.
-                // This is the same aiming logic as before.
-                final double AIMING_TOLERANCE_DEG = 2.0;
-
-                if (vision.hasFieldPose()) {
-                    double headingError = vision.getHeadingErrorToRedTag24Deg(); // Or Blue, based on alliance
-
+        if (vision.isTargetVisible()) {
+            double headingError = vision.getTargetAngleX(); // Or Blue, based on alliance
+            final double AIMING_TOLERANCE_DEG = 2.0;
                     if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
                         // AIM IS GOOD AND ARTIFACT IS READY: Solid GREEN
                         led.setColor(LedUtil.Color.GREEN);
@@ -175,41 +160,57 @@ public class GGRobot {
                         led.setColor(LedUtil.Color.BLUE);
                     } else { // headingError > 0
                         // AIM IS RIGHT: Turn left. RED hint.
-                        led.setColor(LedUtil.Color.RED);
+                        led.setColor(LedUtil.Color.YELLOW);
                     }
                 } else {
                     // Vision lock is lost.
                     // We know an artifact is ready, but we can't provide aiming help.
                     // Set a "warning" color like VIOLET.
-                    led.setColor(LedUtil.Color.VIOLET);
-                }
-
-            } else {
-                // --- FEEDER EMPTY WARNING ---
-                // The launcher is spinning, but NO artifact is in position to be shot.
-                // This is the highest priority warning for the driver.
-                // Blink RED to signal "FEEDER EMPTY!"
-                boolean isLedOn = (System.currentTimeMillis() / 250) % 2 == 0; // On/off every 250ms
-                led.setColor(isLedOn ? LedUtil.Color.RED : LedUtil.Color.OFF);
-            }
-
-        } else {
-            // --- LAUNCHER IS IDLE ---
-            // The launcher is off. Use the LED for a general status indicator.
-            setBlinkingColor(LedUtil.Color.RED);
+                    led.setColor(LedUtil.Color.OFF);
         }
+
     }
 
     /**
      * Sets the LED to a specific color, blinking on and off.
      * @param color The color to blink.
      */
-    private void setBlinkingColor(double color) {
+    public void setBlinkingColor(double color) {
         final int BLINK_INTERVAL_MS = 250;
         boolean isLedOn = (System.currentTimeMillis() / BLINK_INTERVAL_MS) % 2 == 0;
         led.setColor(isLedOn ? color : LedUtil.Color.OFF);
     }
 
+    /**
+     * Resets the robot's odometry position based on the vision system's
+     * field-centric pose. This is the core of vision-based localization
+     * and should be called whenever a reliable vision pose is available.
+     */
+    public void resetOdometryToVision() {
+        Pose3D visionPose3D = vision.getRobotPoseFieldSpace();
+        // Only perform the reset if the vision system has a valid field pose.
+        if (visionPose3D != null) {
+            // Get the X, Y, and Heading from VisionUtil.
+            // Get the X, Y, and Heading from the Pose3D object.
+            double visionX_meters = visionPose3D.getPosition().x;
+            double visionY_meters = visionPose3D.getPosition().y;
+            double visionHeading_rad = Math.toDegrees(visionPose3D.getOrientation().getYaw());
+
+            // Create a new Pose2D object with the vision data.
+            Pose2D visionPose2D = new Pose2D(DistanceUnit.METER,
+                    visionX_meters,
+                    visionY_meters,
+                    AngleUnit.RADIANS,
+                    visionHeading_rad
+            );
+
+            // Tell the Pinpoint odometry system to set its current position to this pose.
+            drive.pinpoint.setPosition(visionPose2D);
+
+            telemetry.log().add("ODOMETRY RESET to Vision Pose: ", visionX_meters * 39.3701, visionY_meters * 39.3701,
+                    Math.toDegrees(visionHeading_rad));
+        }
+    }
 
     // =================================================================================
     // METHODS FOR ACTION-BASED AUTONOMOUS
@@ -495,6 +496,22 @@ public class GGRobot {
     public double getDistanceToGoal() {
         // Define the goal's location. This should be a constant.
         Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);
+        Pose2D currPose = drive.pinpoint.getPosition();
+        return drive.distanceTo(currPose, trgtPose, DistanceUnit.INCH);
+    }
+    public double getDistanceToGoalFieldRelative() {
+        // Define the goal's location. This should be a constant.
+        //if alliance is red
+        // 2. Get the current alliance from the shared static variable.
+        GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+
+        // 3. Get the correct heading error from the vision system based on that alliance.
+        Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);;
+        if (currentAlliance == GGRobotConstants.Alliance.RED) {
+               trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.RED_TAG24_X_M, GGRobotConstants.GoalLocation.RED_TAG24_Y_M, AngleUnit.DEGREES,45);
+        } else { // BLUE
+                trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.BLUE_TAG20_X_M, GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M, AngleUnit.DEGREES,45);
+        }
         Pose2D currPose = drive.pinpoint.getPosition();
         return drive.distanceTo(currPose, trgtPose, DistanceUnit.INCH);
     }

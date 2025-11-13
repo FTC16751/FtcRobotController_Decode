@@ -101,7 +101,7 @@ public class RobotConfig {
 
                 /* Pinpoint Config */
                 -0.0,    // Offset X in mm
-                -150.0,  // Offset Y in mm
+                -203,//-150.0,  // Offset Y in mm
                 GoBildaPinpointDriver.EncoderDirection.REVERSED, // X Pod
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
 
@@ -144,29 +144,29 @@ public class RobotConfig {
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP,
                 /* === NEW: Add GG Bot's specific tuning values here === */
-                12.5,      // xyTolerance
-                0.05, // yawToleranceRadians (this is 3 degrees)
+                13,      // xyTolerance
+                0.055, // yawToleranceRadians (this is 3 degrees)
                 0.008,   // pGain
                 0.00003,   // dGain
                 10.0,       // accel
                 5.0,       // yawPGain
                 0.03,       // yawDGain
-                20.0,       // yawAccel
+                10.0,       // yawAccel
                 0.000002 //iGain
         );
     }
     public static RobotConfig createDefaultSkyLineConfig() {
         return new RobotConfig(
                 /* Motor Directions */
-                DcMotorEx.Direction.REVERSE,  // Left Front
-                DcMotorEx.Direction.FORWARD,  // Right Front
-                DcMotorEx.Direction.REVERSE,  // Left Rear
-                DcMotorEx.Direction.FORWARD,   // Right Rear
+                DcMotorEx.Direction.FORWARD,  // Left Front
+                DcMotorEx.Direction.REVERSE,  // Right Front
+                DcMotorEx.Direction.FORWARD,  // Left Rear
+                DcMotorEx.Direction.REVERSE,   // Right Rear
 
                 /* Pinpoint Config */
                 -0.0,    // Offset X in mm
                 -150.0,  // Offset Y in mm
-                GoBildaPinpointDriver.EncoderDirection.REVERSED, // X Pod
+                GoBildaPinpointDriver.EncoderDirection.FORWARD, // X Pod
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
 
                 /* IMU Config */

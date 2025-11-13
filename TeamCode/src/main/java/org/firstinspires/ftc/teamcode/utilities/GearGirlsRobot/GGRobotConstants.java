@@ -20,6 +20,13 @@ public class GGRobotConstants {
         public static final double FULL_SPEED = 1.0;//We send this power to the servos when we want them to stop.
     }
 
+    public static final class GoalLocation {
+        public static final double BLUE_TAG20_X_M = -1.482;
+        public static final double BLUE_TAG20_Y_M = -1.413;
+
+        public static final double RED_TAG24_X_M  = -1.482;
+        public static final double RED_TAG24_Y_M  =  1.413;
+    }
     public static final class Launcher {
         public static final double CLOSE_TARGET_VELOCITY = 1200; //in ticks/second for the close goal.
         public static final double CLOSE_MIN_VELOCITY = 1175;//minimum required to start a shot for close goal.

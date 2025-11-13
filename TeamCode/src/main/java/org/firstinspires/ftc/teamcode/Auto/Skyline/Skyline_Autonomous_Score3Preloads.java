@@ -27,9 +27,9 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
 
     // --- Autonomous Constants ---
     // Constants for THIS specific path.
-    private static final double LAUNCHER_TARGET_VELOCITY = 1125;
-    private static final double LAUNCHER_MIN_VELOCITY = 1075;
-    private static final double FEED_TIME = 0.25; // Adjusted feed time
+    private static final double LAUNCHER_TARGET_VELOCITY = 1400;
+    private static final double LAUNCHER_MIN_VELOCITY = LAUNCHER_TARGET_VELOCITY-25;
+    private static final double FEED_TIME = .25; // Adjusted feed time
     private static final double DRIVE_SPEED = 0.5;
     private static final double ROTATE_SPEED = 0.2;
 
@@ -96,7 +96,17 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
 
         // Run the main autonomous state machine
         switch (autonomousState){
+            case DRIVING_AWAY_FROM_GOAL:
+                // Note: The drive() and rotate() methods would ideally be moved into DriveUtil2026
+                // and be non-blocking. For this example, we assume they exist as before.
+                ;
+                if(drive(DRIVE_SPEED, -36, DistanceUnit.INCH, 1)){
+                    autonomousState = AutonomousState.REQUEST_SHOT;
+                }
+                break;
             case REQUEST_SHOT:
+                telemetry.addData("REQUEST SHOT", "Shot %d of 3 requested...", (4 - shotsToFire));
+
                 // This state runs only ONCE per shot.
                 if (shotsToFire > 0) {
                     // Tell the robot to begin its launch sequence.
@@ -108,31 +118,30 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
                     // Immediately move to the waiting state.
                     autonomousState = AutonomousState.WAIT_FOR_SHOT_COMPLETION;
                 } else {
+                    telemetry.addData("DONE SHOOTING", "Shot %d of 3 requested...", (4 - shotsToFire));
+
                     // All shots have been fired, move on to driving.
-                    autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+                    autonomousState = AutonomousState.ROTATING;
                 }
                 break;
 
             case WAIT_FOR_SHOT_COMPLETION:
+                telemetry.addData("WAIT FOR SHOT COMPLETION", "Shot %d of 3 requested...", (4 - shotsToFire));
+
                 // In this state, we continuously "tick" the launch sequence by calling it
                 // with 'false'. It will return 'true' for one cycle when it's done.
                 boolean isShotComplete = robot.launchSequence(false, LAUNCHER_TARGET_VELOCITY, LAUNCHER_MIN_VELOCITY, FEED_TIME);
 
                 if (isShotComplete) {
+                    telemetry.addData("SHOT COMPLETE", "Shot %d of 3 requested...", (4 - shotsToFire));
+
                     // The shot is finished! Decrement the counter and go back to request the next one.
                     shotsToFire--;
                     autonomousState = AutonomousState.REQUEST_SHOT;
                 }
                 // If not complete, we do nothing and just stay in this state, letting the sequence run.
                 break;
-            case DRIVING_AWAY_FROM_GOAL:
-                // Note: The drive() and rotate() methods would ideally be moved into DriveUtil2026
-                // and be non-blocking. For this example, we assume they exist as before.
-                ;
-                if(drive(DRIVE_SPEED, -4, DistanceUnit.INCH, 1)){
-                    autonomousState = AutonomousState.ROTATING;
-                }
-                break;
+
 
             case ROTATING:
                 double robotRotationAngle = (alliance == Alliance.RED) ? 45 : -45;
@@ -142,7 +151,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
                 break;
 
             case DRIVING_OFF_LINE:
-                if(drive(DRIVE_SPEED, -26, DistanceUnit.INCH, 1)){
+                if(drive(DRIVE_SPEED, -12, DistanceUnit.INCH, 1)){
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -162,7 +171,9 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
      */
     @Override
     public void stop() {
+
         robot.stopAll();
+        requestOpModeStop();
     }
 
     // These drive methods are still here for now, but should ideally be moved

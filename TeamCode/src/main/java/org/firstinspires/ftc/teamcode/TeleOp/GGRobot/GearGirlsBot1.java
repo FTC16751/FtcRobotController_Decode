@@ -100,6 +100,13 @@ public class GearGirlsBot1 extends OpMode {
     private double prevSmoothedTurn = 0.0;
 
     private final ElapsedTime loopTimer = new ElapsedTime(); // Timer to measure loop time
+    // --- NEW: Constants for the Simple TX Auto-Align ---
+    // This gain determines how aggressively the robot turns to correct its aim.
+    // Start with a small value and tune it for your robot's weight and drivetrain.
+    private static final double TX_ALIGN_KP = 0.04; // Proportional gain for tx alignment.
+
+    // A deadband to prevent the robot from "buzzing" or oscillating when it's very close to the target.
+    private static final double TX_ALIGN_TOLERANCE_DEG = 1.0; // The 1-degree tolerance you requested.
 
 
     /**
@@ -179,6 +186,7 @@ public class GearGirlsBot1 extends OpMode {
         handleDiverterControls();
         handleIntakeControls();
         handleLauncherControls();
+        handleCopilotControls();
         displayTelemetry();
     }
 
@@ -200,9 +208,37 @@ public class GearGirlsBot1 extends OpMode {
         double strafeInput = gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
         boolean isAutoAiming = gamepad2.left_bumper && robot.vision.hasFieldPose();
-
+// --- NEW: TX-BASED AUTO-ALIGN LOGIC ---
+        boolean isSnappingToTarget = gamepad2.dpad_up && robot.vision.isTargetVisible();
+        // ------------------------------------
+        // --- THIS IS THE ONLY CHANGE NEEDED ---
+        // Instead of checking for a single press (wasPressed), we check if the button
+        // is currently HELD DOWN on every loop cycle.
+        boolean isAimLockedOnTarget = gamepad2.dpad_up && robot.vision.isTargetVisible();
+        // ------------------------------------
         if (isAutoAiming) {
             turnInput = robot.calculateAutoAimTurnPower();
+        } else if (isSnappingToTarget) {
+            // --- NEW: EXECUTE THE SNAP-TO-TARGET LOGIC ---
+            // A simpler, camera-relative auto-aim using just the 'tx' value.
+
+            // 1. Get the error directly from the vision subsystem.
+            double txError = robot.vision.getTargetAngleX();
+
+            // 2. Check if we are already within our tolerance.
+            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                // We are aimed correctly, so don't turn.
+                turnInput = 0.0;
+            } else {
+                // 3. We are not aimed. Calculate the turn power using the P-controller.
+                // The negative sign is often needed because a positive tx (target is to the right)
+                // might require a negative (counter-clockwise) turn power depending on your robot's setup.
+                // Tune this by observing your robot's behavior. If it turns away from the target, remove the negative sign.
+                turnInput = TX_ALIGN_KP * txError;
+            }
+            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
+            // --- END OF NEW LOGIC ---
+
         } else {
             // normal right-stick turning
             turnInput = gamepad1.right_stick_x;
@@ -391,16 +427,33 @@ public class GearGirlsBot1 extends OpMode {
 
     }
 
-    /**
-     * Displays critical robot data on the driver station's telemetry screen.
-     * This method is called repeatedly during the main loop to provide real-time feedback
-     * to the drivers. It shows the current state of the launcher state machine, the selected
-     * launch distance (close or far), the target velocity for the launcher motors, and the
-     * actual current velocity of both the left and right launcher motors. This information
-     * is crucial for debugging and monitoring the robot's performance during a match.
-     */
+    private void handleCopilotControls() {
+        // --- 1. Manual Alliance Override ---
+        if (gamepad2.x) { // Using 'x' for Blue
+            // Only update if the alliance has actually changed to avoid spamming the logs.
+            if (SharedState.alliance != GGRobotConstants.Alliance.BLUE) {
+                SharedState.alliance = GGRobotConstants.Alliance.BLUE;
+                robot.configureVisionForTeleOp(SharedState.alliance);
+                telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to BLUE");
+            }
+        }
+
+        if (gamepad2.b) { // Using 'b' for Red
+            if (SharedState.alliance != GGRobotConstants.Alliance.RED) {
+                SharedState.alliance = GGRobotConstants.Alliance.RED;
+                robot.configureVisionForTeleOp(SharedState.alliance);
+                telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to RED");
+            }
+        }
+
+        if(gamepad2.start) {
+            robot.resetOdometryToVision();
+            telemetry.addLine("CO-PILOT OVERRIDE: resetOdometryToVision");
+        }
+    }
     private void displayTelemetry() {
-        telemetry.addLine();
+        telemetry.addLine("--- Drive ---");
+        robot.drive.addTelemetry();
         telemetry.addLine("--- Launcher ---");
         telemetry.addData("Launcher State", launcherSystemState);
         telemetry.addData("TARGETING MODE", targetingMode)
@@ -413,6 +466,8 @@ public class GearGirlsBot1 extends OpMode {
 
         telemetry.addLine("--- Flywheels ---");
         telemetry.addData("Odometry Distance to Goal ", robot.getDistanceToGoal());
+        telemetry.addData("Odometry Distance to Goal FIELD RELATIVE ", robot.getDistanceToGoalFieldRelative());
+
         telemetry.addData("Target Velocity", "%.0f RPM", finalTargetVelocity);
         telemetry.addData("Left Velocity", "%.2f", robot.launcher.getLeftMotorVelocity());
         telemetry.addData("Right Velocity", "%.2f", robot.launcher.getRightMotorVelocity());

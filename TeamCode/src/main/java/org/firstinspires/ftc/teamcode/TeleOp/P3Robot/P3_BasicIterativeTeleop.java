@@ -120,10 +120,10 @@ public class P3_BasicIterativeTeleop extends OpMode
         doDriveControls();
         handleIntakeControls();
         handleLauncherControls();
-        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
-        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
-        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+//        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+//        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+//        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
         telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
@@ -137,7 +137,7 @@ public class P3_BasicIterativeTeleop extends OpMode
     }
     private void doDriveControls() {
 // Use scaled inputs for driving
-        robot.drive.arcadeDrive(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.right_stick_y, 1.0);
+        robot.drive.arcadeDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.right_stick_y, 1.0);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
@@ -183,7 +183,7 @@ public class P3_BasicIterativeTeleop extends OpMode
             robot.launcher.setStopPosition();
         }
         if (gamepad1.yWasPressed()) {
-            robot.launcher.setShooterMotorVelocity(1200);
+            robot.launcher.setShooterMotorVelocity(1100);
             // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
         if (gamepad1.xWasPressed()) {

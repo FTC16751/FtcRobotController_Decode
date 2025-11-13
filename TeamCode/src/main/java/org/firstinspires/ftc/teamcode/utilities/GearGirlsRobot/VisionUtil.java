@@ -39,6 +39,7 @@ public class VisionUtil {
     private double lastTx = 0.0; // Horizontal angle
     private LLResult lastValidResult = null;
 
+
     public enum MotifPattern {
         GPP21, PGP22, PPG23, UNKNOWN
     }
@@ -51,7 +52,11 @@ public class VisionUtil {
     private double fieldY_m = 0.0;
     private double  fieldZ_m = 0.0;
     private double fieldHeadingRad = 0.0;   // yaw
-
+    private double x_meters_rpfs;
+    private double z_meters_rpfs;
+    private double y_meters_rpfs;
+    private double yaw_rpfs;
+    private double lastTagDistanceMeters_rpfs;
     private static double normalizeRad(double a) {
         while (a > Math.PI)  a -= 2.0 * Math.PI;
         while (a < -Math.PI) a += 2.0 * Math.PI;
@@ -63,6 +68,7 @@ public class VisionUtil {
     public static final double RED_TAG24_X_M  = -1.482;
     public static final double RED_TAG24_Y_M  =  1.413;
     Pose3D botposeMT2;
+    private Pose3D robotPoseInFieldSpace = null;
     private static final int MOTIF_PIPELINE = 0;
     private static final int RED_AIM_PIPELINE = 1;
     private static final int BLUE_AIM_PIPELINE = 2;
@@ -115,6 +121,7 @@ public class VisionUtil {
         List<LLResultTypes.FiducialResult> tags = currentResult.getFiducialResults();
         if (tags == null || tags.isEmpty()) {
             resetTracking();
+            this.robotPoseInFieldSpace = null;
             return;
         }
 
@@ -132,6 +139,16 @@ public class VisionUtil {
         z_meters = robotPoseInTagSpace.getPosition().z; // Forward/backward distance from tag
         y_meters = robotPoseInTagSpace.getPosition().y;
         this.lastTagDistanceMeters = Math.hypot(x_meters, z_meters);
+
+        // --- Robot Post Field Space Data ---
+        // Calculate horizontal distance from the robot's pose in the tag's reference frame.
+        this.robotPoseInFieldSpace = primaryTag.getRobotPoseFieldSpace();
+        x_meters_rpfs = this.robotPoseInFieldSpace.getPosition().x; // Side-to-side distance from tag center (rpfs = robot pose field space)
+        z_meters_rpfs = this.robotPoseInFieldSpace.getPosition().z;
+        y_meters_rpfs = this.robotPoseInFieldSpace.getPosition().y;
+        yaw_rpfs = this.robotPoseInFieldSpace.getOrientation().getYaw();
+        this.lastTagDistanceMeters_rpfs = Math.hypot(x_meters_rpfs, z_meters_rpfs);
+        // --- Robot Post Field Space Data ---
 
         // --- FIELD POSE FROM MEGATAG2 ---
         botposeMT2 = currentResult.getBotpose_MT2();
@@ -269,6 +286,10 @@ public class VisionUtil {
         return botposeMT2;
     }
 
+    public Pose3D getRobotPoseFieldSpace() {
+        return this.robotPoseInFieldSpace;
+    }
+
     /**
      * Gets the ID of the primary detected AprilTag.
      * @return The tag ID, or -1 if no target is visible.
@@ -323,6 +344,9 @@ public class VisionUtil {
         if (isTargetVisible) {
             telemetry.addData("LL Status", "Target Visible");
             telemetry.addData("LL Tag ID", lastTagId);
+            telemetry.addData("LL PoseTag X ", x_meters*39.3701);
+            telemetry.addData("LL PoseTag Y ", y_meters*39.3701);
+            telemetry.addData("LL PoseTag Z ", z_meters*39.3701);
             telemetry.addData("LL Distance (in)", "%.1f", getDistanceToTagInches());
             telemetry.addData("LL Angle (tx)", "%.2f", lastTx);
         } else {
@@ -333,8 +357,16 @@ public class VisionUtil {
         telemetry.addData("fieldX_m ", fieldX_m);
         telemetry.addData("fieldY_m ", fieldY_m);
         telemetry.addData("fieldZ_m ", fieldZ_m);
-
         telemetry.addData("fieldHeading ",Math.toDegrees(fieldHeadingRad));   // yaw
+
+        telemetry.addLine("--- Limelight Vision RPFS Data---");
+        telemetry.addData("x_meters_rpfs (in) ", x_meters_rpfs*39.3701);
+        telemetry.addData("z_meters_rpfs (in) ", z_meters_rpfs*39.3701);
+        telemetry.addData("y_meters_rpfs (in) ", y_meters_rpfs*39.3701);
+        telemetry.addData("yaw_rpfs ", yaw_rpfs);
+        telemetry.addData("lastTagDistanceMeters_rpfs ", lastTagDistanceMeters_rpfs*39.3701);
+
+
     }
     public boolean hasFieldPose() {
         return hasFieldPose;

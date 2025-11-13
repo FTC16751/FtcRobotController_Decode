@@ -137,9 +137,9 @@ public class Skyline_Teleop extends OpMode {
     private void handleDriveControls() {
         // Arcade drive with inverted Y and X for standard control
         robot.drive.arcadeDrive(
-                -gamepad1.left_stick_y, // Forward/Backward
                 gamepad1.left_stick_x,  // Strafing
-                gamepad1.right_stick_x, // Turning
+                -gamepad1.left_stick_y, // Forward/Backward
+                -gamepad1.right_stick_x, // Turning
                 0, // Unused parameter
                 DRIVE_SPEED
         );

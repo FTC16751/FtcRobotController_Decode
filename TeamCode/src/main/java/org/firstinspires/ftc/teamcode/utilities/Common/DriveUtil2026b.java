@@ -375,6 +375,14 @@ public class DriveUtil2026b {
         driveDistance  = ((deltaLeftFront + deltaRightFront + deltaLeftBack + deltaRightBack ) / 4) * AXIAL_INCHES_PER_COUNT;
         strafeDistance = ((-deltaLeftFront + deltaRightFront + deltaLeftBack - deltaRightBack) / 4) * LATERAL_INCHES_PER_COUNT;
     }
+
+    public void addTelemetry() {
+        telemetry.addLine("--- drive telemetry ---");
+        telemetry.addData("current X coordinate", pinpoint.getPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", pinpoint.getPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", pinpoint.getPosition().getHeading(AngleUnit.DEGREES));
+
+    }
     /**** CONVERSION METHODS *********/
 
     /**

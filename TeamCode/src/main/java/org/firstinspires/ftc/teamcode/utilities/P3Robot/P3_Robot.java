@@ -150,11 +150,8 @@ public class P3_Robot {
 
                 // Continuously command the velocity to ensure it gets there.
                 launcher.setShooterMotorVelocity(targetVelocity);
-
-                // Check if the flywheels are at the required speed (e.g., 98% of target).
                 if (launcher.getShooterMotorVelocity() >= targetVelocity * 0.98) {
-                    // Ready to feed. Start the feeder/indexer and open the stopper.
-                    launcher.setIndexerServoPower(-1.0); // As per your TeleOp example
+                    launcher.setIndexerServoPower(-1.0);
                     launcher.setShootingPosition();
 
                     launchTimer.reset(); // Start the timer for the feeding duration.
@@ -168,7 +165,7 @@ public class P3_Robot {
                 // The feeder runs for a specific amount of time.
                 if (launchTimer.seconds() > FEED_TIME_SECONDS) {
                     launcher.setIndexerServoPower(0.0);
-                    launcher.setStopPosition();
+                    //launcher.setStopPosition();
 
                     launchTimer.reset(); // Start the timer for the cooldown period.
                     launchState = LaunchState.COOLDOWN;

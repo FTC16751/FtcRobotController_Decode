@@ -250,7 +250,11 @@ public class SkylineAutonomous_Score3Preloads extends OpMode
     public void loop() {
 
         switch (autonomousState){
-
+            case DRIVING_AWAY_FROM_GOAL:
+                if(drive(DRIVE_SPEED, -4, DistanceUnit.INCH, 1)){
+                    autonomousState = AutonomousState.LAUNCH;
+                }
+                break;
             case LAUNCH:
                 launch(true);
                 autonomousState = AutonomousState.WAIT_FOR_LAUNCH;
@@ -264,14 +268,8 @@ public class SkylineAutonomous_Score3Preloads extends OpMode
                         autonomousState = AutonomousState.LAUNCH;
                     } else {
                         launcher.setVelocity(0);
-                        autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+                        autonomousState = AutonomousState.ROTATING;
                     }
-                }
-                break;
-
-            case DRIVING_AWAY_FROM_GOAL:
-                 if(drive(DRIVE_SPEED, -4, DistanceUnit.INCH, 1)){
-                    autonomousState = AutonomousState.ROTATING;
                 }
                 break;
 

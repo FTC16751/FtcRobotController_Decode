@@ -40,29 +40,19 @@ public class P3_CoachesTeleop extends OpMode
     // This constant defines how much the motor power can change per second.
     // A value of 3.0 means it takes 1/3 of a second to go from 0% to 100% power.
     // Smaller values = smoother/slower ramp. Larger values = more responsive.
-    private static final double SLEW_RATE_LIMIT = 4.0; // Units: Power per Second
+    private static final double SLEW_RATE_LIMIT = 5.0; // Units: Power per Second
 
     // Variables to store the previous loop's power commands
     private double prevSmoothedDrive = 0.0;
     private double prevSmoothedStrafe = 0.0;
     private double prevSmoothedTurn = 0.0;
     private final ElapsedTime loopTimer = new ElapsedTime(); // Timer to measure loop time
-    private Follower follower;
-    double driveCoefficient = 1.0;
-    private Drivetrain dt;
-    private boolean isAutoOrienting;
+
     @Override
     public void init() {
         robot = new P3_Robot(hardwareMap,telemetry);
 
-        Pose startingPose = new Pose(9,9,0);
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose);
-        follower.update();
 
-        dt = new Drivetrain(gamepad1, follower, startingPose);
-        driveCoefficient = 0.5;
-        isAutoOrienting = false;
         telemetry.addData("Status", "Initialized P3 Robot");
     }
 
@@ -76,7 +66,6 @@ public class P3_CoachesTeleop extends OpMode
 
     @Override
     public void start() {
-        follower.startTeleopDrive(true);
         runtime.reset();
     }
 
@@ -97,15 +86,15 @@ public class P3_CoachesTeleop extends OpMode
     }
 
     private void doTelemetry() {
-        telemetry.addData("targetVelocityForDistance", targetVelocityForDistance);
+//        telemetry.addData("targetVelocityForDistance", targetVelocityForDistance);
         telemetry.addData("distanceToTagMeters", robot.vision.getDistanceToTagMeters());
         telemetry.addData("distanceToTagInces", robot.vision.getDistanceToTagMeters()*39.3701);
-        telemetry.addData("distanceToTagInches", calcShooterVelocity());
+//        telemetry.addData("distanceToTagInches", calcShooterVelocity());
         telemetry.addData("calculated velocity: ", robot.getFlywheelRpmForDistance((robot.vision.getDistanceToTagMeters()*39.3701)));
-        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
-        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
-        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+//        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+//        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+//        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
         telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
@@ -125,23 +114,21 @@ public class P3_CoachesTeleop extends OpMode
         double driveInput = gamepad1.left_stick_y;
         double strafeInput = -gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
-        //robot.drive.arcadeDrive(strafeInput, driveInput, -turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
-                // --- 2. Apply Deadband ---
+        // --- Apply Deadband ---
         // If the raw input is less than the deadband, treat it as zero.
         double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
         double deadbandedStrafe = Math.abs(strafeInput) > JOYSTICK_DEADBAND ? strafeInput : 0.0;
         double deadbandedTurn = Math.abs(turnInput) > JOYSTICK_DEADBAND ? turnInput : 0.0;
 
-        // --- 3. Apply Scaling Curve (Cubic) for Smoothing ---
+        // --- Apply Scaling Curve (Cubic) for Smoothing ---
         // Cubing the input provides finer control at low speeds.
-        double smoothedDrive = Math.pow(deadbandedDrive, 3);
-        double smoothedStrafe = Math.pow(deadbandedStrafe, 5);
-        double smoothedTurn = Math.pow(deadbandedTurn, 5);
+        double smoothedDrive = Math.pow(deadbandedDrive, 2);
+        double smoothedStrafe = Math.pow(deadbandedStrafe,2);
+        double smoothedTurn = Math.pow(deadbandedTurn, 2);
 
-        // =========================================================================
-        // --- 4. NEW: Apply Slew Rate Limiter for Dampening ---
-        // =========================================================================
+
+        // --- Apply Slew Rate Limiter for Dampening ---
         // Get the time elapsed since the last loop, in seconds.
         double loopTime = loopTimer.seconds();
         loopTimer.reset(); // Reset the timer for the next loop
@@ -159,13 +146,13 @@ public class P3_CoachesTeleop extends OpMode
         prevSmoothedDrive = smoothedDrive;
         prevSmoothedStrafe = smoothedStrafe;
         prevSmoothedTurn = smoothedTurn;
-        // =========================================================================
 
-        //robot.drive.arcadeDrive(smoothedStrafe, smoothedDrive, smoothedTurn, 0, 1.0);
-        robot.drive.fieldCentricDrive(smoothedStrafe, smoothedDrive, -smoothedTurn, 1.0);
+
+        robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        //robot.drive.fieldCentricDrive(smoothedStrafe, smoothedDrive, -smoothedTurn, 1.0);
         // Add telemetry to see the effect
-        telemetry.addData("Raw Drive", "%.2f", driveInput);
-        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
+//        telemetry.addData("Raw Drive", "%.2f", driveInput);
+//        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
     }
 
     private void handleIntakeControls() {
