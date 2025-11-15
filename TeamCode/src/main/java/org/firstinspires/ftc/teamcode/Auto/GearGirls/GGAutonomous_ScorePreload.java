@@ -215,6 +215,7 @@ public class GGAutonomous_ScorePreload extends OpMode {
                 break;
 
             case SHOOT_SEQUENCE:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.5, 0.25);
                 if (!robot.feeder.isBusy()) {
                     if (shotsFired < 3) {
                         LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);

@@ -30,7 +30,7 @@ public class GGRobotConstants {
     public static final class Launcher {
         public static final double CLOSE_TARGET_VELOCITY = 1200; //in ticks/second for the close goal.
         public static final double CLOSE_MIN_VELOCITY = 1175;//minimum required to start a shot for close goal.
-        public static final double FAR_TARGET_VELOCITY = 1450; //Target velocity for far goal
+        public static final double FAR_TARGET_VELOCITY = 1425; //Target velocity for far goal
         public static final double FAR_MIN_VELOCITY = 1325;//minimum required to start a shot for far goal
         public static final double AUTO_TARGET_VELOCITY = 1000; //in ticks/second for the close goal.
         public static final double AUTO_MIN_VELOCITY = AUTO_TARGET_VELOCITY-25;//minimum required to start a shot for close goal.
@@ -88,7 +88,7 @@ public class GGRobotConstants {
         /* Red Alliance Poses */
         public static final Pose2D RED_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-13.7, 17, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,10, 15.6, AngleUnit.DEGREES,-45);
-        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-21);
+        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-24);
         public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,20, 8.8, AngleUnit.DEGREES,0);
 
         /* Blue Alliance Poses */

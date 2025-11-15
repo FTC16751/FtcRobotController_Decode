@@ -71,7 +71,7 @@ public class P3_BasicIterativeTeleop extends OpMode
         RED,
         BLUE
     }
-
+    private double requestedMotorVelocity = 1200;
 
 
     // TODO: set this at init
@@ -127,6 +127,8 @@ public class P3_BasicIterativeTeleop extends OpMode
         telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+        telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
+        telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
     }
 
     /*
@@ -182,12 +184,27 @@ public class P3_BasicIterativeTeleop extends OpMode
             robot.launcher.setIndexerServoPower(0.0);
             robot.launcher.setStopPosition();
         }
+
         if (gamepad1.yWasPressed()) {
-            robot.launcher.setShooterMotorVelocity(1100);
+            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
             // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
         if (gamepad1.xWasPressed()) {
             robot.launcher.setShooterMotorVelocity(0);
+        }
+
+        if (gamepad1.dpadUpWasPressed()) {
+            requestedMotorVelocity = requestedMotorVelocity+100;
+            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+
+        } else if (gamepad1.dpadDownWasPressed()){
+            requestedMotorVelocity = requestedMotorVelocity-100;
+            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+
+        } else if (gamepad1.startWasPressed()){
+            requestedMotorVelocity = 1200;
+            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+
         }
     }
 }
