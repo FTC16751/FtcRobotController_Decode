@@ -89,7 +89,7 @@ public class GGRobotConstants {
         public static final Pose2D RED_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-13.7, 17, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,10, 15.6, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-24);
-        public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,20, 8.8, AngleUnit.DEGREES,0);
+        public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,24, 8.8, AngleUnit.DEGREES,0);
 
         /* Blue Alliance Poses */
         public static final Pose2D BLUE_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-12, -16.4, AngleUnit.DEGREES,45);
