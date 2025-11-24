@@ -8,6 +8,8 @@ import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
+
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
 /**
@@ -23,6 +25,7 @@ public class P3_Robot {
     public final P3_LauncherUtil launcher;
     public final LimeLightVisionUtil vision;
     public final Telemetry telemetry;
+    public final IMU imu;
     private InterpolatingLookupTable flywheelTable;
 
     private enum LaunchState {
@@ -54,6 +57,7 @@ public class P3_Robot {
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
         vision = new LimeLightVisionUtil(hardwareMap, telemetry);
+        imu = hardwareMap.get(IMU.class, "imu");
 
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 1000.0);

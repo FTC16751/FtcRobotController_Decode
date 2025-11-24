@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: Just Park", group="P3Bot")
+@Autonomous(name="P3 AUTO: Just Park", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_JustPark extends OpMode {
 
     // --- Subsystems ---

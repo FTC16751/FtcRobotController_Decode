@@ -73,8 +73,8 @@ public class P3RobotConstants {
         public static final Pose2D START_RED_CLOSE = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
         public static final Pose2D RED_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-26, 36, AngleUnit.DEGREES,-50);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,0, 24, AngleUnit.DEGREES,0);
-        public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-39, 19, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,-38, -3.1, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-39, 24, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,-38, -3.4, AngleUnit.DEGREES,90);
 
         // ---- FAR FROM GOAL START ----//
         public static final Pose2D START_RED_FAR = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
@@ -100,7 +100,7 @@ public class P3RobotConstants {
 
         // -- SPIKE MARK LOCATIONS -- //
         public static final Pose2D BLUE_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-39, -24, AngleUnit.DEGREES,-90);
-        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,-38, 1, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,-38, 3.4, AngleUnit.DEGREES,-90);
         public static final Pose2D BLUE_CLOSE_SPIKEMARK1_BALL1 = new Pose2D(DistanceUnit.INCH,-30, -19.5, AngleUnit.DEGREES,90);
         public static final Pose2D BLUE_CLOSE_SPIKEMARK1_BALL2 = new Pose2D(DistanceUnit.INCH,-30, -14, AngleUnit.DEGREES,90);
 

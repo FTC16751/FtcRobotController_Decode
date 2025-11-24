@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: init paths", group="P3Bot")
+@Autonomous(name="P3 AUTO: Score Preloads", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_Score3Preloads extends OpMode {
 
     // --- Subsystems ---
@@ -68,9 +68,9 @@ public class P3Autonomous_Score3Preloads extends OpMode {
         telemetry.addData("Alliance", "%s (X=Blue, B=Red)", alliance);
         telemetry.addData("Location", "%s (Y=Close, A=Far)", location);
         telemetry.addLine("Ready to Start!");
-        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+//        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+//        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
         telemetry.update();
     }
 
@@ -119,13 +119,13 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 break;
         }
         //robot.addTelemetry();
-        telemetry.addData("imu heading: ", robot.drive.heading);
-        telemetry.addData("Path State Complete", blueCloseState);
-        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
-        telemetry.addData("shooter velocity: ", robot.launcher.getShooterMotorVelocity());
-        telemetry.update();
+//        telemetry.addData("imu heading: ", robot.drive.heading);
+//        telemetry.addData("Path State Complete", blueCloseState);
+//        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+//        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+//        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("shooter velocity: ", robot.launcher.getShooterMotorVelocity());
+//        telemetry.update();
     }
 
     @Override
@@ -154,7 +154,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 break;
             case START_SHOOTING:
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.35, 0.25);
-                autoTargetVelocity = 1280;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
+                autoTargetVelocity = 1300;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
                 driveTimer.reset();
                 redCloseState = RedCloseState.SHOOTING;

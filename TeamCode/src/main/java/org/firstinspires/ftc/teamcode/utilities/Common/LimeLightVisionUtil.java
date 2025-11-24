@@ -20,6 +20,7 @@ public class LimeLightVisionUtil {
 
     private double lastTagDistanceMeters = -1.0;
     private int lastTagId = -1;
+    private double lastTx = 0.0; // Horizontal angle
     private boolean isTargetVisible = false;
 
     public LimeLightVisionUtil(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -69,6 +70,7 @@ public class LimeLightVisionUtil {
 
         this.lastTagId = tag.getFiducialId();
         this.lastTagDistanceMeters = Math.hypot(x, z);
+        this.lastTx = result.getTx();
         addTelemetry();
     }
 
@@ -101,6 +103,9 @@ public class LimeLightVisionUtil {
     public double getDistanceToTagMeters() {
         return lastTagDistanceMeters;
     }
+public double getTagAngle() {
+        return lastTx;
+}
 
     private void resetTracking() {
         this.lastTagId = -1;
