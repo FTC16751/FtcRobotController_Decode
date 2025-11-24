@@ -165,6 +165,7 @@ public class GGAutonomous_ScorePreload extends OpMode {
                 break;
 
             case SHOOT_SEQUENCE:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.5, 0.25);
                 // This state handles firing all three pre-loaded artifacts.
                 // We keep the launcher spinning throughout the sequence.
                 robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
