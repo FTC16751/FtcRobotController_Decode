@@ -8,7 +8,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.Collections;
@@ -40,17 +39,27 @@ public class VisionUtil {
     private LLResult lastValidResult = null;
 
 
+
     public enum MotifPattern {
         GPP21, PGP22, PPG23, UNKNOWN
     }
+    // --- Pose Data ---
+// Use Pose3D objects to store different coordinate system poses
+    private Pose3D robotPoseInTagSpace;    // Robot's pose relative to the primary tag
+    private Pose3D robotPoseInFieldSpace;  // Robot's pose on the field (from a single tag)
+    private Pose3D botposeMT2;             // Robot's pose on the field (from MegaTag2)
+
     double x_meters ;
     double z_meters ;
     double y_meters;
+    private double yaw_degrees;
+
     // --- MegaTag2 field pose state ---
     private boolean hasFieldPose = false;
-    private double fieldX_m = 0.0;
-    private double fieldY_m = 0.0;
-    private double  fieldZ_m = 0.0;
+    private double fieldX_meters_mt2 = 0.0;
+    private double fieldY_meters_mt2 = 0.0;
+    private double fieldZ_meters_mt2 = 0.0;
+    private double fieldHeading_rad_mt2;
     private double fieldHeadingRad = 0.0;   // yaw
     private double x_meters_rpfs;
     private double z_meters_rpfs;
@@ -67,8 +76,7 @@ public class VisionUtil {
 
     public static final double RED_TAG24_X_M  = -1.482;
     public static final double RED_TAG24_Y_M  =  1.413;
-    Pose3D botposeMT2;
-    private Pose3D robotPoseInFieldSpace = null;
+
     private static final int MOTIF_PIPELINE = 0;
     private static final int RED_AIM_PIPELINE = 1;
     private static final int BLUE_AIM_PIPELINE = 2;
@@ -99,7 +107,7 @@ public class VisionUtil {
 
         // Calculate horizontal distance from the robot's pose in the tag's reference frame.
         telemetry.addData("LL PoseTag (x,y,z m)", "%.2f, %.2f, %.2f", x_meters, y_meters, z_meters);
-        //telemetry.addData("Debug lastTx", lastTx);
+        telemetry.addData("Debug lastTx", lastTx);
         if (limelight == null) {
             resetTracking();
             return;
@@ -116,6 +124,7 @@ public class VisionUtil {
         // We have a valid packet, so store it.
         this.lastValidResult = currentResult;
         this.lastTx = currentResult.getTx();
+
 
         // 2. Check if the valid packet contains any AprilTags
         List<LLResultTypes.FiducialResult> tags = currentResult.getFiducialResults();
@@ -134,10 +143,11 @@ public class VisionUtil {
         this.lastTagId = primaryTag.getFiducialId();
 
         // Calculate horizontal distance from the robot's pose in the tag's reference frame.
-        Pose3D robotPoseInTagSpace = primaryTag.getRobotPoseTargetSpace();
+        this.robotPoseInTagSpace = primaryTag.getRobotPoseTargetSpace();
         x_meters = robotPoseInTagSpace.getPosition().x; // Side-to-side distance from tag center
         z_meters = robotPoseInTagSpace.getPosition().z; // Forward/backward distance from tag
         y_meters = robotPoseInTagSpace.getPosition().y;
+        yaw_degrees = robotPoseInTagSpace.getOrientation().getYaw();
         this.lastTagDistanceMeters = Math.hypot(x_meters, z_meters);
 
         // --- Robot Post Field Space Data ---
@@ -153,10 +163,10 @@ public class VisionUtil {
         // --- FIELD POSE FROM MEGATAG2 ---
         botposeMT2 = currentResult.getBotpose_MT2();
         if (botposeMT2 != null) {
-            fieldX_m = botposeMT2.getPosition().x;                 // meters
-            fieldY_m = botposeMT2.getPosition().y;                 // meters
-            fieldZ_m = botposeMT2.getPosition().z;
-            //fieldHeadingRad = botposeMT2.getOrientation().getYaw(); // radians
+            fieldX_meters_mt2 = botposeMT2.getPosition().x;                 // meters
+            fieldY_meters_mt2 = botposeMT2.getPosition().y;                 // meters
+            fieldZ_meters_mt2 = botposeMT2.getPosition().z;
+            fieldHeading_rad_mt2 = botposeMT2.getOrientation().getYaw(); // radians
             hasFieldPose = true;
         } else {
             hasFieldPose = false;
@@ -224,7 +234,7 @@ public class VisionUtil {
     /**
      * Gets the list of all currently detected AprilTags (fiducials).
      *
-     * @return A list of {@link LLResultTypes.FiducialResult} objects. The list will be empty if none are detected.
+     * The list will be empty if none are detected.
      */
     public List<LLResultTypes.FiducialResult> getFiducialDetections() {
         if (lastValidResult != null && lastValidResult.isValid()) {
@@ -269,6 +279,8 @@ public class VisionUtil {
         }
         return null; // Return null if not found
     }
+
+
     /**
      * Gets the robot's calculated 3D position from the Limelight.
      * This is the "botpose" relative to the AprilTag field layout.
@@ -327,6 +339,10 @@ public class VisionUtil {
         this.lastTagDistanceMeters = -1.0;
         this.lastTx = 0.0;
         // Do NOT set lastValidResult to null here, so we can still access stale data if needed.
+        this.robotPoseInTagSpace = null;
+        this.robotPoseInFieldSpace = null;
+        this.botposeMT2 = null;
+        this.hasFieldPose = false;
     }
     /**
      * Checks if a valid AprilTag was visible during the last update cycle.
@@ -340,13 +356,23 @@ public class VisionUtil {
      * Adds relevant vision data to the telemetry stream for debugging.
      */
     public void addTelemetry() {
-        telemetry.addLine("--- Limelight Vision ---");
+        telemetry.addLine("--- Limelight Vision GetLatestResult ---");
+        LLResult lastResult = limelight.getLatestResult();
+        lastResult.getTx();
+        telemetry.addData("getTx", lastResult.getTx());
+        telemetry.addData("getTy", lastResult.getTy());
+        telemetry.addData("getTa", lastResult.getTa());
+        telemetry.addData("getTxNC", lastResult.getTxNC());
+        telemetry.addLine();
+
         if (isTargetVisible) {
+            telemetry.addLine("--- Limelight Vision IDK what this is ---");
             telemetry.addData("LL Status", "Target Visible");
             telemetry.addData("LL Tag ID", lastTagId);
             telemetry.addData("LL PoseTag X ", x_meters*39.3701);
             telemetry.addData("LL PoseTag Y ", y_meters*39.3701);
             telemetry.addData("LL PoseTag Z ", z_meters*39.3701);
+            telemetry.addData("LL PoseTag Yaw ", yaw_degrees);
             telemetry.addData("LL Distance (in)", "%.1f", getDistanceToTagInches());
             telemetry.addData("LL Angle (tx)", "%.2f", lastTx);
         } else {
@@ -354,11 +380,12 @@ public class VisionUtil {
         }
         telemetry.addData("Heading Error to red Tag: ", getHeadingErrorToRedTag24Deg());
         telemetry.addLine("--- Limelight Vision MT2 Data---");
-        telemetry.addData("fieldX_m ", fieldX_m);
-        telemetry.addData("fieldY_m ", fieldY_m);
-        telemetry.addData("fieldZ_m ", fieldZ_m);
+        telemetry.addData("fieldX_m ", fieldX_meters_mt2);
+        telemetry.addData("fieldY_m ", fieldY_meters_mt2);
+        telemetry.addData("fieldZ_m ", fieldZ_meters_mt2);
         telemetry.addData("fieldHeading ",Math.toDegrees(fieldHeadingRad));   // yaw
 
+        telemetry.addLine();
         telemetry.addLine("--- Limelight Vision RPFS Data---");
         telemetry.addData("x_meters_rpfs (in) ", x_meters_rpfs*39.3701);
         telemetry.addData("z_meters_rpfs (in) ", z_meters_rpfs*39.3701);
@@ -376,8 +403,8 @@ public class VisionUtil {
     public double getHeadingErrorToFieldPointRad(double goalX_m, double goalY_m) {
         if (!hasFieldPose) return 0.0;
 
-        double dx = goalX_m - fieldX_m;
-        double dy = goalY_m - fieldY_m;
+        double dx = goalX_m - fieldX_meters_mt2;
+        double dy = goalY_m - fieldY_meters_mt2;
 
         double desiredHeadingRad = Math.atan2(dy, dx);
         double errorRad = normalizeRad(desiredHeadingRad - this.fieldHeadingRad);

@@ -278,7 +278,7 @@ public class GearGirlsBot1 extends OpMode {
         prevSmoothedStrafe = smoothedStrafe;
         prevSmoothedTurn = smoothedTurn;
         // =========================================================================
-
+        //robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
         robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
     }
 

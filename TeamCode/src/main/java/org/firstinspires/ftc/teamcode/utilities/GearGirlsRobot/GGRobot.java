@@ -102,6 +102,7 @@ public class GGRobot {
      * This MUST be called in every iteration of the OpMode's loop().
      */
     public void update() {
+        updateLedStatus();
         if (drive != null) drive.update();
         if (feeder != null) feeder.update();
         // We also need to update the internal launchSequence state machine
@@ -112,7 +113,7 @@ public class GGRobot {
 
         }
         if (drive != null) drive.pinpoint.update();
-        updateLedStatus();
+
     }
 
 
@@ -149,32 +150,23 @@ public class GGRobot {
     }
 
     private void updateLedStatus() {
-        if (vision.isTargetVisible()) {
-            double headingError = vision.getTargetAngleX(); // Or Blue, based on alliance
-            final double AIMING_TOLERANCE_DEG = 2.0;
-                    if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
-                        // AIM IS GOOD AND ARTIFACT IS READY: Solid GREEN
-                        led.setColor(LedUtil.Color.GREEN);
-                    } else if (headingError < 0) {
-                        // AIM IS LEFT: Turn right. BLUE hint.
-                        led.setColor(LedUtil.Color.BLUE);
-                    } else { // headingError > 0
-                        // AIM IS RIGHT: Turn left. RED hint.
-                        led.setColor(LedUtil.Color.YELLOW);
-                    }
-                } else {
-                    // Vision lock is lost.
-                    // We know an artifact is ready, but we can't provide aiming help.
-                    // Set a "warning" color like VIOLET.
-                    led.setColor(LedUtil.Color.OFF);
+        if (!vision.isTargetVisible()) {
+            led.setColor(LedUtil.Color.OFF);
+            return;
         }
 
+        double headingError = vision.getTargetAngleX();
+        final double AIMING_TOLERANCE_DEG = 2.0;
+        if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
+            led.setColor(LedUtil.Color.GREEN);
+        } else if (headingError > AIMING_TOLERANCE_DEG) {
+            led.setColor(LedUtil.Color.YELLOW);
+        } else if (headingError < -AIMING_TOLERANCE_DEG) {
+            led.setColor(LedUtil.Color.BLUE);
+        }
     }
 
-    /**
-     * Sets the LED to a specific color, blinking on and off.
-     * @param color The color to blink.
-     */
+
     public void setBlinkingColor(double color) {
         final int BLINK_INTERVAL_MS = 250;
         boolean isLedOn = (System.currentTimeMillis() / BLINK_INTERVAL_MS) % 2 == 0;
@@ -426,26 +418,28 @@ public class GGRobot {
         double newVelocity; // A temporary variable for the new calculation
 
         // --- The Waterfall Logic ---
-//        if (vision.isTargetVisible()) {
-//            // 1. PRIMARY: Limelight Vision is available and is our most trusted source.
-//            dataSource = "VISION";
-//            double distanceInches = vision.getDistanceToTagInches();
-//            newVelocity = getTargetVelocityForDistance(distanceInches);
-//
-//            // We have a high-confidence value, so we update our fallback state.
-//            this.lastKnownGoodVelocity = newVelocity;
-//
-//        } else
-            if (drive.pinpoint.getLoopTime() > 0) { // A simpler check: is pinpoint sending any data?
-            // 2. SECONDARY: Limelight failed, fall back to Odometry.
-            dataSource = "ODOMETRY";
-            double distanceInches = getDistanceToGoal();
+        if (vision.isTargetVisible()) {
+            // 1. PRIMARY: Limelight Vision is available and is our most trusted source.
+            dataSource = "VISION";
+            double distanceInches = vision.getDistanceToTagInches();
             newVelocity = getTargetVelocityForDistance(distanceInches);
 
-            // We have a medium-confidence value, so we also update our fallback state.
+            // We have a high-confidence value, so we update our fallback state.
             this.lastKnownGoodVelocity = newVelocity;
 
-        } else {
+       }
+//        else
+//            if (drive.pinpoint.getLoopTime() > 0) { // A simpler check: is pinpoint sending any data?
+//            // 2. SECONDARY: Limelight failed, fall back to Odometry.
+//            dataSource = "ODOMETRY";
+//            double distanceInches = getDistanceToGoal();
+//            newVelocity = getTargetVelocityForDistance(distanceInches);
+//
+//            // We have a medium-confidence value, so we also update our fallback state.
+//            this.lastKnownGoodVelocity = newVelocity;
+//
+//        }
+        else {
             // 3. TERTIARY: Both vision and odometry have failed.
             dataSource = "LAST KNOWN";
             // DO NOT calculate a new value. Use the last one we successfully stored.
@@ -508,7 +502,7 @@ public class GGRobot {
         // 3. Get the correct heading error from the vision system based on that alliance.
         Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);;
         if (currentAlliance == GGRobotConstants.Alliance.RED) {
-               trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.RED_TAG24_X_M, GGRobotConstants.GoalLocation.RED_TAG24_Y_M, AngleUnit.DEGREES,45);
+               trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.RED_TAG24_X_M, GGRobotConstants.GoalLocation.RED_TAG24_Y_M, AngleUnit.DEGREES,54);
         } else { // BLUE
                 trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.BLUE_TAG20_X_M, GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M, AngleUnit.DEGREES,45);
         }
@@ -524,14 +518,48 @@ public class GGRobot {
      * @return The calculated turn power (-1.0 to 1.0) to send to the drivetrain.
      */
     public double calculateAutoAimTurnPower() {
+        // --- Start of Telemetry Section ---
+        telemetry.addLine("--- Auto-Aim Calculation ---");
         // 1. Check if vision system can provide an aim point.
         if (!vision.hasFieldPose()) {
             telemetry.addData("AutoAim", "OFF (No Field Pose)");
             return 0.0; // Cannot aim without a field pose.
         }
 
+        // --- Get Robot's Current Position ---
+        // We get the current pose from the pinpoint odometry.
+        Pose2D robotPose = drive.pinpoint.getPosition();
+        double robotX_in = robotPose.getX(DistanceUnit.INCH);
+        double robotY_in = robotPose.getY(DistanceUnit.INCH);
+        double robotHeading_deg = robotPose.getHeading(AngleUnit.DEGREES);
+
+        // Display the robot's current position
+        telemetry.addData("Robot Field Pos (X, Y, H)", "%.1f in, %.1f in, %.1f deg",
+                robotX_in, robotY_in, robotHeading_deg);
+
         // 2. Get the current alliance from the shared static variable.
         GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+        telemetry.addData("AutoAim Alliance", currentAlliance);
+
+
+        // --- Determine Target Goal Coordinates ---
+        double goalX_m;
+        double goalY_m;
+
+        if (currentAlliance == GGRobotConstants.Alliance.RED) {
+            goalX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
+            goalY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
+            telemetry.addData("Target", "RED Goal (Tag 24)");
+        } else { // BLUE
+            goalX_m = GGRobotConstants.GoalLocation.BLUE_TAG20_X_M;
+            goalY_m = GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M;
+            telemetry.addData("Target", "BLUE Goal (Tag 20)");
+        }
+
+        // Display the target coordinates (converted to inches for consistency)
+        telemetry.addData("Target Field Pos (X, Y)", "%.1f in, %.1f in",
+                goalX_m * 39.3701, goalY_m * 39.3701);
+
 
         // 3. Get the correct heading error from the vision system based on that alliance.
         double headingErrorDeg;
@@ -548,6 +576,9 @@ public class GGRobot {
         // 5. Add telemetry for debugging and return the final command.
         telemetry.addData("AutoAim Alliance", currentAlliance);
         telemetry.addData("AutoAim", "ON | Error: %.1f deg | Cmd: %.2f", headingErrorDeg, turnCmd);
+        telemetry.addData("FINAL Heading Error", "%.1f deg", headingErrorDeg);
+        telemetry.addData("FINAL Turn Command", "%.2f", turnCmd);
+        telemetry.addLine("--------------------------");
         return turnCmd;
     }
     // =================================================================================
