@@ -28,7 +28,6 @@
  */
 
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
-
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
 import com.pedropathing.geometry.Pose;
@@ -38,10 +37,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2025;
-import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_IntakeUtil;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 /*
@@ -60,8 +55,9 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 @TeleOp(name="P3: Teleop (Team Version)", group=" _P3opmodes")
 
-public class P3_BasicIterativeTeleop extends OpMode
+public class P3_Teleop extends OpMode
 {
+    public static final double TX_ALIGN_KP = 0.04;
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private P3_Robot robot;
@@ -71,7 +67,7 @@ public class P3_BasicIterativeTeleop extends OpMode
         RED,
         BLUE
     }
-    private double requestedMotorVelocity = 1200;
+    private double requestedMotorVelocity = 1100;
 
 
     // TODO: set this at init
@@ -84,6 +80,9 @@ public class P3_BasicIterativeTeleop extends OpMode
     }
     private IntakeState intakeState = IntakeState.OFF;
     private final double INTAKE_POWER = 1.0;
+    double txError = 0.0;
+    double tagYaw =0.0;
+    public final double TX_ALIGN_TOLERANCE_DEG = 1.0;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -129,6 +128,7 @@ public class P3_BasicIterativeTeleop extends OpMode
         telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
         telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
         telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
+        telemetry.addData("tx error: ", txError);
     }
 
     /*
@@ -138,8 +138,26 @@ public class P3_BasicIterativeTeleop extends OpMode
     public void stop() {
     }
     private void doDriveControls() {
+        double turnInput = 0;
 // Use scaled inputs for driving
-        robot.drive.arcadeDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.right_stick_y, 1.0);
+        if(gamepad1.right_stick_button) {
+            if(robot.vision.isTargetVisible()) {
+                txError = robot.vision.getTagAngle();
+                tagYaw = robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) + txError;
+            } else {
+                txError=tagYaw-robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            }
+            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                turnInput=0.0;
+            }
+            else {
+                turnInput= TX_ALIGN_KP * txError;
+            }
+
+        } else {
+            turnInput = gamepad1.right_stick_x;
+        }
+        robot.drive.arcadeDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, turnInput, gamepad1.right_stick_y, 1.0);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
