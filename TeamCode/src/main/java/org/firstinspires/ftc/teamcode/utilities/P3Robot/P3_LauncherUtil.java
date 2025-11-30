@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class P3_LauncherUtil {
     private final DcMotorEx shooterMotorLeft;
     private final DcMotorEx shooterMotorRight;
-    private final CRServo indexerServo;
+    private final CRServo indexerServo,indexerServo2;
     private final Servo stopperServo;
 
     private double m_speed;
@@ -56,6 +56,9 @@ public class P3_LauncherUtil {
         shooterMotorRight.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         indexerServo = hardwareMap.get(CRServo.class, "indexerServo");
+        indexerServo2 = hardwareMap.get(CRServo.class, "indexerServo2");
+        //reverse indexerServo2
+        indexerServo2.setDirection(CRServo.Direction.REVERSE);
         stopperServo = hardwareMap.get(Servo.class, "stopperServo");
     }
 
@@ -79,7 +82,9 @@ public class P3_LauncherUtil {
     }
 
     public void setIndexerServoPower(double power) {
+
         indexerServo.setPower(power);
+        indexerServo2.setPower(power);
     }
 
     /**

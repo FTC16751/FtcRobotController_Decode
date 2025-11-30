@@ -9,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.AutoAction;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
 import java.util.ArrayList;
 import java.util.List;

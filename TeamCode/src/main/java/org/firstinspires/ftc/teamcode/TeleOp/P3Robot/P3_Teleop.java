@@ -57,7 +57,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 public class P3_Teleop extends OpMode
 {
-    public static final double TX_ALIGN_KP = 0.04;
+    public static final double TX_ALIGN_KP = 0.02;
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private P3_Robot robot;
@@ -138,26 +138,41 @@ public class P3_Teleop extends OpMode
     public void stop() {
     }
     private void doDriveControls() {
-        double turnInput = 0;
-// Use scaled inputs for driving
-        if(gamepad1.right_stick_button) {
-            if(robot.vision.isTargetVisible()) {
-                txError = robot.vision.getTagAngle();
-                tagYaw = robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) + txError;
-            } else {
-                txError=tagYaw-robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            }
-            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
-                turnInput=0.0;
-            }
-            else {
-                turnInput= TX_ALIGN_KP * txError;
-            }
+        //double turnInput = 0;
+        double driveInput  = gamepad1.left_stick_y;
+        double strafeInput = gamepad1.left_stick_x;
+        double turnInput = gamepad1.right_stick_x;
+        boolean isSnappingToTarget = gamepad1.right_stick_button && robot.vision.isTargetVisible();
 
+        if (isSnappingToTarget) {
+            double txError = robot.vision.getTargetAngleX();;
+            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                turnInput = 0.0;
+            } else {
+                turnInput = TX_ALIGN_KP * txError;
+            }
+            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
         } else {
+            // normal right-stick turning
             turnInput = gamepad1.right_stick_x;
         }
-        robot.drive.arcadeDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, turnInput, gamepad1.right_stick_y, 1.0);
+
+//        if(gamepad1.right_stick_button) {
+//            if(robot.vision.isTargetVisible()) {
+//                txError = robot.vision.getTagAngle();
+//            }
+//            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+//                turnInput=0.0;
+//            }
+//            else {
+//                turnInput= TX_ALIGN_KP * txError;
+//            }
+//
+//        } else {
+//            turnInput = gamepad1.right_stick_x;
+//        }
+
+        robot.drive.arcadeDrive(-strafeInput, driveInput, turnInput, gamepad1.right_stick_y, 1.0);
 
         //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 

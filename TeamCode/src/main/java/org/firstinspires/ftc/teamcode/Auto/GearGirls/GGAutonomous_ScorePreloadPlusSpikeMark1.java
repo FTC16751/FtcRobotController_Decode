@@ -3,12 +3,11 @@ package org.firstinspires.ftc.teamcode.Auto.GearGirls;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeUtil;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchIndexer;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
 /**
  * A simplified, explicit state-machine-based autonomous OpMode.
@@ -208,6 +207,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
      */
     private void runRedFarPath() {
         telemetry.addData("Current Path", "Red Far");
+        telemetry.update();
         switch (redFarState) {
             case DRIVE_TO_SCORE:
                 // Drive to the scoring position.
@@ -215,29 +215,25 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.5, 0.25)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
+                    robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
                     redFarState = RedFarState.SHOOT_SEQUENCE;
                 }
                 break;
 
             case SHOOT_SEQUENCE:
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.5, 0.25);
-                // This state handles firing all three pre-loaded artifacts.
-                // We keep the launcher spinning throughout the sequence.
-                robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
-
-                // Only start a new shot if the previous one is finished.
-                //if (!robot.feeder.isBusy()) {
-                if (shotsFired < 3) {
-                    LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
-                    if(robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.AUTO)) {
-                        shotsFired++;
+                if (!robot.feeder.isBusy()) {
+                    if (shotsFired < 3) {
+                        LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                        if(robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.FAR)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        // All 3 shots are fired. Turn off the launcher and move to the park state.
+                        robot.launcher.setMotorVelocity(0, 0);
+                        redFarState = RedFarState.PARK;
                     }
-                } else {
-                    // All 3 shots are fired. Turn off the launcher and move to the park state.
-                    robot.launcher.setMotorVelocity(0, 0);
-                    redFarState = RedFarState.PARK;
                 }
-                //}
                 // While robot.feeder.isBusy() is true, we do nothing and let the shot finish.
                 break;
             case RED_FAR_COLLECT:

@@ -107,7 +107,8 @@ public class GearGirlsBot1 extends OpMode {
 
     // A deadband to prevent the robot from "buzzing" or oscillating when it's very close to the target.
     private static final double TX_ALIGN_TOLERANCE_DEG = 1.0; // The 1-degree tolerance you requested.
-
+    private enum DriveMode { FIELD_CENTRIC, ARCADE }
+    private DriveMode DRIVEMODE = DriveMode.ARCADE;
 
     /**
      * Code to run ONCE when the driver hits INIT
@@ -204,84 +205,56 @@ public class GearGirlsBot1 extends OpMode {
             robot.drive.pinpoint.resetPosAndIMU();
         }
 
+        //i want to use the gamepad1.back button to toggle between using drivemode of arcadeDrive and fieldCentricDrive toogle drive mode should be within this telop
+        if (gamepad1.backWasPressed()) {
+            toggleDriveMode();
+        }
+
         double driveInput  = -gamepad1.left_stick_y;
         double strafeInput = gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
-        boolean isAutoAiming = gamepad2.left_bumper && robot.vision.hasFieldPose();
-// --- NEW: TX-BASED AUTO-ALIGN LOGIC ---
-        boolean isSnappingToTarget = gamepad2.dpad_up && robot.vision.isTargetVisible();
-        // ------------------------------------
-        // --- THIS IS THE ONLY CHANGE NEEDED ---
-        // Instead of checking for a single press (wasPressed), we check if the button
-        // is currently HELD DOWN on every loop cycle.
-        boolean isAimLockedOnTarget = gamepad2.dpad_up && robot.vision.isTargetVisible();
-        // ------------------------------------
-        if (isAutoAiming) {
-            turnInput = robot.calculateAutoAimTurnPower();
-        } else if (isSnappingToTarget) {
-            // --- NEW: EXECUTE THE SNAP-TO-TARGET LOGIC ---
-            // A simpler, camera-relative auto-aim using just the 'tx' value.
+        boolean isSnappingToTarget = gamepad2.leftBumperWasPressed() && robot.vision.isTargetVisible();
 
-            // 1. Get the error directly from the vision subsystem.
+        if (isSnappingToTarget) {
+            //camera-relative auto-aim using just the 'tx' value.
+
+            // Get the angle error directly from the vision subsystem.
             double txError = robot.vision.getTargetAngleX();
 
-            // 2. Check if we are already within our tolerance.
+            // Check if we are already within our tolerance.
             if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
                 // We are aimed correctly, so don't turn.
                 turnInput = 0.0;
             } else {
-                // 3. We are not aimed. Calculate the turn power using the P-controller.
-                // The negative sign is often needed because a positive tx (target is to the right)
-                // might require a negative (counter-clockwise) turn power depending on your robot's setup.
-                // Tune this by observing your robot's behavior. If it turns away from the target, remove the negative sign.
+                // We are not aimed. Calculate the turn power using the P-controller.
                 turnInput = TX_ALIGN_KP * txError;
             }
             telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
-            // --- END OF NEW LOGIC ---
 
         } else {
-            // normal right-stick turning
+            // use normal turning
             turnInput = gamepad1.right_stick_x;
             telemetry.addData("AutoAim", "OFF");
         }
 
-        // --- 2. Apply Deadband ---
-        // If the raw input is less than the deadband, treat it as zero.
-        double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
-        double deadbandedStrafe = Math.abs(strafeInput) > JOYSTICK_DEADBAND ? strafeInput : 0.0;
-        double deadbandedTurn = Math.abs(turnInput) > JOYSTICK_DEADBAND ? turnInput : 0.0;
 
-        // --- 3. Apply Scaling Curve (Cubic) for Smoothing ---
-        // Cubing the input provides finer control at low speeds.
-        double smoothedDrive = Math.pow(deadbandedDrive, 5);
-        double smoothedStrafe = Math.pow(deadbandedStrafe, 5);
-        double smoothedTurn = Math.pow(deadbandedTurn, 5);
 
-        // =========================================================================
-        // --- 4. NEW: Apply Slew Rate Limiter for Dampening ---
-        // =========================================================================
-        // Get the time elapsed since the last loop, in seconds.
-        double loopTime = loopTimer.seconds();
-        loopTimer.reset(); // Reset the timer for the next loop
-
-        // Calculate the maximum change allowed in motor power for this loop cycle.
-        double maxDelta = SLEW_RATE_LIMIT * loopTime;
-
-        // Apply the limiter. Use Range.clip to constrain the new power to be
-        // within `maxDelta` of the previous power.
-        smoothedDrive  = Range.clip(smoothedDrive,  prevSmoothedDrive - maxDelta,  prevSmoothedDrive + maxDelta);
-        smoothedStrafe = Range.clip(smoothedStrafe, prevSmoothedStrafe - maxDelta, prevSmoothedStrafe + maxDelta);
-        smoothedTurn   = Range.clip(smoothedTurn,   prevSmoothedTurn - maxDelta,   prevSmoothedTurn + maxDelta);
-
-        // Store the new limited powers as the "previous" values for the next loop.
-        prevSmoothedDrive = smoothedDrive;
-        prevSmoothedStrafe = smoothedStrafe;
-        prevSmoothedTurn = smoothedTurn;
         // =========================================================================
         //robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
         robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        } else if (DRIVEMODE == DriveMode.FIELD_CENTRIC) {
+            robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
+        }
     }
-
+    private void toggleDriveMode() {
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            DRIVEMODE = DriveMode.FIELD_CENTRIC;;
+        } else {
+            DRIVEMODE =DriveMode.ARCADE;
+        }
+    }
 
     /**
      * Manages the intake mechanism based on gamepad input.

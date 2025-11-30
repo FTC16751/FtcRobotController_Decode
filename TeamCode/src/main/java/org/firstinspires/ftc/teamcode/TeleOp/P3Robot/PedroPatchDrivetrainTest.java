@@ -19,7 +19,7 @@ public class PedroPatchDrivetrainTest extends OpMode{
 
     @Override
     public void init() {
-        Pose startingPose = new Pose(9,9,0);
+        Pose startingPose = new Pose(0,0,0);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose);
         follower.update();

@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
 
 import com.qualcomm.robotcore.hardware.IMU;
@@ -23,7 +24,7 @@ public class P3_Robot {
     public final DriveUtil2026b drive;
     public final P3_IntakeUtil intake;
     public final P3_LauncherUtil launcher;
-    public final LimeLightVisionUtil vision;
+    public final VisionUtil vision;
     public final Telemetry telemetry;
     public final IMU imu;
     private InterpolatingLookupTable flywheelTable;
@@ -56,7 +57,7 @@ public class P3_Robot {
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
-        vision = new LimeLightVisionUtil(hardwareMap, telemetry);
+        vision = new VisionUtil(hardwareMap, telemetry);
         imu = hardwareMap.get(IMU.class, "imu");
 
         flywheelTable = new InterpolatingLookupTable();

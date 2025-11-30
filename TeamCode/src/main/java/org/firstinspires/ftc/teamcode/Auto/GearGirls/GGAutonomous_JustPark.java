@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
 
 @Autonomous(name="GG AUTO: Just Parka", group="GGBot")

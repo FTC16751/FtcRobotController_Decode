@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
-import static org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil.RED_TAG24_X_M;
-import static org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil.RED_TAG24_Y_M;
+import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_X_COORDINATE_METERS;
+import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_Y_COORDINATE_METERS;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants.LauncherSystemState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants.LauncherTargetingMode;
 
@@ -29,7 +30,7 @@ import java.util.ArrayList; // Add these imports
  */
 public class GGRobot {
 
-    // 1. PUBLIC SUBSYSTEMS
+    //PUBLIC SUBSYSTEMS
     public final DriveUtil2026b drive;
     public final LauncherMotors launcher;
     public final LaunchIndexer feeder;
@@ -39,7 +40,7 @@ public class GGRobot {
     public final IntakeSensorFusion intakeSensors;
     public final LedUtil led;
 
-    // 2. PRIVATE STATE AND TIMERS FOR ROBOT-LEVEL ACTIONS
+    //PRIVATE STATE AND TIMERS FOR ROBOT-LEVEL ACTIONS
     private enum LaunchState {
         IDLE,
         SPINNING_UP,
@@ -48,7 +49,6 @@ public class GGRobot {
     }
     private LaunchState launchState = LaunchState.IDLE;
     private ElapsedTime launchCycleTimer = new ElapsedTime();
-    // ---1. NEW STATE MACHINE FOR THE DRIVE_AND_INTAKE ACTION ---
     private enum DriveAndIntakeState {
         IDLE,
         STARTING,
@@ -59,7 +59,7 @@ public class GGRobot {
     }
     private DriveAndIntakeState driveAndIntakeState = DriveAndIntakeState.IDLE;
     private ElapsedTime intakeSubActionTimer = new ElapsedTime();
-    // === 1. DEFINE YOUR LOOKUP TABLE ===
+    // === LOOKUP TABLE ===
     private InterpolatingLookupTable flywheelTable;
     private double lastKnownGoodVelocity = 0.0;
 
@@ -71,7 +71,9 @@ public class GGRobot {
     public GGRobot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
+        // Get the robot configuration from the config file
         RobotConfig ggConfig = RobotConfig.createDefaultGearGirlsConfig();
+
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, ggConfig);
         launcher = new LauncherMotors(hardwareMap);
@@ -81,6 +83,7 @@ public class GGRobot {
         vision = new VisionUtil(hardwareMap, telemetry);
         led = new LedUtil(hardwareMap, "led_servo");
 
+        //this is our flywheel lookup table. there's probably a better place to put this, but it's what we have now
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 960.0*1.1);
         flywheelTable.add(40.0, 1010.0*1.05);
@@ -93,7 +96,7 @@ public class GGRobot {
         flywheelTable.add(130.0, 1470.0);
         flywheelTable.add(140.0, 1500.0);
 
-        drive.resetHeading();
+        //drive.resetHeading();
         //stopAll();
     }
 
@@ -102,17 +105,17 @@ public class GGRobot {
      * This MUST be called in every iteration of the OpMode's loop().
      */
     public void update() {
-        updateLedStatus();
+        if (led != null) updateLedStatus();
         if (drive != null) drive.update();
         if (feeder != null) feeder.update();
-        // We also need to update the internal launchSequence state machine
         if (intakeSensors != null) intakeSensors.update();
         if (vision != null) {
             vision.update();
             vision.updateRobotOrientation(drive.getHeading());
 
         }
-        if (drive != null) drive.pinpoint.update();
+        //i don't think we need to do this, it should be covered in drive.update()
+        //if (drive != null) drive.pinpoint.update();
 
     }
 
@@ -175,19 +178,43 @@ public class GGRobot {
 
     /**
      * Resets the robot's odometry position based on the vision system's
-     * field-centric pose. This is the core of vision-based localization
-     * and should be called whenever a reliable vision pose is available.
+     * field-centric pose.
+     * WORK IN PROGRESS. THE IDEA HERE IS TO USE THE APRIL TAG TO
+     * RESET THE TELOP ODOMETRY FOR FIELD-RELAATIVE DRIVING.
      */
     public void resetOdometryToVision() {
         Pose3D visionPose3D = vision.getRobotPoseFieldSpace();
         // Only perform the reset if the vision system has a valid field pose.
         if (visionPose3D != null) {
             // Get the X, Y, and Heading from VisionUtil.
-            // Get the X, Y, and Heading from the Pose3D object.
             double visionX_meters = visionPose3D.getPosition().x;
             double visionY_meters = visionPose3D.getPosition().y;
             double visionHeading_rad = Math.toDegrees(visionPose3D.getOrientation().getYaw());
+            double tx = vision.getTargetAngleX();
 
+            // Get the current alliance from the shared state.
+            GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+
+            double targetX_m;
+            double targetY_m;
+
+            if (currentAlliance == GGRobotConstants.Alliance.RED) {
+                targetX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
+                targetY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
+            } else { // BLUE alliance
+                targetX_m = GGRobotConstants.GoalLocation.BLUE_TAG20_X_M;
+                targetY_m = GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M;
+            }
+
+            double tagY = RED_GOAL_Y_COORDINATE_METERS;
+            double tagX = RED_GOAL_X_COORDINATE_METERS;
+
+            // This offset defines "forward" from the driver's perspective.
+            // 90 degrees makes "away from the driver station" the new 0-degree heading.
+            double DRIVER_ROT_OFFSET = 90;
+
+            //COMMENT THIS OUT FOR NOW. FIRST TEST TO JUST SET HEADING SO FIELD RELATIVE DRIVNG
+            // works accoding to where the drive team is standing (red or blue)
             // Create a new Pose2D object with the vision data.
             Pose2D visionPose2D = new Pose2D(DistanceUnit.METER,
                     visionX_meters,
@@ -195,9 +222,22 @@ public class GGRobot {
                     AngleUnit.RADIANS,
                     visionHeading_rad
             );
-
             // Tell the Pinpoint odometry system to set its current position to this pose.
-            drive.pinpoint.setPosition(visionPose2D);
+            //drive.pinpoint.setPosition(visionPose2D);
+
+
+            //Calculate the absolute angle on the field from the robot to the target tag.
+            double angleFieldToTagDeg = Math.toDegrees(Math.atan2(targetY_m - visionY_meters, targetX_m - visionX_meters));
+
+            //Calculate the true field heading by correcting the angle with the Limelight's 'tx' error.
+            double fieldHeadingDeg = angleFieldToTagDeg - tx;
+            fieldHeadingDeg = AngleUnit.normalizeDegrees(fieldHeadingDeg);
+
+            //Create the "driver-relative" heading by applying the offset.
+            double driverHeadingDeg = AngleUnit.normalizeDegrees(fieldHeadingDeg - DRIVER_ROT_OFFSET);
+
+            // set the New Heading in pinpoint
+            drive.pinpoint.setHeading(driverHeadingDeg, AngleUnit.DEGREES);
 
             telemetry.log().add("ODOMETRY RESET to Vision Pose: ", visionX_meters * 39.3701, visionY_meters * 39.3701,
                     Math.toDegrees(visionHeading_rad));
@@ -208,42 +248,6 @@ public class GGRobot {
     // METHODS FOR ACTION-BASED AUTONOMOUS
     // =================================================================================
 
-    /**
-     * Executes a single AutoAction from a sequence.
-     * This method acts as a router, starting the appropriate non-blocking action
-     * on the correct subsystem based on the action's type.
-     *
-     * @param action The AutoAction to be executed.
-     */
-    public void executeAutoAction(AutoAction action) {
-        // Use a switch statement on the action's type for clarity and extensibility.
-        switch (action.type) {
-            case DRIVE_TO_POINT:
-                // This is a Pinpoint navigation action.
-                // Call the non-blocking driveToPointAsync method from DriveUtil2026.
-                // We pass the targetPose from the AutoAction object.
-                drive.driveTo(drive.pinpoint.getPosition(),action.targetPose, 0.6, 0.25); // Using default speed and hold time
-                break;
-
-            case SHOOT:
-                // This action is ONLY a shot. Call the non-blocking launch sequence.
-                // We pass 'true' to initiate the shot and use the feeder side from the action.
-                launchSequence(true, action.feederSide, GGRobotConstants.LauncherDistance.FAR);
-                break;
-
-            case CUSTOM:
-                // This is a placeholder for future actions, like running an intake or moving an arm.
-                // For example:
-                // if (action.description.equals("Run Intake")) {
-                //     intake.runIntakeForTime(2.0); // Assuming such a method exists
-                // }
-                break;
-            // --- 3. ADD THE CASE FOR OUR NEW ACTION ---
-            case DRIVE_AND_INTAKE:
-                driveAndIntakeSequence(true,12);
-                break;
-        }
-    }
 
     /**
      * A non-blocking state machine to handle the launch sequence for one shot.
@@ -253,6 +257,7 @@ public class GGRobot {
      * @param distanceProfile The launcher distance profile (CLOSE or FAR) to determine speed.
      * @return true for one cycle when a shot has been fully completed.
      */
+
     public boolean launchSequence(boolean shootCommand, LaunchIndexer.FeederSide sideToFire, GGRobotConstants.LauncherDistance distanceProfile) {
         switch (launchState) {
             case IDLE:
@@ -293,83 +298,9 @@ public class GGRobot {
         return false;
     }
 
-    /**
-     * A non-blocking state machine for the complex "Drive and Intake" action.
-     * This method should be called repeatedly from the OpMode's loop.
-     *
-     * @param startSequence If true, begins the sequence. If false, just updates the current state.
-     * @param driveDistance The distance to drive forward slowly while intaking.
-     * @return              `true` for one cycle when the entire action is complete.
-     */
-    public boolean driveAndIntakeSequence(boolean startSequence, double driveDistance) {
-        // If we are idle and receive the start command, begin the sequence.
-        if (driveAndIntakeState == DriveAndIntakeState.IDLE && startSequence) {
-            driveAndIntakeState = DriveAndIntakeState.STARTING;
-        }
-
-        // Run the state machine logic.
-        switch (driveAndIntakeState) {
-            case STARTING:
-                // Start the intake and set the diverter for the first artifact.
-                intake.setIntakeMotorPower(GGRobotConstants.Intake.INTAKE_SPEED);
-                intake.setDiverterRight(); // First artifact goes to the right.
-                intakeSubActionTimer.reset();
-                driveAndIntakeState = DriveAndIntakeState.INTAKING_FIRST_ARTIFACT;
-
-                // Also, start the slow forward drive using a non-blocking call.
-               if (drive.driveRelative(drive.pinpoint.getPosition(),driveDistance, 0, 0, .25,2)){
-                     // Drive at 20% speed.
-                }
-                break;
-
-            case INTAKING_FIRST_ARTIFACT:
-                // Wait until the right-side sensor detects an artifact.
-                if (intakeSensors.isSlotOccupied(IntakeSensorFusion.IntakeSlot.RIGHT_2)) {
-                    intake.setDiverterLeft(); // Switch diverter for the next artifacts.
-                    intakeSubActionTimer.reset();
-                    driveAndIntakeState = DriveAndIntakeState.SWITCHING_DIVERTER;
-                }
-                // Add a timeout here for robustness in a real match!
-                break;
-
-            case SWITCHING_DIVERTER:
-                // Give the servo time to move.
-                if (intakeSubActionTimer.seconds() > 0.5) {
-                    driveAndIntakeState = DriveAndIntakeState.INTAKING_REMAINING;
-                }
-                break;
-
-            case INTAKING_REMAINING:
-                // Wait until both left-side sensors detect artifacts.
-                if (intakeSensors.isSlotOccupied(IntakeSensorFusion.IntakeSlot.LEFT_1) &&
-                        intakeSensors.isSlotOccupied(IntakeSensorFusion.IntakeSlot.LEFT_2)) {
-                    intake.setIntakeMotorPower(0); // We have all three, stop the intake.
-                    // The slow forward drive is still running. Now we just wait for it to finish.
-                    driveAndIntakeState = DriveAndIntakeState.DRIVING_FORWARD;
-                }
-                // Add a timeout here for robustness in a real match!
-                break;
-
-            case DRIVING_FORWARD:
-                // The intake part is done. Now we just wait for the driveAsync to finish.
-                if (!drive.isBusy()) {
-                    // The drive is done. The entire complex action is complete.
-                    driveAndIntakeState = DriveAndIntakeState.IDLE; // Reset the state.
-                    return true; // Signal completion for this one loop cycle.
-                }
-                break;
-
-            case IDLE:
-                // Do nothing if we are idle.
-                break;
-        }
-
-        // If we have not returned true yet, it means the sequence is still in progress.
-        return false;
-    }
 
     /**
-     * The master method for setting launcher velocity based on the OpMode's intent.
+     * method for setting launcher velocity based on the OpMode's intent.
      * It contains all the complex orchestration logic.
      *
      * @param systemState The desired power state (IDLE or ACTIVE).
@@ -406,6 +337,9 @@ public class GGRobot {
         // Return the velocity that was just commanded, for telemetry purposes.
         return finalTargetVelocity;
     }
+
+
+
     /**
      * Calculates the target launcher velocity using a hierarchical "waterfall" of data sources.
      * It prefers Limelight, falls back to Odometry, and finally uses its last known good value.
@@ -478,7 +412,6 @@ public class GGRobot {
      * @return The calculated target velocity in ticks per second.
      */
     public double getTargetVelocityForDistance(double distanceInches) {
-        // This method safely accesses the private flywheelTable.
         return flywheelTable.get(distanceInches);
     }
 
@@ -488,7 +421,6 @@ public class GGRobot {
      * @return The distance to the goal in INCHES.
      */
     public double getDistanceToGoal() {
-        // Define the goal's location. This should be a constant.
         Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);
         Pose2D currPose = drive.pinpoint.getPosition();
         return drive.distanceTo(currPose, trgtPose, DistanceUnit.INCH);
@@ -511,38 +443,39 @@ public class GGRobot {
     }
 
     /**
-     * The master method for calculating auto-aim turn power during TeleOp.
-     * It orchestrates the SharedState, Vision, and Drive subsystems to produce a single command.
-     * This is the ONLY auto-aim method the OpMode should ever call.
+     * Tmethod for calculating auto-aim turn power during TeleOp.
      *
+     * This is one of 2 trials for auto-aim.
+     * the other takes in the tx value from the limelight and uses that to calculate the turn power.
+     * THIS METHOD IS CURRENTLY INCONSISTENT BECAUSE OUR ODOMETRY IN TELEOP IS NOT BASED ON THE FIELD COORDINATES.
      * @return The calculated turn power (-1.0 to 1.0) to send to the drivetrain.
      */
     public double calculateAutoAimTurnPower() {
-        // --- Start of Telemetry Section ---
         telemetry.addLine("--- Auto-Aim Calculation ---");
-        // 1. Check if vision system can provide an aim point.
+        //  Check if vision system can provide an aim point.
         if (!vision.hasFieldPose()) {
             telemetry.addData("AutoAim", "OFF (No Field Pose)");
             return 0.0; // Cannot aim without a field pose.
         }
 
-        // --- Get Robot's Current Position ---
-        // We get the current pose from the pinpoint odometry.
+        // --- Get Robot's Current Position from the pinpoint odometry.
         Pose2D robotPose = drive.pinpoint.getPosition();
+
+        // get the robot's position in inches from
         double robotX_in = robotPose.getX(DistanceUnit.INCH);
         double robotY_in = robotPose.getY(DistanceUnit.INCH);
         double robotHeading_deg = robotPose.getHeading(AngleUnit.DEGREES);
 
-        // Display the robot's current position
+        // I'm not sure if this is the right pose to get from limelight, dsplay it in telemetry
         telemetry.addData("Robot Field Pos (X, Y, H)", "%.1f in, %.1f in, %.1f deg",
                 robotX_in, robotY_in, robotHeading_deg);
 
-        // 2. Get the current alliance from the shared static variable.
+        //Get the current alliance from the shared static variable.
         GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
         telemetry.addData("AutoAim Alliance", currentAlliance);
 
 
-        // --- Determine Target Goal Coordinates ---
+        // Determine Target Goal Coordinates. These are constants based on ftc field coordinates
         double goalX_m;
         double goalY_m;
 
@@ -556,24 +489,23 @@ public class GGRobot {
             telemetry.addData("Target", "BLUE Goal (Tag 20)");
         }
 
-        // Display the target coordinates (converted to inches for consistency)
+        // Display the target coordinates
         telemetry.addData("Target Field Pos (X, Y)", "%.1f in, %.1f in",
                 goalX_m * 39.3701, goalY_m * 39.3701);
 
 
-        // 3. Get the correct heading error from the vision system based on that alliance.
+        // Get the correct heading error from the vision system based on that alliance.
         double headingErrorDeg;
         if (currentAlliance == GGRobotConstants.Alliance.RED) {
-            headingErrorDeg = vision.getHeadingErrorToRedTag24Deg();
+            headingErrorDeg = vision.calculateHeadingErrorToRedGoalDegrees();
         } else { // BLUE
-            headingErrorDeg = vision.getHeadingErrorToBlueTag20Deg();
+            headingErrorDeg = vision.calculateHeadingErrorToBlueGoalDegrees();
         }
 
-        // 4. Pass the simple heading error to the DriveUtil specialist to get the motor command.
-        //    The drive utility doesn't need to know anything about alliances or tags.
+        //Pass the simple heading error to the DriveUtil
         double turnCmd = drive.calculateAutoAimTurn(headingErrorDeg);
 
-        // 5. Add telemetry for debugging and return the final command.
+        // telemetry for debugging and return the final command.
         telemetry.addData("AutoAim Alliance", currentAlliance);
         telemetry.addData("AutoAim", "ON | Error: %.1f deg | Cmd: %.2f", headingErrorDeg, turnCmd);
         telemetry.addData("FINAL Heading Error", "%.1f deg", headingErrorDeg);
@@ -581,77 +513,5 @@ public class GGRobot {
         telemetry.addLine("--------------------------");
         return turnCmd;
     }
-    // =================================================================================
-    // AUTONOMOUS PATH PLANNING
-    // =================================================================================
 
-    /**
-     * The master planner for building an entire autonomous sequence.
-     * This method contains all the logic for choosing waypoints and actions based
-     * on the starting position and vision results.
-     *
-     * @param alliance  The selected Alliance (RED or BLUE).
-     * @param location  The selected starting Location (CLOSE or FAR).
-     * @param detectedMotif The MotifPattern detected by the vision system.
-     * @return A complete List<AutoAction> ready for the OpMode to execute.
-     */
-    public List<AutoAction> buildAutonomousSequence(
-            GGRobotConstants.Alliance alliance,
-            GGRobotConstants.Location location,
-            VisionUtil.MotifPattern detectedMotif
-    ) {
-        List<AutoAction> sequence = new ArrayList<>();
-        telemetry.log().add("GGRobot: Building new sequence for " + alliance + "/" + location);
-
-        // --- Step 1: Determine all necessary waypoints based on selections ---
-        final Pose2D driveToScorePose;
-        final Pose2D parkPose;
-
-        if (location == GGRobotConstants.Location.CLOSE) {
-            driveToScorePose = (alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY : GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY;
-            parkPose = (alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.RED_CLOSE_PARK : GGRobotConstants.Waypoints.BLUE_CLOSE_PARK;
-        } else { // Location.FAR
-            driveToScorePose = (alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE : GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE;
-            parkPose = (alliance == GGRobotConstants.Alliance.RED) ? GGRobotConstants.Waypoints.RED_FAR_PARK : GGRobotConstants.Waypoints.BLUE_FAR_PARK;
-        }
-
-
-        // --- Step 2: Build the Action "Script" ---
-
-        // 1. Initial Drive
-        sequence.add(AutoAction.createDriveAction("Drive to Scoring Pos", driveToScorePose));
-
-        // 2. Add Shooting Sequence based on the detected motif
-        // Assuming Green is on the Right, Purple is on the Left for pre-loads
-        switch (detectedMotif) {
-            case GPP21: // green purple purple
-                sequence.add(AutoAction.createShootAction("Shoot Green", LaunchIndexer.FeederSide.RIGHT));
-                sequence.add(AutoAction.createShootAction("Shoot Purple 1", LaunchIndexer.FeederSide.LEFT));
-                sequence.add(AutoAction.createShootAction("Shoot Purple 2", LaunchIndexer.FeederSide.LEFT));
-                break;
-            case PGP22: // Purple Green Purple
-                sequence.add(AutoAction.createShootAction("Shoot Purple 1", LaunchIndexer.FeederSide.LEFT));
-                sequence.add(AutoAction.createShootAction("Shoot Green", LaunchIndexer.FeederSide.RIGHT));
-                sequence.add(AutoAction.createShootAction("Shoot Purple 2", LaunchIndexer.FeederSide.LEFT));
-                break;
-            case PPG23: // Purple Purple Green
-            case UNKNOWN:
-            default:
-                sequence.add(AutoAction.createShootAction("Shoot Purple 1", LaunchIndexer.FeederSide.LEFT));
-                sequence.add(AutoAction.createShootAction("Shoot Purple 2", LaunchIndexer.FeederSide.LEFT));
-                sequence.add(AutoAction.createShootAction("Shoot Green", LaunchIndexer.FeederSide.RIGHT));
-                break;
-        }
-
-        // 3. Drive to Intake Area and run intake
-        // We can add a placeholder drive action before the intake.
-        sequence.add(AutoAction.createDriveAndIntakeAction("Intake from Floor", 12.0));
-
-        // 4. Drive to Parking Position
-        sequence.add(AutoAction.createDriveAction("Park", parkPose));
-
-
-        telemetry.log().add("GGRobot: Sequence built with " + sequence.size() + " actions.");
-        return sequence; // Return the completed plan
-    }
 }

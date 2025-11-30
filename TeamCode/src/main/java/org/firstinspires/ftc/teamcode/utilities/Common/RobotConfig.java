@@ -1,221 +1,272 @@
 package org.firstinspires.ftc.teamcode.utilities.Common;
-
+// Import all necessary classes from hardware and third-party libraries
+import androidx.annotation.Nullable;
+import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 /**
  * A data class to hold all configuration values that are specific to a
- * particular robot's physical build. This object is created in a robot-specific
- * class (like GGRobot) and passed to generic utilities (like DriveUtil2026)
- * to configure them correctly.
+ * particular robot's physical build and tuning profile. An instance of this
+ * class is created in a robot-specific factory method (e.g., createDefaultGearGirlsConfig)
+ * and passed to generic utilities (like DriveUtil2026b) to configure them correctly.
  */
 public class RobotConfig {
 
-    // === Drivetrain Motor Directions ===
-    public final DcMotorEx.Direction leftFrontDirection;
-    public final DcMotorEx.Direction rightFrontDirection;
-    public final DcMotorEx.Direction leftRearDirection;
-    public final DcMotorEx.Direction rightRearDirection;
-
-    // === Pinpoint Odometry Configuration ===
-    public final double pinpointOffsetX_mm;
-    public final double pinpointOffsetY_mm;
-    public final GoBildaPinpointDriver.EncoderDirection pinpointXPodDirection;
-    public final GoBildaPinpointDriver.EncoderDirection pinpointYPodDirection;
-
-    // === IMU Configuration ===
-    public final RevHubOrientationOnRobot.LogoFacingDirection imuLogoDirection;
-    public final RevHubOrientationOnRobot.UsbFacingDirection imuUsbDirection;
-
-    // === Drive Controller & PID Tuning ===
-    public final double xyTolerance;
-    public final double yawTolerance; // Storing in radians is common for math
-    public final double pGain;
-    public final double dGain;
-    public final double accel;
-    public final double yawPGain;
-    public final double yawDGain;
-    public final double yawAccel;
-    public final double iGain;
-
+    // =================================================================================
+    // NESTED CONFIGURATION DATA CLASSES
+    // Each class holds a logical group of constants.
+    // =================================================================================
 
     /**
-     * Constructor for the robot's physical configuration.
+     * Contains the physical motor direction settings for the drivetrain.
      */
-    public RobotConfig(
-            DcMotorEx.Direction leftFrontDirection,
-            DcMotorEx.Direction rightFrontDirection,
-            DcMotorEx.Direction leftRearDirection,
-            DcMotorEx.Direction rightRearDirection,
-            double pinpointOffsetX_mm,
-            double pinpointOffsetY_mm,
-            GoBildaPinpointDriver.EncoderDirection pinpointXPodDirection,
-            GoBildaPinpointDriver.EncoderDirection pinpointYPodDirection,
-            RevHubOrientationOnRobot.LogoFacingDirection imuLogoDirection,
-            RevHubOrientationOnRobot.UsbFacingDirection imuUsbDirection,
-            // === new tuning parameters to the constructor ===
-            double xyTolerance, double yawTolerance, double pGain, double dGain,
-            double accel, double yawPGain, double yawDGain, double yawAccel, double iGain
-    ) {
-        this.leftFrontDirection = leftFrontDirection;
-        this.rightFrontDirection = rightFrontDirection;
-        this.leftRearDirection = leftRearDirection;
-        this.rightRearDirection = rightRearDirection;
-        this.pinpointOffsetX_mm = pinpointOffsetX_mm;
-        this.pinpointOffsetY_mm = pinpointOffsetY_mm;
-        this.pinpointXPodDirection = pinpointXPodDirection;
-        this.pinpointYPodDirection = pinpointYPodDirection;
-        this.imuLogoDirection = imuLogoDirection;
-        this.imuUsbDirection = imuUsbDirection;
+    public static final class DrivetrainConfig {
+        public final DcMotorEx.Direction leftFrontDirection;
+        public final DcMotorEx.Direction rightFrontDirection;
+        public final DcMotorEx.Direction leftRearDirection;
+        public final DcMotorEx.Direction rightRearDirection;
 
-        //Assign the new values inside the constructor
-        this.xyTolerance = xyTolerance;
-        this.yawTolerance = yawTolerance;
-        this.pGain = pGain;
-        this.dGain = dGain;
-        this.accel = accel;
-        this.yawPGain = yawPGain;
-        this.yawDGain = yawDGain;
-        this.yawAccel = yawAccel;
-        this.iGain = iGain;
-        // =======================================================
+        public DrivetrainConfig(DcMotorEx.Direction lF, DcMotorEx.Direction rF, DcMotorEx.Direction lR, DcMotorEx.Direction rR) {
+            this.leftFrontDirection = lF;
+            this.rightFrontDirection = rF;
+            this.leftRearDirection = lR;
+            this.rightRearDirection = rR;
+        }
+    }
+
+    /**
+     * Contains the physical setup for the GoBilda Pinpoint odometry module.
+     */
+    public static final class OdometryConfig {
+        public final double pinpointOffsetX_mm;
+        public final double pinpointOffsetY_mm;
+        public final GoBildaPinpointDriver.EncoderDirection pinpointXPodDirection;
+        public final GoBildaPinpointDriver.EncoderDirection pinpointYPodDirection;
+
+        public OdometryConfig(double offsetX, double offsetY, GoBildaPinpointDriver.EncoderDirection xDir, GoBildaPinpointDriver.EncoderDirection yDir) {
+            this.pinpointOffsetX_mm = offsetX;
+            this.pinpointOffsetY_mm = offsetY;
+            this.pinpointXPodDirection = xDir;
+            this.pinpointYPodDirection = yDir;
+        }
+    }
+
+    /**
+     * Contains the physical orientation of the Control Hub's internal IMU.
+     */
+    public static final class ImuConfig {
+        public final RevHubOrientationOnRobot.LogoFacingDirection logoDirection;
+        public final RevHubOrientationOnRobot.UsbFacingDirection usbDirection;
+
+        public ImuConfig(RevHubOrientationOnRobot.LogoFacingDirection logo, RevHubOrientationOnRobot.UsbFacingDirection usb) {
+            this.logoDirection = logo;
+            this.usbDirection = usb;
+        }
+    }
+
+    /**
+     * Contains tuning values for the simple "driveToPoint" style of autonomous.
+     */
+    public static final class PointToPointTuning {
+        public final double xyTolerance;
+        public final double yawTolerance;
+        public final double pGain;
+        public final double dGain;
+        public final double iGain;
+        public final double accel;
+        public final double yawPGain;
+        public final double yawDGain;
+        public final double yawAccel;
+
+        public PointToPointTuning(double xy, double yaw, double p, double d, double i, double a, double yp, double yd, double ya) {
+            this.xyTolerance = xy;
+            this.yawTolerance = yaw;
+            this.pGain = p;
+            this.dGain = d;
+            this.iGain = i;
+            this.accel = a;
+            this.yawPGain = yp;
+            this.yawDGain = yd;
+            this.yawAccel = ya;
+        }
+    }
+
+    /**
+     * Contains all tuning constants required by the Pedro Pathing library.
+     */
+    public static final class PedroPathingConfig {
+        public final double followerMass;
+        public final double forwardZeroPowerAccel;
+        public final double lateralZeroPowerAccel;
+        public final PIDFCoefficients translationalPIDF;
+        public final PIDFCoefficients headingPIDF;
+        public final double trackWidth;
+        public final double lateralMultiplier;
+        public final double driveMaxVelo;
+        public final double strafeMaxVelo;
+        public final PathConstraints pathConstraints;
+
+        public PedroPathingConfig(double mass, double fwdAccel, double latAccel, PIDFCoefficients transPIDF, PIDFCoefficients headPIDF, double track, double latMulti, double driveVelo, double strafeVelo, PathConstraints constraints) {
+            this.followerMass = mass;
+            this.forwardZeroPowerAccel = fwdAccel;
+            this.lateralZeroPowerAccel = latAccel;
+            this.translationalPIDF = transPIDF;
+            this.headingPIDF = headPIDF;
+            this.trackWidth = track;
+            this.lateralMultiplier = latMulti;
+            this.driveMaxVelo = driveVelo;
+            this.strafeMaxVelo = strafeVelo;
+            this.pathConstraints = constraints;
+        }
     }
 
     // =================================================================================
-    //  STATIC FACTORY METHODS (The "Default" Templates)
+    // MAIN RobotConfig CLASS MEMBERS
+    // =================================================================================
+
+    public final DrivetrainConfig drivetrain;
+    public final OdometryConfig odometry;
+    public final ImuConfig imu;
+    public final PointToPointTuning pointToPointTuning;
+    public final PedroPathingConfig pedroPathing; // This can be null
+
+    /**
+     * The main constructor now takes these organized data objects.
+     * @param pedroPathingConfig Can be null if a robot doesn't use Pedro Pathing.
+     */
+    public RobotConfig(DrivetrainConfig drivetrain, OdometryConfig odometry, ImuConfig imu, PointToPointTuning p2pTuning, @Nullable PedroPathingConfig pedroPathingConfig) {
+        this.drivetrain = drivetrain;
+        this.odometry = odometry;
+        this.imu = imu;
+        this.pointToPointTuning = p2pTuning;
+        this.pedroPathing = pedroPathingConfig;
+    }
+
+    // =================================================================================
+    //  STATIC FACTORY METHODS (The "Default" Templates for each robot)
     // =================================================================================
 
     /**
-     * Creates the default, known-good configuration for the Gear Girls robot.
-     * A new programmer can use this with one line of code.
-     * @return A pre-populated RobotConfig object for the Gear Girls bot.
+     * Creates the complete configuration profile for the Gear Girls robot.
      */
     public static RobotConfig createDefaultGearGirlsConfig() {
         return new RobotConfig(
-                /* Motor Directions */
-                DcMotorEx.Direction.REVERSE,  // Left Front
-                DcMotorEx.Direction.FORWARD,  // Right Front
-                DcMotorEx.Direction.REVERSE,  // Left Rear
-                DcMotorEx.Direction.FORWARD,   // Right Rear
+                new DrivetrainConfig(
+                        DcMotorEx.Direction.REVERSE,
+                        DcMotorEx.Direction.FORWARD,
+                        DcMotorEx.Direction.REVERSE,
+                        DcMotorEx.Direction.FORWARD
+                ),
+                new OdometryConfig(
+                        -0.0, -203.0,
+                        GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                ),
+                new ImuConfig(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                ),
+                new PointToPointTuning(
+                        17.0,
+                        0.0349,
+                        0.006,
+                        0.00003,
+                        0.000002,
+                        10.0,
+                        5.0,
+                        0.0,
+                        20.0
+                ),
+                // Gear Girls robot uses Pedro Pathing, so we provide its config.
+                new PedroPathingConfig(
+                        5.0, -34.46, -64.23,
+                        new PIDFCoefficients(0.01905, 0, 0.0035, 0.02), // translational
+                        new PIDFCoefficients(0.5, 0, 0.03, 0.01),      // heading
+                        16.45, 1.0, 86.71, 60.75,
+                        new PathConstraints(0.99, 100, 1, 1)
+                )
 
-                /* Pinpoint Config */
-                -0.0,    // Offset X in mm
-                -203,//-150.0,  // Offset Y in mm
-                GoBildaPinpointDriver.EncoderDirection.REVERSED, // X Pod
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
-
-                /* IMU Config */
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD,
-
-                /* === NEW: Add GG Bot's specific tuning values here === */
-                17,      // xyTolerance
-                0.0349066, // yawToleranceRadians (this is 2 degrees)
-                0.01905,   // pGain
-                0.00111,   // dGain
-                8.0,       // accel
-                5.0,       // yawPGain
-                0.0,       // yawDGain
-                20.0,       // yawAccel
-                0.000002 //iGain
         );
     }
 
     /**
-     * Creates the default, known-good configuration for the P3 robot.
-     * @return A pre-populated RobotConfig object for the P3 bot.
+     * Creates the complete configuration profile for the P3 robot.
      */
     public static RobotConfig createDefaultP3Config() {
         return new RobotConfig(
-                /* Motor Directions */
-                DcMotorEx.Direction.REVERSE,  // Left Front
-                DcMotorEx.Direction.FORWARD,  // Right Front
-                DcMotorEx.Direction.REVERSE,  // Left Rear
-                DcMotorEx.Direction.FORWARD,   // Right Rear
-
-                /* Pinpoint Config */
-                -38,   // P3's X offset (MM)
-                165.0,  // P3's Y offset (MM)
-                GoBildaPinpointDriver.EncoderDirection.REVERSED, // X Pod
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
-
-                /* IMU Config */
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP,
-                /* === NEW: Add GG Bot's specific tuning values here === */
-                13,      // xyTolerance
-                0.055, // yawToleranceRadians (this is 3 degrees)
-                0.008,   // pGain
-                0.00003,   // dGain
-                10.0,       // accel
-                5.0,       // yawPGain
-                0.03,       // yawDGain
-                10.0,       // yawAccel
-                0.000002 //iGain
+                new DrivetrainConfig(
+                        DcMotorEx.Direction.REVERSE, DcMotorEx.Direction.FORWARD,
+                        DcMotorEx.Direction.REVERSE, DcMotorEx.Direction.FORWARD
+                ),
+                new OdometryConfig(
+                        -38.0, 165.0,
+                        GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                ),
+                new ImuConfig(
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
+                ),
+                new PointToPointTuning(
+                        13.0, 0.055, 0.008, 0.00003, 0.000002,
+                        10.0, 5.0, 0.03, 10.0
+                ),
+                // P3 robot also uses Pedro Pathing, but with different tuning.
+                new PedroPathingConfig(
+                        4.5, -30.0, -60.0,
+                        new PIDFCoefficients(0.02, 0, 0.004, 0.02),    // translational
+                        new PIDFCoefficients(0.6, 0, 0.035, 0.01),      // heading
+                        16.0, 1.05, 80.0, 55.0,
+                        new PathConstraints(0.95, 90, 1, 1)
+                )
         );
     }
+
+    /**
+     * Creates the configuration for Skyline, assuming it does NOT use Pedro Pathing.
+     */
     public static RobotConfig createDefaultSkyLineConfig() {
         return new RobotConfig(
-                /* Motor Directions */
-                DcMotorEx.Direction.FORWARD,  // Left Front
-                DcMotorEx.Direction.REVERSE,  // Right Front
-                DcMotorEx.Direction.FORWARD,  // Left Rear
-                DcMotorEx.Direction.REVERSE,   // Right Rear
-
-                /* Pinpoint Config */
-                -0.0,    // Offset X in mm
-                -150.0,  // Offset Y in mm
-                GoBildaPinpointDriver.EncoderDirection.FORWARD, // X Pod
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
-
-                /* IMU Config */
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT,
-                /* === NEW: Add GG Bot's specific tuning values here === */
-                15.5,      // xyTolerance
-                0.0349066, // yawToleranceRadians (this is 2 degrees)
-                0.01905,   // pGain
-                0.00111,   // dGain
-                8.0,       // accel
-                5.0,       // yawPGain
-                0.0,       // yawDGain
-                20.0,       // yawAccel
-                0.000002 //iGain
+                new DrivetrainConfig(
+                        DcMotorEx.Direction.FORWARD, DcMotorEx.Direction.REVERSE,
+                        DcMotorEx.Direction.FORWARD, DcMotorEx.Direction.REVERSE
+                ),
+                new OdometryConfig(
+                        -0.0, -150.0,
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                ),
+                new ImuConfig(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                ),
+                new PointToPointTuning( // It has its own simple PID tuning
+                        15.5, 0.0349066, 0.01905, 0.00111, 0.000002,
+                        8.0, 5.0, 0.0, 20.0
+                ),
+                // This robot does NOT use Pedro Pathing, so we pass null.
+                null
         );
     }
-    /**
-     * A generic "Standard Bot" config for new prototypes.
-     * @return A pre-populated RobotConfig object for a standard build.
-     */
+
     public static RobotConfig createDefaultStandardBotConfig() {
-            return new RobotConfig(
-                    /* Motor Directions */
-                    DcMotorEx.Direction.REVERSE,  // Left Front
-                    DcMotorEx.Direction.FORWARD,  // Right Front
-                    DcMotorEx.Direction.REVERSE,  // Left Rear
-                    DcMotorEx.Direction.FORWARD,   // Right Rear
-
-                    /* Pinpoint Config */
-                    -0.0,    // Offset X in mm
-                    -150.0,  // Offset Y in mm
-                    GoBildaPinpointDriver.EncoderDirection.FORWARD, // X Pod
-                    GoBildaPinpointDriver.EncoderDirection.FORWARD,   // Y Pod
-
-                    /* IMU Config */
-                    RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                    RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD,
-                    /* === NEW: Add GG Bot's specific tuning values here === */
-                    15.5,      // xyTolerance
-                    0.0349066, // yawToleranceRadians (this is 2 degrees)
-                    0.01905,   // pGain
-                    0.00111,   // dGain
-                    8.0,       // accel
-                    5.0,       // yawPGain
-                    0.0,       // yawDGain
-                    20.0,       // yawAccel
-                    0.000002 //iGain
-            );
-
+        return new RobotConfig(
+                new DrivetrainConfig(
+                        DcMotorEx.Direction.REVERSE,  // Left Front
+                        DcMotorEx.Direction.FORWARD,  // Right Front
+                        DcMotorEx.Direction.REVERSE,  // Left Rear
+                        DcMotorEx.Direction.FORWARD   // Right Rear
+                ),
+                new OdometryConfig(
+                        -0.0, -150.0,
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                ),
+                new ImuConfig(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                ),
+                new PointToPointTuning( // It has its own simple PID tuning
+                        15.5, 0.0349066, 0.01905, 0.00111, 0.000002,
+                        8.0, 5.0, 0.0, 20.0
+                ),
+                // This robot does NOT use Pedro Pathing, so we pass null.
+                null
+        );
     }
 }

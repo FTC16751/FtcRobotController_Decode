@@ -18,6 +18,8 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 @TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
 public class P3_CoachesTeleop extends OpMode
 {
+    public static final double TX_ALIGN_KP = 0.02;
+    public final double TX_ALIGN_TOLERANCE_DEG = 1.0;
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private P3_Robot robot;
@@ -27,6 +29,8 @@ public class P3_CoachesTeleop extends OpMode
     // --- OPMODE STATE VARIABLES ---
     private enum AllianceColor { RED, BLUE }
     private AllianceColor alliance = AllianceColor.RED;
+    private enum DriveMode { FIELD_CENTRIC, ARCADE }
+    private DriveMode DRIVEMODE = DriveMode.ARCADE;
     private enum IntakeState { ON, OFF, REVERSE }
     private IntakeState intakeState = IntakeState.OFF;
     private boolean isShooterOn = false;
@@ -91,14 +95,10 @@ public class P3_CoachesTeleop extends OpMode
         telemetry.addData("distanceToTagInces", robot.vision.getDistanceToTagMeters()*39.3701);
 //        telemetry.addData("distanceToTagInches", calcShooterVelocity());
         telemetry.addData("calculated velocity: ", robot.getFlywheelRpmForDistance((robot.vision.getDistanceToTagMeters()*39.3701)));
-//        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
-//        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
-//        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
         telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
-
+        robot.vision.addTelemetry();
     }
 
     @Override
@@ -108,13 +108,33 @@ public class P3_CoachesTeleop extends OpMode
     }
 
     private void doDriveControls() {
-        if (gamepad1.backWasPressed()) {
-            robot.drive.resetPosAndIMU();
+        if (gamepad1.startWasPressed()) {
+            //robot.drive.resetPosAndIMU();
+            robot.drive.pinpoint.setHeading(robot.vision.getTargetAngleX()-154, AngleUnit.DEGREES);
         }
+        //i want to use the gamepad1.back button to toggle between using drivemode of arcadeDrive and fieldCentricDrive toogle drive mode should be within this telop
+        if (gamepad1.backWasPressed()) {
+            toggleDriveMode();
+        }
+
+
         double driveInput = gamepad1.left_stick_y;
         double strafeInput = -gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
 
+        boolean isSnappingToTarget = gamepad1.right_stick_button && robot.vision.isTargetVisible();
+        if (isSnappingToTarget) {
+            double txError = robot.vision.getTargetAngleX();;
+            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                turnInput = 0.0;
+            } else {
+                turnInput = TX_ALIGN_KP * txError;
+            }
+            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
+        } else {
+            // normal right-stick turning
+            turnInput = gamepad1.right_stick_x;
+        }
         // --- Apply Deadband ---
         // If the raw input is less than the deadband, treat it as zero.
         double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
@@ -123,36 +143,30 @@ public class P3_CoachesTeleop extends OpMode
 
         // --- Apply Scaling Curve (Cubic) for Smoothing ---
         // Cubing the input provides finer control at low speeds.
-        double smoothedDrive = Math.pow(deadbandedDrive, 2);
-        double smoothedStrafe = Math.pow(deadbandedStrafe,2);
-        double smoothedTurn = Math.pow(deadbandedTurn, 2);
+        double smoothedDrive = Math.pow(deadbandedDrive, 3);
+        double smoothedStrafe = Math.pow(deadbandedStrafe,3);
+        double smoothedTurn = Math.pow(deadbandedTurn, 3);
 
 
-        // --- Apply Slew Rate Limiter for Dampening ---
-        // Get the time elapsed since the last loop, in seconds.
-        double loopTime = loopTimer.seconds();
-        loopTimer.reset(); // Reset the timer for the next loop
 
-        // Calculate the maximum change allowed in motor power for this loop cycle.
-        double maxDelta = SLEW_RATE_LIMIT * loopTime;
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        } else if (DRIVEMODE == DriveMode.FIELD_CENTRIC) {
+            robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
+        }
 
-        // Apply the limiter. Use Range.clip to constrain the new power to be
-        // within `maxDelta` of the previous power.
-        smoothedDrive  = Range.clip(smoothedDrive,  prevSmoothedDrive - maxDelta,  prevSmoothedDrive + maxDelta);
-        smoothedStrafe = Range.clip(smoothedStrafe, prevSmoothedStrafe - maxDelta, prevSmoothedStrafe + maxDelta);
-        smoothedTurn   = Range.clip(smoothedTurn,   prevSmoothedTurn - maxDelta,   prevSmoothedTurn + maxDelta);
-
-        // Store the new limited powers as the "previous" values for the next loop.
-        prevSmoothedDrive = smoothedDrive;
-        prevSmoothedStrafe = smoothedStrafe;
-        prevSmoothedTurn = smoothedTurn;
-
-
-        robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
-        //robot.drive.fieldCentricDrive(smoothedStrafe, smoothedDrive, -smoothedTurn, 1.0);
         // Add telemetry to see the effect
-//        telemetry.addData("Raw Drive", "%.2f", driveInput);
-//        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
+        telemetry.addData("Raw Drive", "%.2f", driveInput);
+        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
+        telemetry.addData("drive mode: ", DRIVEMODE);
+    }
+
+    private void toggleDriveMode() {
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            DRIVEMODE = DriveMode.FIELD_CENTRIC;;
+        } else {
+            DRIVEMODE = DriveMode.ARCADE;
+        }
     }
 
     private void handleIntakeControls() {
@@ -198,7 +212,10 @@ public class P3_CoachesTeleop extends OpMode
 
         if (isShooterOn) {
             // TODO: Replace 1000 with a call to a dynamic velocity calculation method
-            robot.launcher.setShooterMotorVelocity(calcShooterVelocity());
+            robot.launcher.setShooterMotorVelocity(1250);
+           // robot.launcher.setShooterMotorVelocity(calcShooterVelocity());
+
+
         } else {
             robot.launcher.setShooterMotorVelocity(0);
         }

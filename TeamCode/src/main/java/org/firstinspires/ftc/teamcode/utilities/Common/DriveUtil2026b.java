@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.utilities.Common;
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.RADIANS;
 import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -19,7 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.VisionUtil;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
 import java.util.Arrays;
@@ -59,7 +61,7 @@ public class DriveUtil2026b {
     public static final String REAR_RIGHT_MOTOR_NAME = "Rear_Right";
 
     // --- IMU & Sensor Members ---
-    private IMU imu;
+    public IMU imu;
     private DistanceSensor sensorDistance;
     private double rawHeading = 0;
     private double headingOffset = 0;
@@ -153,6 +155,9 @@ public class DriveUtil2026b {
     public double driveDistance     = 0; // scaled axial distance (+ = forward)
     public double strafeDistance    = 0; // scaled lateral distance (+ = left)
     public double heading           = 0; // Latest Robot heading from IMU
+    // The Follower can be null if this robot doesn't use it.
+    //public final Follower follower;
+
     private double holdTime;
     // =================================================================================
     // SECTION 2: CONSTRUCTOR & INITIALIZATION
@@ -166,6 +171,19 @@ public class DriveUtil2026b {
         initializeIMU(hardwareMap);
         initMotors(hardwareMap);
         initOdo(hardwareMap);
+
+//        if (config.pedroPathing != null) {
+//            // This robot wants smooth driving. Create the Follower.
+//            this.follower = Constants.createFollower(hardwareMap, config);
+//            this.follower.setStartingPose(new Pose(0, 0, 0));
+//            this.follower.startTeleopDrive(true);
+//            telemetry.log().add("DriveUtil: Initialized with Pedro Pathing Follower.");
+//        } else {
+//            // This robot does NOT use Pedro. The follower remains null.
+//            this.follower = null;
+//            telemetry.log().add("DriveUtil: Initialized in Simple PID Mode.");
+//           ;
+//        }
     }
 
     private void initMotors(HardwareMap hardwareMap) {
@@ -176,10 +194,10 @@ public class DriveUtil2026b {
         motors = Arrays.asList(leftFrontMotor, rightFrontMotor, leftRearMotor, rightRearMotor);
 
         // Use the injected config for directions
-        leftFrontMotor.setDirection(config.leftFrontDirection);
-        rightFrontMotor.setDirection(config.rightFrontDirection);
-        leftRearMotor.setDirection(config.leftRearDirection);
-        rightRearMotor.setDirection(config.rightRearDirection);
+        leftFrontMotor.setDirection(config.drivetrain.leftFrontDirection);
+        rightFrontMotor.setDirection(config.drivetrain.rightFrontDirection);
+        leftRearMotor.setDirection(config.drivetrain.leftRearDirection);
+        rightRearMotor.setDirection(config.drivetrain.rightRearDirection);
 
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -192,7 +210,7 @@ public class DriveUtil2026b {
         imu = hardwareMap.get(IMU.class, "imu");
         // Use the injected config for IMU orientation
         RevHubOrientationOnRobot orientationOnRobot =
-                new RevHubOrientationOnRobot(config.imuLogoDirection, config.imuUsbDirection);
+                new RevHubOrientationOnRobot(config.imu.logoDirection, config.imu.usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         resetHeading();
     }
@@ -204,9 +222,9 @@ public class DriveUtil2026b {
 
     private void configurePinpoint() {
         // Use the injected config for Pinpoint setup
-        pinpoint.setOffsets(config.pinpointOffsetX_mm, config.pinpointOffsetY_mm, DistanceUnit.MM);
+        pinpoint.setOffsets(config.odometry.pinpointOffsetX_mm, config.odometry.pinpointOffsetY_mm, DistanceUnit.MM);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        pinpoint.setEncoderDirections(config.pinpointXPodDirection, config.pinpointYPodDirection);
+        pinpoint.setEncoderDirections(config.odometry.pinpointXPodDirection, config.odometry.pinpointYPodDirection);
         pinpoint.resetPosAndIMU();
     }
 
@@ -314,6 +332,8 @@ public class DriveUtil2026b {
         telemetry.addData("current X coordinate", currentPos.getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", currentPos.getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", currentPos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("pinpoin x direction: ", config.odometry.pinpointXPodDirection);
+        telemetry.addData("pinpoin y direction: ", config.odometry.pinpointYPodDirection);
         return currentPos;
     }
 
@@ -488,25 +508,34 @@ public class DriveUtil2026b {
     }
 
     public void arcadeDrive(double strafe, double drive, double turn, double rightStickY, double speed) {
-        // This is where you would apply smoothing/deadband if desired,
-        // or just pass the raw values to moveRobot.
-        moveRobot(drive * speed, strafe * speed, turn * speed);
+       // if (follower != null) {
+            // If the follower exists, use it for smooth, stateful control.
+           // follower.setTeleOpDrive(drive, strafe, turn, true);
+        //} else {
+            // This is where you would apply smoothing/deadband if desired,
+            // or just pass the raw values to moveRobot.
+            moveRobot(drive * speed, strafe * speed, turn * speed);
+       // }
     }
 
     public void fieldCentricDrive(double strafe, double drive, double turn, double speed) {
-        // 1. Get the robot's current heading from the IMU.
-        // We get it in radians because the Math functions work with radians.
-        double botHeading = getPinpointHeading();
+//        if (follower != null) {
+//            // If the follower exists, use it for smooth, stateful control.
+//            follower.setTeleOpDrive(drive, strafe, turn, false);
+//        } else {
+            // Get the robot's current heading from the IMU.
+            double botHeading = getPinpointHeading();
 
-        // 2. The Field-Centric Transformation
-        // Rotate the joystick inputs by the negative of the robot's heading.
-        // This cancels out the robot's rotation from the control scheme.
-        double rotatedX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
-        double rotatedY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
+            // Field-Centric Transformation
+            // Rotate the joystick inputs by the negative of the robot's heading.
+            // This cancels out the robot's rotation
+            double rotatedX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
+            double rotatedY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
 
-        // 3. Call the existing moveRobot method with the new, "rotated" inputs.
-        // The turn input remains the same.
-        moveRobot(rotatedY * speed, rotatedX * speed, turn * speed);
+            // Call the existing moveRobot method with the new, "rotated" inputs.
+            // The turn input remains the same.
+            moveRobot(rotatedY * speed, rotatedX * speed, turn * speed);
+        //}
     }
 
     public void simpleTankDrive(double left_stick_x, double left_stick_y, double right_stick_x, double right_stick_y, double DRIVE_SPEED) {
@@ -719,6 +748,9 @@ public class DriveUtil2026b {
                 // Do nothing
                 break;
         }
+//        if (follower != null) {
+//            follower.update();
+//        }
     }
 
     public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
@@ -768,33 +800,33 @@ public class DriveUtil2026b {
     private double calculatePID(Pose2D currentPosition, Pose2D targetPosition, Direction direction){
         if(direction ==Direction.x){
             double xError = targetPosition.getX(MM) - currentPosition.getX(MM);
-            return xPID.calculateAxisPID(xError, config.pGain, config.dGain, config.accel,PIDTimer.seconds(), xyTolerance);
+            return xPID.calculateAxisPID(xError, config.pointToPointTuning.pGain, config.pointToPointTuning.dGain, config.pointToPointTuning.accel,PIDTimer.seconds(), xyTolerance);
         }
         if(direction == Direction.y){
             double yError = targetPosition.getY(MM) - currentPosition.getY(MM);
-            return yPID.calculateAxisPID(yError, config.pGain, config.dGain, config.accel, PIDTimer.seconds(), xyTolerance);
+            return yPID.calculateAxisPID(yError, config.pointToPointTuning.pGain, config.pointToPointTuning.dGain, config.pointToPointTuning.accel, PIDTimer.seconds(), xyTolerance);
         }
         if(direction == Direction.h){
             double targetH = targetPosition.getHeading(AngleUnit.RADIANS);
             double currentH = currentPosition.getHeading(AngleUnit.RADIANS);
             double hError = Angle.normDelta(targetH - currentH);
             //double hError = targetPosition.getHeading(AngleUnit.RADIANS) - currentPosition.getHeading(AngleUnit.RADIANS);
-            if (Math.abs(hError) < config.yawTolerance) {
+            if (Math.abs(hError) < config.pointToPointTuning.yawTolerance) {
                 hPID.pidReset();
                 return 0.0;
             }
-            return hPID.calculateAxisPID(hError, config.yawPGain, config.yawDGain, config.yawAccel, PIDTimer.seconds(), yawTolerance);
+            return hPID.calculateAxisPID(hError, config.pointToPointTuning.yawPGain, config.pointToPointTuning.yawDGain, config.pointToPointTuning.yawAccel, PIDTimer.seconds(), yawTolerance);
         }
         return 0;
     }
 
     private InBounds inBounds (Pose2D currPose, Pose2D trgtPose){
-        boolean xInBounds = currPose.getX(MM) > (trgtPose.getX(MM) - config.xyTolerance) && currPose.getX(MM) < (trgtPose.getX(MM) + config.xyTolerance);
-        boolean yInBounds = currPose.getY(MM) > (trgtPose.getY(MM) - config.xyTolerance) && currPose.getY(MM) < (trgtPose.getY(MM) + config.xyTolerance);
+        boolean xInBounds = currPose.getX(MM) > (trgtPose.getX(MM) - config.pointToPointTuning.xyTolerance) && currPose.getX(MM) < (trgtPose.getX(MM) + config.pointToPointTuning.xyTolerance);
+        boolean yInBounds = currPose.getY(MM) > (trgtPose.getY(MM) - config.pointToPointTuning.xyTolerance) && currPose.getY(MM) < (trgtPose.getY(MM) + config.pointToPointTuning.xyTolerance);
         double targetH = trgtPose.getHeading(RADIANS);
         double currentH = currPose.getHeading(RADIANS);
         double hError = Angle.normDelta(targetH - currentH);
-        boolean hInBounds = Math.abs(hError) < config.yawTolerance;
+        boolean hInBounds = Math.abs(hError) < config.pointToPointTuning.yawTolerance;
         //boolean hInBounds = currPose.getHeading(RADIANS) > (trgtPose.getHeading(RADIANS) - config.yawTolerance) &&
         //        currPose.getHeading(RADIANS) < (trgtPose.getHeading(RADIANS) + config.yawTolerance);
 
@@ -815,7 +847,7 @@ public class DriveUtil2026b {
         double xDelta = trgtPose.getX(MM) - currPose.getX(MM);
         double yDelta = trgtPose.getY(MM) - currPose.getY(MM);
 
-        if(Math.abs(xDelta) > config.xyTolerance || Math.abs(yDelta) > config.xyTolerance){
+        if(Math.abs(xDelta) > config.pointToPointTuning.xyTolerance || Math.abs(yDelta) > config.pointToPointTuning.xyTolerance){
             return Math.atan2(yDelta, xDelta);
         } else {
             return currPose.getHeading(RADIANS);
@@ -1106,41 +1138,23 @@ public class DriveUtil2026b {
             double p = error * pGain;
             double cycleTime = currentTime - previousTime;
             double d = dGain * (previousError - error) / (cycleTime);
-            double output = p - d;
+            double output = p + d;
             double dV = cycleTime * accel;
-            double dVup = cycleTime * accel;
-            double dVdown = cycleTime * accel *1.5;
-
-            // --- INTEGRAL UPDATE ---
-            // Only integrate when we're outside the "close enough" window
-            if (Math.abs(error) > tolerance) {
-                integralError += error * cycleTime;      // accumulate error over time
-                // Anti-windup clamp
-                if (integralError > I_LIMIT)  integralError = I_LIMIT;
-                if (integralError < -I_LIMIT) integralError = -I_LIMIT;
-            } else {
-                // When we're very close, reset so it doesn't keep pushing
-                integralError = 0.0;
-            }
-
-            double i = integralError * iGain;
-            output = p + i - d;
-
-            // --- NORMALIZE OUTPUT ---
 
             double max = Math.abs(output);
-            if (max > 1.0) {
+            if(max > 1.0){
                 output /= max;
             }
 
-            if ((output - previousOutput) > dVup) {
-                output = previousOutput + dVup;
-            } else if ((output - previousOutput) < -dVdown) {
-                output = previousOutput - dVdown;
+            if((output - previousOutput) > dV){
+                output = previousOutput + dV;
+            } else if ((output - previousOutput) < -dV){
+                output = previousOutput - dV;
             }
+
             previousOutput = output;
-            previousError = error;
-            previousTime = currentTime;
+            previousError  = error;
+            previousTime   = currentTime;
 
             errorR = error;
 

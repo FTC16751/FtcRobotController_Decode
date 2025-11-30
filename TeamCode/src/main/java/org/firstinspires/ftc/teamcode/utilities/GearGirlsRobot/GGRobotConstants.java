@@ -24,8 +24,8 @@ public class GGRobotConstants {
         public static final double BLUE_TAG20_X_M = -1.482;
         public static final double BLUE_TAG20_Y_M = -1.413;
 
-        public static final double RED_TAG24_X_M  = -1.482;
-        public static final double RED_TAG24_Y_M  =  1.413;
+        public static final double RED_TAG24_X_M  = -1.482; // -58.34 in inches
+        public static final double RED_TAG24_Y_M  =  1.413; // 55.63 in inches
     }
     public static final class Launcher {
         public static final double CLOSE_TARGET_VELOCITY = 1200; //in ticks/second for the close goal.
@@ -88,12 +88,20 @@ public class GGRobotConstants {
         /* Red Alliance Poses */
         public static final Pose2D RED_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-13.7, 17, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,10, 15.6, AngleUnit.DEGREES,-45);
-        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-24);
+        //public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-24);
+        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,3, 0, AngleUnit.DEGREES,-20);
         public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,24, 8.8, AngleUnit.DEGREES,0);
-        public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,2.5, 36.1, AngleUnit.DEGREES,-89.8);
-        public static final Pose2D RED_FAR_SPIKEMARK3_BALL1 = new Pose2D(DistanceUnit.INCH,3.8, 39.5, AngleUnit.DEGREES,-89.8);
-        public static final Pose2D RED_FAR_SPIKEMARK3_BALL2 = new Pose2D(DistanceUnit.INCH,1.8, 34.5, AngleUnit.DEGREES,-89.8);
-        public static final Pose2D RED_FAR_SPIKEMARK3_BALL3 = new Pose2D(DistanceUnit.INCH,1.8, 34.5, AngleUnit.DEGREES,-89.8);
+        //public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,2.5, 36.1, AngleUnit.DEGREES,-89.8);
+        public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,26, 0, AngleUnit.DEGREES,-90.);
+
+        public static final Pose2D RED_FAR_SPIKEMARK3_BALL1 = new Pose2D(DistanceUnit.INCH,26, -17, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK3_BALL2 = new Pose2D(DistanceUnit.INCH,26, -23, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK3_BALL3 = new Pose2D(DistanceUnit.INCH,26, -39, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,47, 0, AngleUnit.DEGREES,-90.);
+
+        public static final Pose2D RED_FAR_SPIKEMARK2_BALL1 = new Pose2D(DistanceUnit.INCH,47, -17, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_BALL2 = new Pose2D(DistanceUnit.INCH,47, -23, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_BALL3 = new Pose2D(DistanceUnit.INCH,47, -39, AngleUnit.DEGREES,-90);
 // use+declare
 
 
