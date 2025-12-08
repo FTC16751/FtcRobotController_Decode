@@ -46,6 +46,10 @@ public class PedroPatchDrivetrainTest extends OpMode{
             isAutoOrienting = !isAutoOrienting;
         }
         */
+        if (gamepad1.startWasPressed()) {
+            Pose resetPose = new Pose(0,0,0);
+            dt.resetPose(resetPose);
+        }
 
         telemetry.addData("X", dt.position.getX());
         telemetry.addData("Y", dt.position.getY());

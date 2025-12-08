@@ -28,21 +28,14 @@
  */
 
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_HoodServoUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 /*
@@ -59,15 +52,14 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="P3: Teleop (Team Version)", group=" _P3opmodes")
+@TeleOp(name="P3: Teleop (Team Version) COPY", group=" _P3opmodes")
 
-public class P3_Teleop extends OpMode
+public class P3_Teleop_COPY extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private P3_Robot robot;
-    private P3_HoodServoUtil hoodServo;
 
 
     enum allianceColor {
@@ -99,14 +91,9 @@ public class P3_Teleop extends OpMode
     @Override
     public void init() {
         robot = new P3_Robot(hardwareMap,telemetry);
-        hoodServo = new P3_HoodServoUtil(hardwareMap);
+
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
-
-        // Load the alliance that was saved by the Autonomous OpMode
-        CommonConstants.Alliance alliance = SharedState.alliance; // This loads the value into the static variable.
-        // 3. Tell the robot to configure its vision system for that alliance.
-        robot.configureVisionForTeleOp(alliance);
     }
 
     /*
@@ -134,14 +121,14 @@ public class P3_Teleop extends OpMode
         handleIntakeControls();
         calcShooterVelocity();
         handleLauncherControls();
-        handleHoodServo();
-        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
-        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
-        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
-        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+        
+//        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+//        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+//        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+//        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+//        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+//        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
         telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
         telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
         telemetry.addData("tx error: ", txError);
@@ -152,15 +139,6 @@ public class P3_Teleop extends OpMode
      */
     @Override
     public void stop() {
-    }
-
-    private void handleHoodServo() {
-       if (gamepad1.dpad_left) {
-            hoodServo.setLowPosition();
-        }
-       else if (gamepad1.dpad_right) {
-           hoodServo.setHighPosition();
-       }
     }
     private void doDriveControls() {
         //double turnInput = 0;
@@ -184,7 +162,10 @@ public class P3_Teleop extends OpMode
         }
 
 
-        robot.drive.arcadeDrive(strafeInput, -driveInput, turnInput, gamepad1.right_stick_y, 1.0);
+
+        robot.drive.arcadeDrive(-strafeInput, driveInput, turnInput, gamepad1.right_stick_y, 1.0);
+
+        //drive.arcadeDrive(strafeInput, driveInput, turnInput, gamepad1.right_stick_y, DRIVE_SPEED);
 
     }
 
@@ -194,7 +175,7 @@ public class P3_Teleop extends OpMode
         }
         switch (intakeState) {
             case ON:
-                robot.intake.setIntakeMotorPower(-INTAKE_POWER);
+                robot.intake.setIntakeMotorPower(INTAKE_POWER);
                 break;
             case OFF:
                 robot.intake.setIntakeMotorPower(0.0);
@@ -210,10 +191,12 @@ public class P3_Teleop extends OpMode
         double h = 0.9845-0.381;
         double angle = Math.toRadians(55);
         double distance = robot.vision.getDistanceToTagMeters();
+        telemetry.addData("distance ", distance);
         double flyWheelCircumference = 0.09525*Math.PI;
         double velocity = Math.sqrt(Math.pow(9.8*distance, 2)/
                 (2*Math.cos(angle)*Math.cos(angle))
                 * (distance*Math.tan(angle)) - h);
+        telemetry.addData("velocity ", velocity);
         double rotations = velocity / flyWheelCircumference;
         double ticks;
         ticks = 28 * rotations;
@@ -222,16 +205,16 @@ public class P3_Teleop extends OpMode
 
     private void handleLauncherControls() {
         if (gamepad1.right_trigger > 0.8) {
-            robot.feeder.setFeederMotorPower(-1.0);
+            robot.launcher.setIndexerServoPower(-1.0);
             robot.launcher.setShootingPosition();
         }
         else {
-            robot.feeder.setFeederMotorPower(0.0);
+            robot.launcher.setIndexerServoPower(0.0);
             robot.launcher.setStopPosition();
         }
 
         if (gamepad1.yWasPressed()) {
-            requestedMotorVelocity = 1200;//calcShooterVelocity();
+            requestedMotorVelocity = calcShooterVelocity();
             robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
             // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
@@ -253,15 +236,5 @@ public class P3_Teleop extends OpMode
 
         }
     }
-    private void doLights() {
-        if ((angleOnTarget==0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT * requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.GREEN);
-        } else if ((angleOnTarget<0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT * requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.YELLOW);
-        } else if ((angleOnTarget>0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT*requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.BLUE);
-        } else {
-            robot.light.setColor(LedUtil.Color.RED);
-        }
-    }
+
 }

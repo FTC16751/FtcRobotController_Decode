@@ -69,7 +69,7 @@ public class VisionUtil {
     private static final int RED_GOAL_PIPELINE = 1;
     private static final int BLUE_GOAL_PIPELINE = 2;
 
-
+    public enum Alliance { RED, BLUE }
 
 
 
@@ -236,7 +236,17 @@ public class VisionUtil {
     }
 
     public double getDistanceToTagMeters() {
-
+        if (!isTargetVisible) {
+            return -1.0;
+        }
+        // Create a local variable for the pose to work with.
+        Pose3D pose = this.robotPoseInTagSpace;
+        if (pose == null) {
+            return -1.0;
+        }
+        double x_meters = pose.getPosition().x;
+        double z_meters = pose.getPosition().z; // Limelight uses Z for forward distance in tag space
+        robotDistanceToTagInTagSpace = Math.hypot(x_meters, z_meters);
         return robotDistanceToTagInTagSpace;
     }
 
@@ -339,8 +349,8 @@ public class VisionUtil {
      * This is the primary method OpModes should use to configure vision targeting.
      * @param alliance The alliance color to target.
      */
-    public void setTargetingAlliance(GGRobotConstants.Alliance alliance) {
-        if (alliance == GGRobotConstants.Alliance.RED) {
+    public void setTargetingAlliance(CommonConstants.Alliance alliance) {
+        if (alliance == CommonConstants.Alliance.RED) {
             setPipeline(RED_GOAL_PIPELINE);
         } else {
             setPipeline(BLUE_GOAL_PIPELINE);

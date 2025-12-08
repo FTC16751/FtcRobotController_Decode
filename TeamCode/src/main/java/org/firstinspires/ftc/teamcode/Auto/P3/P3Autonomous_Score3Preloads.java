@@ -216,6 +216,8 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 }
                 break;
             case START_SHOOTING:
+                telemetry.addData("I'm here with olivia, chilling not getting to this code", "bruh number 1");
+
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_AWAY, 0.35, 0.25);
                 autoTargetVelocity = 1300;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
@@ -223,6 +225,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 redFarState = RedFarState.SHOOTING;
                 break;
             case SHOOTING:
+                telemetry.addData("I'm here with olivia, chilling not getting to this code", "bruh");
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_AWAY, 0.35, 0.25);
                 telemetry.addData("Path State", redFarState);
                 if (shotsFired < 3) {

@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOA
 import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_Y_COORDINATE_METERS;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
@@ -145,7 +146,7 @@ public class GGRobot {
         telemetry.addData("Pinpoint Positions (x, y, heading): ", drive.pinpoint.getPosition().getX(DistanceUnit.INCH) + ", " + drive.pinpoint.getPosition().getY(DistanceUnit.INCH) + ", " + drive.pinpoint.getPosition().getHeading(AngleUnit.DEGREES));
     }
 
-    public void configureVisionForTeleOp(GGRobotConstants.Alliance alliance) {
+    public void configureVisionForTeleOp(CommonConstants.Alliance alliance) {
         if (vision != null) {
             vision.setTargetingAlliance(alliance);
             telemetry.addData("Vision", "Configured for %s Alliance", alliance);
@@ -193,12 +194,12 @@ public class GGRobot {
             double tx = vision.getTargetAngleX();
 
             // Get the current alliance from the shared state.
-            GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+            CommonConstants.Alliance currentAlliance = SharedState.alliance;
 
             double targetX_m;
             double targetY_m;
 
-            if (currentAlliance == GGRobotConstants.Alliance.RED) {
+            if (currentAlliance == CommonConstants.Alliance.RED) {
                 targetX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
                 targetY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
             } else { // BLUE alliance
@@ -429,11 +430,11 @@ public class GGRobot {
         // Define the goal's location. This should be a constant.
         //if alliance is red
         // 2. Get the current alliance from the shared static variable.
-        GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+        CommonConstants.Alliance currentAlliance = SharedState.alliance;
 
         // 3. Get the correct heading error from the vision system based on that alliance.
         Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);;
-        if (currentAlliance == GGRobotConstants.Alliance.RED) {
+        if (currentAlliance == CommonConstants.Alliance.RED) {
                trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.RED_TAG24_X_M, GGRobotConstants.GoalLocation.RED_TAG24_Y_M, AngleUnit.DEGREES,54);
         } else { // BLUE
                 trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.BLUE_TAG20_X_M, GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M, AngleUnit.DEGREES,45);
@@ -471,7 +472,7 @@ public class GGRobot {
                 robotX_in, robotY_in, robotHeading_deg);
 
         //Get the current alliance from the shared static variable.
-        GGRobotConstants.Alliance currentAlliance = SharedState.alliance;
+        CommonConstants.Alliance currentAlliance = SharedState.alliance;
         telemetry.addData("AutoAim Alliance", currentAlliance);
 
 
@@ -479,7 +480,7 @@ public class GGRobot {
         double goalX_m;
         double goalY_m;
 
-        if (currentAlliance == GGRobotConstants.Alliance.RED) {
+        if (currentAlliance == CommonConstants.Alliance.RED) {
             goalX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
             goalY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
             telemetry.addData("Target", "RED Goal (Tag 24)");
@@ -496,7 +497,7 @@ public class GGRobot {
 
         // Get the correct heading error from the vision system based on that alliance.
         double headingErrorDeg;
-        if (currentAlliance == GGRobotConstants.Alliance.RED) {
+        if (currentAlliance == CommonConstants.Alliance.RED) {
             headingErrorDeg = vision.calculateHeadingErrorToRedGoalDegrees();
         } else { // BLUE
             headingErrorDeg = vision.calculateHeadingErrorToBlueGoalDegrees();

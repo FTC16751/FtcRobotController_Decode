@@ -1,18 +1,17 @@
 package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
-import org.firstinspires.ftc.teamcode.utilities.Common.LimeLightVisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion;
 
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_LauncherUtil;
+
 /**
  * P3_Robot is the central hub that orchestrates all of the P3 robot's subsystems.
  * It owns all the hardware and utility classes, providing a clean interface for OpModes.
@@ -27,7 +26,9 @@ public class P3_Robot {
     public final VisionUtil vision;
     public final Telemetry telemetry;
     public final IMU imu;
+    public final LedUtil light;
     private InterpolatingLookupTable flywheelTable;
+    public final P3_IndexerUtil feeder;
 
     private enum LaunchState {
         IDLE,         // The sequence is not running.
@@ -59,6 +60,9 @@ public class P3_Robot {
         launcher = new P3_LauncherUtil(hardwareMap);
         vision = new VisionUtil(hardwareMap, telemetry);
         imu = hardwareMap.get(IMU.class, "imu");
+        light = new LedUtil(hardwareMap, "light");
+        feeder = new P3_IndexerUtil(hardwareMap);
+
 
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 1000.0);
@@ -212,4 +216,11 @@ public class P3_Robot {
         launcher.setStopPosition();
         launchState = LaunchState.IDLE;
     }
+    public void configureVisionForTeleOp(CommonConstants.Alliance alliancecolor) {
+        if (vision != null) {
+            vision.setTargetingAlliance(alliancecolor);
+            telemetry.addData("Vision", "Configured for %s Alliance", alliancecolor);
+        }
+    }
+
 }

@@ -53,4 +53,9 @@ public class Drivetrain {
         position = follower.getPose();
 
     }
+
+    public void resetPose(Pose pose) {
+        follower.setStartingPose(pose);
+    }
+
 }

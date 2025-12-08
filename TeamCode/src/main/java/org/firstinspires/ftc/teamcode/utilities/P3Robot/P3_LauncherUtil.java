@@ -73,7 +73,7 @@ public class P3_LauncherUtil {
     /**
      * Sets the power of the intake motor.
      *
-     * @param speed The desired power level, typically between -1.0 and 1.0.
+     * @param speed The desired in ticks per second.
      */
     public void setShooterMotorVelocity(double speed) {
         shooterMotorLeft.setVelocity(speed);
@@ -124,6 +124,7 @@ public class P3_LauncherUtil {
         setShooterMotorVelocity(m_speed = speed);
         shooterState = shooterStates.SPINNING_UP;
     }
+
     public void launch() {
         if(shooterState == shooterStates.FLYWHEEL_SPUN) {
             setIndexerServoPower(.25);

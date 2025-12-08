@@ -28,6 +28,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
@@ -121,7 +122,7 @@ public class GearGirlsBot1 extends OpMode {
         robot = new GGRobot(hardwareMap, telemetry);
 
         // Load the alliance that was saved by the Autonomous OpMode
-        GGRobotConstants.Alliance alliance = SharedState.alliance; // This loads the value into the static variable.
+        CommonConstants.Alliance alliance = SharedState.alliance; // This loads the value into the static variable.
         // 3. Tell the robot to configure its vision system for that alliance.
         robot.configureVisionForTeleOp(alliance);
 
@@ -404,16 +405,16 @@ public class GearGirlsBot1 extends OpMode {
         // --- 1. Manual Alliance Override ---
         if (gamepad2.x) { // Using 'x' for Blue
             // Only update if the alliance has actually changed to avoid spamming the logs.
-            if (SharedState.alliance != GGRobotConstants.Alliance.BLUE) {
-                SharedState.alliance = GGRobotConstants.Alliance.BLUE;
+            if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
+                SharedState.alliance = CommonConstants.Alliance.BLUE;
                 robot.configureVisionForTeleOp(SharedState.alliance);
                 telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to BLUE");
             }
         }
 
         if (gamepad2.b) { // Using 'b' for Red
-            if (SharedState.alliance != GGRobotConstants.Alliance.RED) {
-                SharedState.alliance = GGRobotConstants.Alliance.RED;
+            if (SharedState.alliance != CommonConstants.Alliance.RED) {
+                SharedState.alliance = CommonConstants.Alliance.RED;
                 robot.configureVisionForTeleOp(SharedState.alliance);
                 telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to RED");
             }

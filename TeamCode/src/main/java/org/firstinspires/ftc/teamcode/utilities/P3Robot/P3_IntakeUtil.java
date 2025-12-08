@@ -49,7 +49,7 @@ public class P3_IntakeUtil {
      * @param /power The desired power level, typically between -1.0 and 1.0.
      */
     public void setIntakeMotorPower(double power) {
-        intakeMotor.setPower(power*.6);
+        intakeMotor.setPower(power);
         intakeServo.setPower(-power);
         intakeServo2.setPower(-power);
 

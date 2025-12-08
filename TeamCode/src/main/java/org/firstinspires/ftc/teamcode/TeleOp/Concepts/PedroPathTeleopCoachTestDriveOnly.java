@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.EncoderOdometry;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
@@ -91,7 +92,7 @@ public class PedroPathTeleopCoachTestDriveOnly extends OpMode{
         // --- ROBOT ---
         robot = new GGRobot(hardwareMap, telemetry);
         // Load the alliance that was saved by the Autonomous OpMode
-        GGRobotConstants.Alliance alliance = SharedState.alliance; // This loads the value into the static variable.
+        CommonConstants.Alliance alliance = SharedState.alliance; // This loads the value into the static variable.
         robot.configureVisionForTeleOp(alliance);
 
         // --- State Initialization ---
@@ -270,15 +271,15 @@ public class PedroPathTeleopCoachTestDriveOnly extends OpMode{
     private void handleCopilotControls() {
         // --- Manual Alliance Override ---
         if (gamepad2.x) { // Using 'x' for Blue
-            if (SharedState.alliance != GGRobotConstants.Alliance.BLUE) {
-                SharedState.alliance = GGRobotConstants.Alliance.BLUE;
+            if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
+                SharedState.alliance = CommonConstants.Alliance.BLUE;
                 robot.configureVisionForTeleOp(SharedState.alliance);
             }
         }
 
         if (gamepad2.b) { // Using 'b' for Red
-            if (SharedState.alliance != GGRobotConstants.Alliance.RED) {
-                SharedState.alliance = GGRobotConstants.Alliance.RED;
+            if (SharedState.alliance != CommonConstants.Alliance.RED) {
+                SharedState.alliance = CommonConstants.Alliance.RED;
                 robot.configureVisionForTeleOp(SharedState.alliance);
             }
         }

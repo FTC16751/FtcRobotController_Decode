@@ -59,6 +59,7 @@ public class ExampleTeleOp extends OpMode {
     }
     @Override
     public void loop() {
+
         // snap to goal
         boolean snapToGoal = gamepad1.left_bumper;
         Pose goalPose;
