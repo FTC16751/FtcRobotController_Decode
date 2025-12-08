@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
+import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 
 /**
  * Skyline_Robot is the central hub that orchestrates all of the Skyline robot's subsystems.
@@ -18,7 +20,7 @@ public class Skyline_Robot {
     public final Skyline_LauncherUtil launcher;
     public final Skyline_FeederUtil feeder;
     public final Telemetry telemetry;
-
+    public final VisionUtil vision;
     // --- State Machine for the Launch Sequence ---
     private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
     private LaunchState launchState = LaunchState.IDLE;
@@ -32,6 +34,7 @@ public class Skyline_Robot {
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
         launcher = new Skyline_LauncherUtil(hardwareMap);
         feeder = new Skyline_FeederUtil(hardwareMap);
+        vision = new VisionUtil(hardwareMap, telemetry);
     }
 
     /**
@@ -40,9 +43,8 @@ public class Skyline_Robot {
      * For now, it updates the launch sequence state machine.
      */
     public void update() {
-        // This is where you would call update() on any subsystems that need it
-        // e.g., vision.update();
-        // The launch state machine is managed by the launch() method itself.
+        if (drive != null) drive.update();
+        if (vision != null) vision.update();
     }
 
     /**
@@ -95,5 +97,13 @@ public class Skyline_Robot {
         drive.stopRobot();
         launcher.setVelocity(0);
         feeder.stop();
+        vision.stop();
+    }
+
+    public void configureVisionForTeleOp(GGRobotConstants.Alliance alliance) {
+        if (vision != null) {
+            vision.setTargetingAlliance(alliance);
+            telemetry.addData("Vision", "Configured for %s Alliance", alliance);
+        }
     }
 }
