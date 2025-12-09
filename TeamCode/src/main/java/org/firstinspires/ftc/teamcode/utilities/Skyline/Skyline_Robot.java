@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
@@ -100,7 +101,7 @@ public class Skyline_Robot {
         vision.stop();
     }
 
-    public void configureVisionForTeleOp(GGRobotConstants.Alliance alliance) {
+    public void configureVisionForTeleOp(CommonConstants.Alliance alliance) {
         if (vision != null) {
             vision.setTargetingAlliance(alliance);
             telemetry.addData("Vision", "Configured for %s Alliance", alliance);
