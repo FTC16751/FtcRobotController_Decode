@@ -198,10 +198,10 @@ public class PedroPathTeleopCoachTest extends OpMode{
         // Set the position based on the final state once per loop
         switch (diverterDirection) {
             case LEFT:
-                robot.intake.setDiverterLeft();
+                robot.intake.setDiverterRight();
                 break;
             case RIGHT:
-                robot.intake.setDiverterRight();
+                robot.intake.setDiverterLeft();
                 break;
             case CENTER:
                 robot.intake.setDiverterCenter();

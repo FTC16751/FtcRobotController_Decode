@@ -30,11 +30,11 @@ public class GGRobotConstants {
     public static final class Launcher {
         public static final double CLOSE_TARGET_VELOCITY = 1200; //in ticks/second for the close goal.
         public static final double CLOSE_MIN_VELOCITY = 1175;//minimum required to start a shot for close goal.
-        public static final double FAR_TARGET_VELOCITY = 1425; //Target velocity for far goal
+        public static final double FAR_TARGET_VELOCITY = 1350; //Target velocity for far goal
         public static final double FAR_MIN_VELOCITY = 1325;//minimum required to start a shot for far goal
         public static final double AUTO_TARGET_VELOCITY = 1000; //in ticks/second for the close goal.
         public static final double AUTO_MIN_VELOCITY = AUTO_TARGET_VELOCITY-25;//minimum required to start a shot for close goal.
-        public static final double TIME_BETWEEN_SHOTS = 1.0;
+        public static final double TIME_BETWEEN_SHOTS = 0.5;
     }
 
     public enum LauncherDistance {
@@ -55,8 +55,8 @@ public class GGRobotConstants {
     }
 
     public static final class Diverter {
-        public static final double LEFT_POSITION = 0.2962;
-        public static final double RIGHT_POSITION = 0.0;
+        public static final double RIGHT_POSITION = 0.2962;
+        public static final double LEFT_POSITION = 0.0;
         public static final double CENTER_POSITION = 0.145;
     }
 
@@ -89,7 +89,7 @@ public class GGRobotConstants {
         public static final Pose2D RED_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-13.7, 17, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,10, 15.6, AngleUnit.DEGREES,-45);
         //public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-24);
-        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,3, 0, AngleUnit.DEGREES,-20);
+        public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,6, 0, AngleUnit.DEGREES,-20);
         public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,24, 8.8, AngleUnit.DEGREES,0);
         //public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,2.5, 36.1, AngleUnit.DEGREES,-89.8);
         public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,26, 0, AngleUnit.DEGREES,-90.);
@@ -101,7 +101,7 @@ public class GGRobotConstants {
 
         public static final Pose2D RED_FAR_SPIKEMARK2_BALL1 = new Pose2D(DistanceUnit.INCH,47, -17, AngleUnit.DEGREES,-90);
         public static final Pose2D RED_FAR_SPIKEMARK2_BALL2 = new Pose2D(DistanceUnit.INCH,47, -23, AngleUnit.DEGREES,-90);
-        public static final Pose2D RED_FAR_SPIKEMARK2_BALL3 = new Pose2D(DistanceUnit.INCH,47, -39, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_BALL3 = new Pose2D(DistanceUnit.INCH,47, -40, AngleUnit.DEGREES,-90);
 // use+declare
 
 

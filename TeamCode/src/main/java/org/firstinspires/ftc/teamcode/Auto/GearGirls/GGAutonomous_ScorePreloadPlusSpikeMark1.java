@@ -242,7 +242,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_ALIGN, 0.5, 0.25);
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_BALL1, 0.5, 0.25);
                 sleep(100);
-                robot.intake.setDiverterRight();
+                robot.intake.setDiverterLeft();
                 sleep(50);
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_BALL2, 0.5, 0.25);
                 sleep(100);
@@ -302,7 +302,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
                 // Drive to the final parking position.
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN, 0.5, 0.25)) {
                     robot.intake.setIntakeMotorPower(1);
-                    robot.intake.setDiverterLeft();
+                    robot.intake.setDiverterRight();
                     blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL1;
                 }
                 break;

@@ -34,18 +34,18 @@ public class IntakeUtil {
     /**
      * Moves the diverter servo to the predefined LEFT position.
      * This is used to direct game elements to the left side of the robot intake.
-     * The position value is sourced from {@link GGRobotConstants.Diverter#LEFT_POSITION}.
+     * The position value is sourced from {@link GGRobotConstants.Diverter#RIGHT_POSITION}.
      */
-    public void setDiverterLeft() {
-        setDiverterPosition(GGRobotConstants.Diverter.LEFT_POSITION);
+    public void setDiverterRight() {
+        setDiverterPosition(GGRobotConstants.Diverter.RIGHT_POSITION);
     }
 
     /**
      * Moves the diverter servo to the predefined RIGHT position.
      * This is used to direct game elements to the right side of the robot intake.
      */
-    public void setDiverterRight() {
-        setDiverterPosition(GGRobotConstants.Diverter.RIGHT_POSITION);
+    public void setDiverterLeft() {
+        setDiverterPosition(GGRobotConstants.Diverter.LEFT_POSITION);
     }
 
     /**

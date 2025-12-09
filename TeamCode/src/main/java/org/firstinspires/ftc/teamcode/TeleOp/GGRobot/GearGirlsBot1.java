@@ -26,7 +26,6 @@ package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
@@ -319,10 +318,10 @@ public class GearGirlsBot1 extends OpMode {
         // Set the position based on the final state once per loop
         switch (diverterDirection) {
             case LEFT:
-                robot.intake.setDiverterLeft();
+                robot.intake.setDiverterRight();
                 break;
             case RIGHT:
-                robot.intake.setDiverterRight();
+                robot.intake.setDiverterLeft();
                 break;
             case CENTER:
                 robot.intake.setDiverterCenter();

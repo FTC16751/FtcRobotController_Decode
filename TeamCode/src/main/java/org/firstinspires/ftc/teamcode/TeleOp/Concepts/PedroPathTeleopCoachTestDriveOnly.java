@@ -26,9 +26,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.opencv.Circle;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 import org.firstinspires.ftc.vision.opencv.ColorRange;
-import org.firstinspires.ftc.vision.opencv.ImageRegion;
 
-import java.nio.file.attribute.FileTime;
 import java.util.List;
 
 @TeleOp(name="Coach Pedro Path DrivetrainTest2 ", group="Concept")
@@ -303,10 +301,10 @@ public class PedroPathTeleopCoachTestDriveOnly extends OpMode{
         // Set the position based on the final state once per loop
         switch (diverterDirection) {
             case LEFT:
-                robot.intake.setDiverterLeft();
+                robot.intake.setDiverterRight();
                 break;
             case RIGHT:
-                robot.intake.setDiverterRight();
+                robot.intake.setDiverterLeft();
                 break;
             case CENTER:
                 robot.intake.setDiverterCenter();
