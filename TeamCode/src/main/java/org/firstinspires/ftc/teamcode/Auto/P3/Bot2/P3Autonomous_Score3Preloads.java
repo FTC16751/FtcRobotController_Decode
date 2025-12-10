@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto.P3;
+package org.firstinspires.ftc.teamcode.Auto.P3.Bot2;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -6,14 +6,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: Score Preloads", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO: bot2 Score Preloads", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_Score3Preloads extends OpMode {
 
     // --- Subsystems ---
-    private P3_Robot_Bot1 robot;
+    private P3_Robot robot;
 
     // --- OpMode State and Configuration ---
     private P3RobotConstants.Alliance alliance = P3RobotConstants.Alliance.RED;
@@ -58,7 +57,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
 
     @Override
     public void init() {
-        robot = new P3_Robot_Bot1(hardwareMap, telemetry);
+        robot = new P3_Robot(hardwareMap, telemetry);
         telemetry.addData(">", "Robot Initialized. Ready for selections.");
     }
 
@@ -161,7 +160,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 redCloseState = RedCloseState.MOVE_AWAY_FROM_GOAL;
                 break;
             case MOVE_AWAY_FROM_GOAL:
-                robot.intake.setIntakeMotorPower(1.0);
+                robot.intake.setIntakePower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.35, 0.25)) {
                     shotsFired = 0;
@@ -209,7 +208,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 redFarState = RedFarState.RED_FAR_DRIVE_TO_SCORE;
                 break;
             case RED_FAR_DRIVE_TO_SCORE:
-                robot.intake.setIntakeMotorPower(1.0);
+                robot.intake.setIntakePower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.35, 0.25)) {
                     shotsFired = 0;
@@ -258,7 +257,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                     blueCloseState = BlueCloseState.MOVE_AWAY_FROM_GOAL;
                     break;
                 case MOVE_AWAY_FROM_GOAL:
-                    robot.intake.setIntakeMotorPower(1.0);
+                    robot.intake.setIntakePower(1.0);
                     robot.launcher.setShooterMotorVelocity(1000);
                     if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.35, 1)) {
                         shotsFired = 0;

@@ -52,7 +52,7 @@ public class P3_Robot {
      */
     public P3_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-        RobotConfig config = RobotConfig.createDefaultP3Config();
+        RobotConfig config = RobotConfig.createP3Robot2Config();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
@@ -105,7 +105,7 @@ public class P3_Robot {
      */
     public void stopAll() {
         drive.stopRobot(); // Assuming a method like this exists in DriveUtil2026
-        intake.setIntakeMotorPower(0);
+        intake.setIntakePower(0);
         launcher.setShooterMotorVelocity(0);
         vision.stop();
     }

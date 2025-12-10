@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
@@ -41,7 +40,7 @@ public class P3_IntakeUtil {
      * Stops the intake motor by setting its power to zero.
      */
     public void stopIntake() {
-        setIntakeMotorPower(0.0);
+        setIntakePower(0.0);
     }//Stop
 
     /**
@@ -49,11 +48,32 @@ public class P3_IntakeUtil {
      *
      * @param /power The desired power level, typically between -1.0 and 1.0.
      */
-    public void setIntakeMotorPower(double power) {
+    public void setIntakePower(double power) {
         intakeMotor.setPower(power);
         intakeServo.setPower(-power);
         intakeServo2.setPower(-power);
 
+    }
+
+    public void setIntakeMotor(double power) {
+        intakeMotor.setPower(power);
+    }
+
+    public void setIntakeServos() {
+        intakeServo.setPower(-1.0);
+        intakeServo2.setPower(-1.0);
+
+    }
+
+    public void stopIntakeServos() {
+
+        intakeServo.setPower(0.0);
+        intakeServo2.setPower(0.0);
+    }
+
+    public void reverseIntakeServos() {
+        intakeServo.setPower(1.0);
+        intakeServo2.setPower(1.0);
     }
 
     /**

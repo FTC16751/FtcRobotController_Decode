@@ -207,7 +207,7 @@ public class RobotConfig {
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
                 ),
                 new PointToPointTuning(
-                        13.0, 0.055, 0.008, 0.00003, 0.000002,
+                        17.0, 0.055, 0.002, 0.00003, 0.000002,
                         10.0, 5.0, 0.03, 10.0
                 ),
                 // P3 robot also uses Pedro Pathing, but with different tuning.
@@ -220,7 +220,33 @@ public class RobotConfig {
                 )
         );
     }
-
+    public static RobotConfig createP3Robot2Config() {
+        return new RobotConfig(
+                new DrivetrainConfig(
+                        DcMotorEx.Direction.REVERSE, DcMotorEx.Direction.FORWARD,
+                        DcMotorEx.Direction.REVERSE, DcMotorEx.Direction.FORWARD
+                ),
+                new OdometryConfig(
+                        -38.0, 165.0,
+                        GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                ),
+                new ImuConfig(
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
+                ),
+                new PointToPointTuning(
+                        17.0, 0.055, 0.002, 0.00003, 0.000002,
+                        10.0, 5.0, 0.03, 10.0
+                ),
+                // P3 robot also uses Pedro Pathing, but with different tuning.
+                new PedroPathingConfig(
+                        4.5, -30.0, -60.0,
+                        new PIDFCoefficients(0.02, 0, 0.004, 0.02),    // translational
+                        new PIDFCoefficients(0.6, 0, 0.035, 0.01),      // heading
+                        16.0, 1.05, 80.0, 55.0,
+                        new PathConstraints(0.95, 90, 1, 1)
+                )
+        );
+    }
     /**
      * Creates the configuration for Skyline, assuming it does NOT use Pedro Pathing.
      */

@@ -33,8 +33,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
@@ -196,9 +194,9 @@ public class P3_Teleop extends OpMode
         }
 
         switch (intakeState) {
-            case ON:      robot.intake.setIntakeMotorPower(INTAKE_POWER);  break;
-            case REVERSE: robot.intake.setIntakeMotorPower(-INTAKE_POWER); break;
-            case OFF:     robot.intake.setIntakeMotorPower(0);             break;
+            case ON:      robot.intake.setIntakePower(INTAKE_POWER);  break;
+            case REVERSE: robot.intake.setIntakePower(-INTAKE_POWER); break;
+            case OFF:     robot.intake.setIntakePower(0);             break;
         }
     }
 /**

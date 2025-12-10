@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto.P3;
+package org.firstinspires.ftc.teamcode.Auto.P3.Bot2;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -9,10 +9,10 @@ import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
-//import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: Alliance Selection Test", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
-public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
+@Autonomous(name="P3 AUTO: bot2 Just Park", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
+public class
+P3Autonomous_JustPark extends OpMode {
 
     // --- Subsystems ---
     private P3_Robot robot;
@@ -27,7 +27,7 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
     private AutonomousState autonomousState = AutonomousState.PRE_START;
 
     // --- Path-Specific State Machines ---
-    private enum RedCloseState { START, PARK }
+    private enum RedCloseState { START, COMPLETE, PARK }
     private RedCloseState redCloseState = RedCloseState.START;
 
     private enum RedFarState { START,  PARK }
@@ -136,9 +136,12 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
                 redCloseState = RedCloseState.PARK;
                 break;
             case PARK:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_PARK, 0.5, 0.25)) {
+                    redCloseState = RedCloseState.COMPLETE;
+                }
+                break;
+            case COMPLETE:
                 autonomousState = AutonomousState.COMPLETE;
-
-
                 break;
         }
         telemetry.addData("Path State", redCloseState);
@@ -151,8 +154,11 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
                 redFarState = RedFarState.PARK;
                 break;
             case PARK:
-                autonomousState = AutonomousState.COMPLETE;
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
 
+                    autonomousState = AutonomousState.COMPLETE;
+
+                }
                 break;
         }
     }
@@ -165,7 +171,9 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
                 blueCloseState = BlueCloseState.PARK;
                 break;
             case PARK:
-                autonomousState = AutonomousState.COMPLETE;
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
+                    autonomousState = AutonomousState.COMPLETE;
+                }
                 break;
         }
         telemetry.addData("Path State", blueCloseState);
@@ -179,7 +187,9 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
                 blueFarState = BlueFarState.PARK;
                 break;
             case PARK:
-                autonomousState = AutonomousState.COMPLETE;
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
+                    autonomousState = AutonomousState.COMPLETE;
+                }
                 break;
         }
     }

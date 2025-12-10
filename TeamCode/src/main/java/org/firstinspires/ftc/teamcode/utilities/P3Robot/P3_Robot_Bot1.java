@@ -103,7 +103,7 @@ public class P3_Robot_Bot1 {
      */
     public void stopAll() {
         drive.stopRobot(); // Assuming a method like this exists in DriveUtil2026
-        intake.setIntakeMotorPower(0);
+        intake.setIntakePower(0);
         launcher.setShooterMotorVelocity(0);
         vision.stop();
     }

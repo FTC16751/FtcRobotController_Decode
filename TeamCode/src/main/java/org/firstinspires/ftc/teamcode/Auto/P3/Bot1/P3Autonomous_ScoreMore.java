@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto.P3;
+package org.firstinspires.ftc.teamcode.Auto.P3.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -7,11 +7,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: Score Preloads AND Spikemark 1", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO: bot1 Score Preloads + 3", group="P3Bot1",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_ScoreMore extends OpMode {
 
     // --- Subsystems ---
@@ -145,7 +144,7 @@ public class P3Autonomous_ScoreMore extends OpMode {
                 redCloseState = RedCloseState.MOVE_AWAY_FROM_GOAL;
                 break;
             case MOVE_AWAY_FROM_GOAL:
-                robot.intake.setIntakeMotorPower(1.0);
+                robot.intake.setIntakePower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.35, 0.25))
                 {
@@ -235,7 +234,7 @@ public class P3Autonomous_ScoreMore extends OpMode {
                 redFarState = RedFarState.MOVE_AWAY_FROM_GOAL;
                 break;
             case MOVE_AWAY_FROM_GOAL:
-                robot.intake.setIntakeMotorPower(1.0);
+                robot.intake.setIntakePower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.35, 0.25)) {
                     shotsFired = 0;
@@ -324,7 +323,7 @@ public class P3Autonomous_ScoreMore extends OpMode {
                 blueCloseState = BlueCloseState.MOVE_AWAY_FROM_GOAL;
                 break;
             case MOVE_AWAY_FROM_GOAL:
-                robot.intake.setIntakeMotorPower(1.0);
+                robot.intake.setIntakePower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.4, 0.25))
                 {

@@ -1,21 +1,18 @@
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 // LIMELIGHT imports
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
 @TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
+@Disabled
 public class P3_CoachesTeleop extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;
@@ -179,9 +176,9 @@ public class P3_CoachesTeleop extends OpMode
         }
 
         switch (intakeState) {
-            case ON:      robot.intake.setIntakeMotorPower(INTAKE_POWER);  break;
-            case REVERSE: robot.intake.setIntakeMotorPower(-INTAKE_POWER); break;
-            case OFF:     robot.intake.setIntakeMotorPower(0);             break;
+            case ON:      robot.intake.setIntakePower(INTAKE_POWER);  break;
+            case REVERSE: robot.intake.setIntakePower(-INTAKE_POWER); break;
+            case OFF:     robot.intake.setIntakePower(0);             break;
         }
     }
 

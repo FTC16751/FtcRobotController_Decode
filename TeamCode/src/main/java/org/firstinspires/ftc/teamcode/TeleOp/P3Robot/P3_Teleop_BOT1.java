@@ -33,10 +33,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 
 /*
@@ -53,9 +49,9 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="P3: Teleop (Team Version) COPY", group=" _P3opmodes")
+@TeleOp(name="P3: BOT1 Teleop (Team Version)", group=" _P3opmodes")
 
-public class P3_Teleop_COPY extends OpMode
+public class P3_Teleop_BOT1 extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;
     // Declare OpMode members.
@@ -176,10 +172,12 @@ public class P3_Teleop_COPY extends OpMode
         }
         switch (intakeState) {
             case ON:
-                robot.intake.setIntakeMotorPower(INTAKE_POWER);
+                robot.intake.setIntakeMotor(-INTAKE_POWER);
+                robot.intake.setIntakeServos();
                 break;
             case OFF:
-                robot.intake.setIntakeMotorPower(0.0);
+                robot.intake.setIntakePower(0.0);
+                robot.intake.stopIntakeServos();
                 break;
 
         }
