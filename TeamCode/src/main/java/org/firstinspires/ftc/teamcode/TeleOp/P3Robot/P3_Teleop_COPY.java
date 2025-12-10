@@ -37,6 +37,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -59,7 +60,7 @@ public class P3_Teleop_COPY extends OpMode
     public static final double TX_ALIGN_KP = 0.02;
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private P3_Robot robot;
+    private P3_Robot_Bot1 robot;
 
 
     enum allianceColor {
@@ -90,7 +91,7 @@ public class P3_Teleop_COPY extends OpMode
      */
     @Override
     public void init() {
-        robot = new P3_Robot(hardwareMap,telemetry);
+        robot = new P3_Robot_Bot1(hardwareMap,telemetry);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -215,7 +216,7 @@ public class P3_Teleop_COPY extends OpMode
 
         if (gamepad1.yWasPressed()) {
             requestedMotorVelocity = calcShooterVelocity();
-            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+            robot.launcher.setShooterMotorVelocity(1300);
             // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
         }
         if (gamepad1.xWasPressed()) {

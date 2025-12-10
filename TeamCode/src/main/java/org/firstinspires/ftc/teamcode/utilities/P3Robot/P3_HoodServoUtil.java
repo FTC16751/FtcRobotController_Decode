@@ -40,7 +40,7 @@ public class P3_HoodServoUtil {
     }
 
     public void setHighPosition() {
-        hoodServo.setPosition(0.075);
+        hoodServo.setPosition(0.1);
     }
 
 }

@@ -81,9 +81,9 @@ public class P3RobotConstants {
         public static final Pose2D RED_FAR_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,8.5, 12, AngleUnit.DEGREES,-21);
         public static final Pose2D RED_FAR_PARK = new Pose2D(DistanceUnit.INCH,24, -6, AngleUnit.DEGREES,0);
         public static final Pose2D RED_FAR_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,24, -6, AngleUnit.DEGREES,0); // CHANGE
-        public static final Pose2D RED_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,24, -6, AngleUnit.DEGREES,0); // CHANGE
+        public static final Pose2D RED_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,24, -6, AngleUnit.DEGREES,90); // CHANGE
 
-        public static final Pose2D RED_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,24, -6, AngleUnit.DEGREES,0); // CHANGE
+        public static final Pose2D RED_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,29, -6, AngleUnit.DEGREES,90); // CHANGE
 
 
         // * Blue Alliance Poses */

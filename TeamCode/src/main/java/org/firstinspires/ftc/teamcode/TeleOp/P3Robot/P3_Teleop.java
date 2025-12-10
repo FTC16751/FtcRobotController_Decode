@@ -28,9 +28,7 @@
  */
 
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -39,9 +37,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_HoodServoUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 
@@ -135,16 +131,18 @@ public class P3_Teleop extends OpMode
         calcShooterVelocity();
         handleLauncherControls();
         handleHoodServo();
-        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
-        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
-        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
-        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
-        telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
-        telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
-        telemetry.addData("tx error: ", txError);
+        handleCopilotControls();
+
+//        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
+//        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+//        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+//        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+//        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+//        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
+//        telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
+//        telemetry.addData("tx error: ", txError);
     }
 
     /*
@@ -192,14 +190,15 @@ public class P3_Teleop extends OpMode
         if (gamepad1.aWasPressed()) {
             intakeState = (intakeState == IntakeState.ON) ? IntakeState.OFF : IntakeState.ON;
         }
-        switch (intakeState) {
-            case ON:
-                robot.intake.setIntakeMotorPower(-INTAKE_POWER);
-                break;
-            case OFF:
-                robot.intake.setIntakeMotorPower(0.0);
-                break;
 
+        if (gamepad1.bWasPressed()) {
+            intakeState = (intakeState == IntakeState.REVERSE) ? IntakeState.OFF : IntakeState.REVERSE;
+        }
+
+        switch (intakeState) {
+            case ON:      robot.intake.setIntakeMotorPower(INTAKE_POWER);  break;
+            case REVERSE: robot.intake.setIntakeMotorPower(-INTAKE_POWER); break;
+            case OFF:     robot.intake.setIntakeMotorPower(0);             break;
         }
     }
 /**
@@ -253,15 +252,39 @@ public class P3_Teleop extends OpMode
 
         }
     }
+
+    private void handleCopilotControls() {
+        if (gamepad1.left_bumper) { // Set alliance to Blue
+            if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
+                SharedState.alliance = CommonConstants.Alliance.BLUE;
+                robot.configureVisionForTeleOp(SharedState.alliance);
+                telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to BLUE");
+            }
+        }
+
+        if (gamepad1.right_bumper) { // set alliance to Red
+            if (SharedState.alliance != CommonConstants.Alliance.RED) {
+                SharedState.alliance = CommonConstants.Alliance.RED;
+                robot.configureVisionForTeleOp(SharedState.alliance);
+                telemetry.addLine("CO-PILOT OVERRIDE: Alliance switched to RED");
+            }
+        }
+
+//        if(gamepad2.start) {
+//            robot.resetOdometryToVision();
+//            telemetry.addLine("CO-PILOT OVERRIDE: resetOdometryToVision");
+//        }
+    }
+
     private void doLights() {
         if ((angleOnTarget==0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT * requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.GREEN);
+            robot.led.setColor(LedUtil.Color.GREEN);
         } else if ((angleOnTarget<0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT * requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.YELLOW);
+            robot.led.setColor(LedUtil.Color.YELLOW);
         } else if ((angleOnTarget>0.0) && (robot.launcher.getShooterMotorVelocity() >= SHOOTER_VELOCITY_TOLERANCE_PERCENT*requestedMotorVelocity)) {
-            robot.light.setColor(LedUtil.Color.BLUE);
+            robot.led.setColor(LedUtil.Color.BLUE);
         } else {
-            robot.light.setColor(LedUtil.Color.RED);
+            robot.led.setColor(LedUtil.Color.RED);
         }
     }
 }

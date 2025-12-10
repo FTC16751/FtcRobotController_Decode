@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
@@ -28,7 +29,7 @@ public class P3_IntakeUtil {
         }
         //Intake Motor (new bot)
         intakeMotor = hardwareMap.get(DcMotor.class, INTAKE_MOTOR_NAME);
-        intakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         intakeServo = hardwareMap.get(CRServo.class, "intakeServo");

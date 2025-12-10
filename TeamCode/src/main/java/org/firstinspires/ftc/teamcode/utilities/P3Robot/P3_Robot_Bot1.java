@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.DriveUtil2026b;
@@ -9,14 +12,11 @@ import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 /**
  * P3_Robot is the central hub that orchestrates all of the P3 robot's subsystems.
  * It owns all the hardware and utility classes, providing a clean interface for OpModes.
  */
-public class P3_Robot {
+public class P3_Robot_Bot1 {
 
     // --- PUBLIC SUBSYSTEMS ---
     // These are public so the OpMode can access them directly (e.g., robot.drive.arcadeDrive(...))
@@ -28,7 +28,6 @@ public class P3_Robot {
     public final IMU imu;
     public final LedUtil led;
     private InterpolatingLookupTable flywheelTable;
-    public final P3_IndexerUtil feeder;
 
     private enum LaunchState {
         IDLE,         // The sequence is not running.
@@ -50,7 +49,7 @@ public class P3_Robot {
     /**
      * Constructor for the P3_Robot class.
      */
-    public P3_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
+    public P3_Robot_Bot1(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         RobotConfig config = RobotConfig.createDefaultP3Config();
 
@@ -61,7 +60,6 @@ public class P3_Robot {
         vision = new VisionUtil(hardwareMap, telemetry);
         imu = hardwareMap.get(IMU.class, "imu");
         led = new LedUtil(hardwareMap, "light");
-        feeder = new P3_IndexerUtil(hardwareMap);
 
 
         flywheelTable = new InterpolatingLookupTable();

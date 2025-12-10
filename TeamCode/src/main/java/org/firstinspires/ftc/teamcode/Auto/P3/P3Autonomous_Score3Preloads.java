@@ -6,13 +6,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 @Autonomous(name="P3 AUTO: Score Preloads", group="P3Bot",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_Score3Preloads extends OpMode {
 
     // --- Subsystems ---
-    private P3_Robot robot;
+    private P3_Robot_Bot1 robot;
 
     // --- OpMode State and Configuration ---
     private P3RobotConstants.Alliance alliance = P3RobotConstants.Alliance.RED;
@@ -57,7 +58,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
 
     @Override
     public void init() {
-        robot = new P3_Robot(hardwareMap, telemetry);
+        robot = new P3_Robot_Bot1(hardwareMap, telemetry);
         telemetry.addData(">", "Robot Initialized. Ready for selections.");
     }
 
@@ -210,34 +211,35 @@ public class P3Autonomous_Score3Preloads extends OpMode {
             case RED_FAR_DRIVE_TO_SCORE:
                 robot.intake.setIntakeMotorPower(1.0);
                 robot.launcher.setShooterMotorVelocity(1000);
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_AWAY, 0.35, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.35, 0.25)) {
                     shotsFired = 0;
                     redFarState = RedFarState.START_SHOOTING;
                 }
                 break;
             case START_SHOOTING:
-                telemetry.addData("I'm here with olivia, chilling not getting to this code", "bruh number 1");
-
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_AWAY, 0.35, 0.25);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.35, 0.25);
                 autoTargetVelocity = 1300;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
                 driveTimer.reset();
                 redFarState = RedFarState.SHOOTING;
                 break;
             case SHOOTING:
-                telemetry.addData("I'm here with olivia, chilling not getting to this code", "bruh");
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_AWAY, 0.35, 0.25);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.35, 0.25);
                 telemetry.addData("Path State", redFarState);
+                //if (!robot.isLaunchSequenceBusy()) {
                 if (shotsFired < 3) {
                     // Start the sequence
                     telemetry.addData("Launch Sequence", "launch!");
                     if (robot.launchSequence(true, autoTargetVelocity)) {
                         shotsFired++;
-                    } else {
-                        // All 3 shots are done, move to the next auto state (e.g., PARK).
-                        redFarState = RedFarState.PARK;
                     }
+                    ;
+
+                } else {
+                    // All 3 shots are done, move to the next auto state (e.g., PARK).
+                    redFarState = RedFarState.PARK;
                 }
+                //}
                 break;
             case PARK:
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {

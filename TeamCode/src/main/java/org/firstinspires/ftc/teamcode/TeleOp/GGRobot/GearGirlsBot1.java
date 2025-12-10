@@ -401,9 +401,8 @@ public class GearGirlsBot1 extends OpMode {
     }
 
     private void handleCopilotControls() {
-        // --- 1. Manual Alliance Override ---
+        // ---Manual Alliance Override ---
         if (gamepad2.x) { // Using 'x' for Blue
-            // Only update if the alliance has actually changed to avoid spamming the logs.
             if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
                 SharedState.alliance = CommonConstants.Alliance.BLUE;
                 robot.configureVisionForTeleOp(SharedState.alliance);
