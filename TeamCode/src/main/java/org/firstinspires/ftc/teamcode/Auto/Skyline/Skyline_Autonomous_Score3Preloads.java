@@ -27,7 +27,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
 
     // --- Autonomous Constants ---
     // Constants for THIS specific path.
-    private static final double LAUNCHER_TARGET_VELOCITY = 1400;
+    private static final double LAUNCHER_TARGET_VELOCITY = 1375;
     private static final double LAUNCHER_MIN_VELOCITY = LAUNCHER_TARGET_VELOCITY-25;
     private static final double FEED_TIME = .45; // Adjusted feed time
     private static final double DRIVE_SPEED = 0.5;
@@ -42,7 +42,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
         WAIT_FOR_SHOT_COMPLETION, // State to wait for the launchSequence to finish
         // -----------------------------
         DRIVING_AWAY_FROM_GOAL,
-        ROTATING,
+        TURN_TO_PARK,
         DRIVING_OFF_LINE,
         COMPLETE
     }
@@ -121,7 +121,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
                     telemetry.addData("DONE SHOOTING", "Shot %d of 3 requested...", (4 - shotsToFire));
 
                     // All shots have been fired, move on to driving.
-                    autonomousState = AutonomousState.ROTATING;
+                    autonomousState = AutonomousState.TURN_TO_PARK;
                 }
                 break;
 
@@ -143,7 +143,7 @@ public class Skyline_Autonomous_Score3Preloads extends OpMode
                 break;
 
 
-            case ROTATING:
+            case TURN_TO_PARK:
                 double robotRotationAngle = (alliance == Alliance.RED) ? 30 : -30;
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
                     autonomousState = AutonomousState.DRIVING_OFF_LINE;

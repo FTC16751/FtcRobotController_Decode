@@ -19,8 +19,8 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  * This OpMode is only responsible for the high-level sequence of events.
  */
 
-@Autonomous(name="SKYLINE: PARK NEAR GOAL", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
-public class Skyline_Autonomous_Park extends OpMode
+@Autonomous(name="SKYLINE: PARK FAR ", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
+public class Skyline_Autonomous_Park_Far extends OpMode
 {
     // --- Main Robot Object ---
     private Skyline_Robot robot;
@@ -98,10 +98,10 @@ public class Skyline_Autonomous_Park extends OpMode
         switch (autonomousState){
             case PARK:
             if (alliance == Alliance.RED) {
-                robot.drive.drive_p3(-12,-12,0,.5);
+                robot.drive.drive_p3(24,0,0,.5);
             }
                 else {
-                    robot.drive.drive_p3(-12,12,0,.5);
+                    robot.drive.drive_p3(24,0,0,.5);
             }
                 autonomousState = AutonomousState.COMPLETE;
                 break;
