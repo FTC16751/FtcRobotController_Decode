@@ -38,7 +38,7 @@ public class GGRobot {
     public final IntakeUtil intake;
     public final Telemetry telemetry;
     public final VisionUtil vision;
-    public final IntakeSensorFusion intakeSensors;
+    //public final IntakeSensorFusion intakeSensors;
     public final LedUtil led;
 
     //PRIVATE STATE AND TIMERS FOR ROBOT-LEVEL ACTIONS
@@ -80,7 +80,7 @@ public class GGRobot {
         launcher = new LauncherMotors(hardwareMap);
         feeder = new LaunchIndexer(hardwareMap);
         intake = new IntakeUtil(hardwareMap);
-        intakeSensors = new IntakeSensorFusion(hardwareMap, telemetry);
+        //intakeSensors = new IntakeSensorFusion(hardwareMap, telemetry);
         vision = new VisionUtil(hardwareMap, telemetry);
         led = new LedUtil(hardwareMap, "led_servo");
 
@@ -109,7 +109,7 @@ public class GGRobot {
         if (led != null) updateLedStatus();
         if (drive != null) drive.update();
         if (feeder != null) feeder.update();
-        if (intakeSensors != null) intakeSensors.update();
+        //if (intakeSensors != null) intakeSensors.update();
         if (vision != null) {
             vision.update();
             vision.updateRobotOrientation(drive.getHeading());

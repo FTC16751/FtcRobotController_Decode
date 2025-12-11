@@ -31,7 +31,7 @@ public class LedUtil {
         try {
             ledServo = hardwareMap.get(Servo.class, deviceName);
             // Set a default color on initialization.
-            setColor(Color.RED);
+            setColor(Color.OFF);
         } catch (Exception e) {
             throw new RuntimeException("Could not find or initialize LED servo: " + deviceName, e);
         }

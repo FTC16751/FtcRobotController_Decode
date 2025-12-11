@@ -32,16 +32,8 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.Skyline;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
@@ -62,13 +54,13 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "SKYLINE: Teleop (RUN ME)", group = " _SLopmodes")
+@TeleOp(name = "SKYLINE: Teleop (V2)", group = " _SLopmodes")
 //@Disabled
-public class Skyline_Teleop extends OpMode {
+public class Skyline_TeleopV2 extends OpMode {
     // --- Constants for this OpMode ---
     private static final double DRIVE_SPEED = 0.80;
     private static final double FEED_TIME_SECONDS = 2.50;
-    private static double LAUNCHER_TARGET_VELOCITY = 1400;
+    private static double LAUNCHER_TARGET_VELOCITY_NEAR = 1400;
     private static double LAUNCHER_TARGET_VELOCITY_FAR = 1780;
     private static final double LAUNCHER_MIN_VELOCITY = 1350; // Adjusted for a reasonable threshold
 
@@ -123,25 +115,15 @@ public class Skyline_Teleop extends OpMode {
      */
     @Override
     public void loop() {
-        // 1. ALWAYS update the robot's state first
         robot.update();
 
-        // 2. Delegate all control logic to helper methods
         handleDriveControls();
         handleManualLauncherControls();
         handleManualFeederControls();
+        handleAllianceSelectionControls();
 
-//        // 3. Call the main launch sequence state machine
-//        robot.launchSequence(
-//                gamepad1.rightBumperWasPressed(), // The trigger for the sequence
-//                LAUNCHER_TARGET_VELOCITY,
-//                LAUNCHER_MIN_VELOCITY,
-//                FEED_TIME_SECONDS
-//        );
-
-        // 4. Display telemetry
         doTelemetry();
-        handleCopilotControls();
+
     }
 
     /*
@@ -200,22 +182,25 @@ public class Skyline_Teleop extends OpMode {
                 break;
 
             case MANUAL_OVERRIDE:
-                // In this mode, we check for specific manual button presses.
-                if (gamepad1.a) {
-                    // Set a predefined "far" velocity
+                if (gamepad1.dpadLeftWasReleased()) {
+                    // Set predefined "far" velocity
                     launcherVelocity = LAUNCHER_TARGET_VELOCITY_FAR;
                     telemetry.addData("Launcher Mode", "MANUAL (A - Far)");
-                } else if (gamepad1.b) {
+                } else if (gamepad1.dpadRightWasReleased()) {
+                    // Set predefined 'near' velocity
+                    launcherVelocity = LAUNCHER_TARGET_VELOCITY_NEAR;
+                    telemetry.addData("Launcher Mode", "MANUAL (A - Far)");
+                } else if (gamepad1.a) {
                     // Stop the launcher
                     launcherVelocity = 0;
                     telemetry.addData("Launcher Mode", "MANUAL (B - Off)");
                 } else if (gamepad1.dpadUpWasReleased()) {
                     // Increase the CURRENT velocity by 100
-                    launcherVelocity += 25;
+                    launcherVelocity += 100;
                     telemetry.addData("Launcher Mode", "MANUAL (+100)");
                 } else if (gamepad1.dpadDownWasReleased()) {
                     // Decrease the CURRENT velocity by 100
-                    launcherVelocity -= 25;
+                    launcherVelocity -= 100;
                     telemetry.addData("Launcher Mode", "MANUAL (-100)");
                 }
                 // If no manual override button is being pressed, 'launcherVelocity' simply
@@ -223,44 +208,20 @@ public class Skyline_Teleop extends OpMode {
                 break;
         }
         robot.launcher.setVelocity(launcherVelocity);
-
-//        if (gamepad1.yWasPressed()) {
-//            launcherVelocity = robot.updateAndGetTargetVelocity();
-//            robot.launcher.setVelocity(launcherVelocity);
-//        }
-//        if (gamepad1.a) {
-//            launcherVelocity = LAUNCHER_TARGET_VELOCITY_FAR;
-//            robot.launcher.setVelocity(launcherVelocity);
-//        }
-//        if (gamepad1.b) {
-//            launcherVelocity = 0;
-//            robot.launcher.setVelocity(launcherVelocity);
-//
-//        }
-//        if (gamepad1.dpadUpWasPressed()) {
-//            launcherVelocity = launcherVelocity+100;
-//            robot.launcher.setVelocity(launcherVelocity);
-//
-//        } else if (gamepad1.dpadDownWasPressed()){
-//            launcherVelocity = launcherVelocity-100;
-//            robot.launcher.setVelocity(launcherVelocity);
-//        }
     }
 
     private void handleManualFeederControls() {
-        if (gamepad1.dpad_left) {
+        if (gamepad1.left_bumper) {
             robot.feeder.setPower(1.0); // Both forward
-        } else if (gamepad1.dpad_right) {
+        } else if (gamepad1.right_bumper) {
             robot.feeder.setPower(-1.0); // Both reverse
         } else {
-            // Stop only if no manual d-pad input is given.
-            // This allows the launch sequence to control the feeders.
             robot.feeder.stop();
         }
     }
 
-    private void handleCopilotControls() {
-        if (gamepad1.left_bumper) { // Set alliance to Blue
+    private void handleAllianceSelectionControls() {
+        if (gamepad1.xWasPressed()) { // Set alliance to Blue
             if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
                 SharedState.alliance = CommonConstants.Alliance.BLUE;
                 robot.configureVisionForTeleOp(SharedState.alliance);
@@ -268,7 +229,7 @@ public class Skyline_Teleop extends OpMode {
             }
         }
 
-        if (gamepad1.right_bumper) { // set alliance to Red
+        if (gamepad1.bWasPressed()) { // set alliance to Red
             if (SharedState.alliance != CommonConstants.Alliance.RED) {
                 SharedState.alliance = CommonConstants.Alliance.RED;
                 robot.configureVisionForTeleOp(SharedState.alliance);
