@@ -42,7 +42,7 @@ public class P3_Robot {
 
     // These constants define the timing of the launch sequence. They belong here
     // as they define a robot-level behavior.
-    private static final double FEED_TIME_SECONDS = 2.5; // How long to run the indexer for each shot.
+    private static final double FEED_TIME_SECONDS = .25; // How long to run the indexer for each shot.
     private static final double COOLDOWN_TIME_SECONDS = 0.25; // Brief pause between shots.
     // ---------------------------------------------------
 
@@ -53,7 +53,6 @@ public class P3_Robot {
     public P3_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         RobotConfig config = RobotConfig.createP3Robot2Config();
-
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         intake = new P3_IntakeUtil(hardwareMap);
@@ -62,7 +61,7 @@ public class P3_Robot {
         imu = hardwareMap.get(IMU.class, "imu");
         led = new LedUtil(hardwareMap, "light");
         feeder = new P3_IndexerUtil(hardwareMap);
-
+        launcher.setStopPosition();
 
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 1000.0);
@@ -163,6 +162,7 @@ public class P3_Robot {
                 launcher.setShooterMotorVelocity(targetVelocity);
                 if (launcher.getShooterMotorVelocity() >= targetVelocity * 0.98) {
                     launcher.setIndexerServoPower(-1.0);
+                    feeder.setFeederMotorPower(-1.0);
                     launcher.setShootingPosition();
 
                     launchTimer.reset(); // Start the timer for the feeding duration.
@@ -176,12 +176,15 @@ public class P3_Robot {
                 // The feeder runs for a specific amount of time.
                 if (launchTimer.seconds() > FEED_TIME_SECONDS) {
                     launcher.setIndexerServoPower(0.0);
+                    feeder.setFeederMotorPower(0.0);
+
                     //launcher.setStopPosition();
 
                     launchTimer.reset(); // Start the timer for the cooldown period.
                     launchState = LaunchState.COOLDOWN;
                 } else {
                     launcher.setIndexerServoPower(-1.0);
+                    feeder.setFeederMotorPower(-1.0);
                     launcher.setShootingPosition();
                 }
                 break;

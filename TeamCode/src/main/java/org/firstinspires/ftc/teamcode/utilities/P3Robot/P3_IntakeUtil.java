@@ -36,12 +36,6 @@ public class P3_IntakeUtil {
     }
 
 
-    /**
-     * Stops the intake motor by setting its power to zero.
-     */
-    public void stopIntake() {
-        setIntakePower(0.0);
-    }//Stop
 
     /**
      * Sets the power of the intake motor.
@@ -54,6 +48,14 @@ public class P3_IntakeUtil {
         intakeServo2.setPower(-power);
 
     }
+
+    public void startIntake() {
+        intakeMotor.setPower(-1);
+    }
+    public void stopIntake() {
+        intakeMotor.setPower(0);
+    }
+
 
     public void setIntakeMotor(double power) {
         intakeMotor.setPower(power);

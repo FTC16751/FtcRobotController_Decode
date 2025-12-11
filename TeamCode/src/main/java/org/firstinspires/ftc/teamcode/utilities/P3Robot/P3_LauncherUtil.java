@@ -111,15 +111,18 @@ public class P3_LauncherUtil {
 
 
     public void setStopPosition() {
-        stopperServo.setPosition(0.0);
+        stopperServo.setPosition(0.2);
         // FIX THIS LATER
     }
 
     public void setShootingPosition() {
-        stopperServo.setPosition(0.20);
+        stopperServo.setPosition(0.0);
         // FIX THIS LATER
     }
 
+    public double getStopperServoPosition() {
+        return stopperServo.getPosition();
+    }
     public void spinUp(double speed) {
         setShooterMotorVelocity(m_speed = speed);
         shooterState = shooterStates.SPINNING_UP;

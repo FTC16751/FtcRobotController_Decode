@@ -67,6 +67,11 @@ P3Autonomous_JustPark extends OpMode {
         telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
         telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+        telemetry.addData("imu heading: ", robot.drive.heading);
+        telemetry.addData("left front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
+        telemetry.addData("right front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
+        telemetry.addData("right rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
+        telemetry.addData("left rear motor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
         telemetry.update();
     }
 
@@ -74,9 +79,9 @@ P3Autonomous_JustPark extends OpMode {
     public void start() {
         // Set the robot's starting position based on the final selections
         if (location == P3RobotConstants.Location.CLOSE) {
-            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_CLOSE : P3RobotConstants.Waypoints.START_BLUE_CLOSE);
+            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Bot2_Waypoints.START_RED_CLOSE : P3RobotConstants.Bot2_Waypoints.START_BLUE_CLOSE);
         } else { // FAR
-            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_FAR : P3RobotConstants.Waypoints.START_BLUE_FAR);
+            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Bot2_Waypoints.START_RED_FAR : P3RobotConstants.Bot2_Waypoints.START_BLUE_FAR);
         }
 
         // Transition to the main execution state
@@ -136,7 +141,7 @@ P3Autonomous_JustPark extends OpMode {
                 redCloseState = RedCloseState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_CLOSE_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_CLOSE_PARK, 0.5, 0.25)) {
                     redCloseState = RedCloseState.COMPLETE;
                 }
                 break;
@@ -154,7 +159,7 @@ P3Autonomous_JustPark extends OpMode {
                 redFarState = RedFarState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
 
                     autonomousState = AutonomousState.COMPLETE;
 
@@ -171,7 +176,7 @@ P3Autonomous_JustPark extends OpMode {
                 blueCloseState = BlueCloseState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARKING_LOCATION, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -187,7 +192,7 @@ P3Autonomous_JustPark extends OpMode {
                 blueFarState = BlueFarState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARKING_LOCATION, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;

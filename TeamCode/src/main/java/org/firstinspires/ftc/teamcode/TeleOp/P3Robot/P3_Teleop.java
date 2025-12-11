@@ -130,16 +130,16 @@ public class P3_Teleop extends OpMode
         handleLauncherControls();
         handleHoodServo();
         handleCopilotControls();
-
+        telemetry.addData("stopper servo position: ", robot.launcher.getStopperServoPosition());
+        telemetry.addData("hood servo position: ", hoodServo.getPosition());
 //        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
-//        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
 //        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
 //        telemetry.addData("Right Rear motor position: ", robot.drive.getmotorPosition(robot.drive.rightRearMotor));
 //        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
 //        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
 //        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
-//        telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
-//        telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
+        telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
+        telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
 //        telemetry.addData("tx error: ", txError);
     }
 
@@ -194,8 +194,8 @@ public class P3_Teleop extends OpMode
         }
 
         switch (intakeState) {
-            case ON:      robot.intake.setIntakePower(INTAKE_POWER);  break;
-            case REVERSE: robot.intake.setIntakePower(-INTAKE_POWER); break;
+            case ON:      robot.intake.setIntakePower(-INTAKE_POWER);  break;
+            case REVERSE: robot.intake.setIntakePower(INTAKE_POWER); break;
             case OFF:     robot.intake.setIntakePower(0);             break;
         }
     }

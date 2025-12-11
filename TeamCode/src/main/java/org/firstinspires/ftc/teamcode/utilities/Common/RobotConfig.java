@@ -228,7 +228,7 @@ public class RobotConfig {
                 ),
                 new OdometryConfig(
                         -38.0, 165.0,
-                        GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED
                 ),
                 new ImuConfig(
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
