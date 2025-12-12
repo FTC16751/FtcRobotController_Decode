@@ -81,7 +81,7 @@ P3Autonomous_JustPark extends OpMode {
         if (location == P3RobotConstants.Location.CLOSE) {
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Bot2_Waypoints.START_RED_CLOSE : P3RobotConstants.Bot2_Waypoints.START_BLUE_CLOSE);
         } else { // FAR
-            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Bot2_Waypoints.START_RED_FAR : P3RobotConstants.Bot2_Waypoints.START_BLUE_FAR);
+            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Bot2_Waypoints.RED_FAR_START_POSITION : P3RobotConstants.Bot2_Waypoints.START_BLUE_FAR);
         }
 
         // Transition to the main execution state
@@ -159,7 +159,7 @@ P3Autonomous_JustPark extends OpMode {
                 redFarState = RedFarState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_FAR_PARK_POSITION, 0.5, 0.25)) {
 
                     autonomousState = AutonomousState.COMPLETE;
 

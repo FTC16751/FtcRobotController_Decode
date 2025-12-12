@@ -155,7 +155,7 @@ P3Autonomous_JustPark extends OpMode {
                 redFarState = RedFarState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.RED_FAR_PARK_POSITION, 0.5, 0.25)) {
 
                     autonomousState = AutonomousState.COMPLETE;
 

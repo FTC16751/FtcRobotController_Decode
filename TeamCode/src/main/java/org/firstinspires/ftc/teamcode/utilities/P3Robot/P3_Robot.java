@@ -42,7 +42,7 @@ public class P3_Robot {
 
     // These constants define the timing of the launch sequence. They belong here
     // as they define a robot-level behavior.
-    private static final double FEED_TIME_SECONDS = .25; // How long to run the indexer for each shot.
+    private static final double FEED_TIME_SECONDS = .5; // How long to run the indexer for each shot.
     private static final double COOLDOWN_TIME_SECONDS = 0.25; // Brief pause between shots.
     // ---------------------------------------------------
 

@@ -49,8 +49,8 @@ public class P3_LauncherUtil {
         shooterMotorLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         shooterMotorRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
-        shooterMotorLeft.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
-        shooterMotorRight.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+        shooterMotorLeft.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 16));
+        shooterMotorRight.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 16));
 
         shooterMotorLeft.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooterMotorRight.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
