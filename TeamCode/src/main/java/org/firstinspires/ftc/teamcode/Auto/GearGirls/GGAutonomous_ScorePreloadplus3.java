@@ -37,14 +37,14 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
     // --- Path-Specific State Machines ---
     private enum RedCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, PARK } private RedCloseState redCloseState = RedCloseState.DRIVE_TO_SCORE;
 
-    private enum RedFarState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, RED_FAR_COLLECT_BALL1, DRIVE_TO_SCORE2, RED_FAR_ALIGN_SPIKEMARK3, RED_FAR_COLLECT_BALL2, RED_FAR_COLLECT_BALL3, SET_DIVERTER_RIGHT, WAIT_FOR_DIVERTER, SHOOT_SEQUENCE2, RED_FAR_ALIGN_SPIKEMARK2, RED_FAR_COLLECT_SPIKEMARK2_BALL1, SET_DIVERTER_LEFT2, WAIT_FOR_DIVERTER2, RED_FAR_COLLECT_SPIKEMARK2_BALL2, RED_FAR_COLLECT_SPIKEMARK2_BALL3, DRIVE_TO_SCORE3, SHOOT_SEQUENCE3, WAIT_FOR_DIVERTER3, SET_DIVERTER_RIGHT2, PARK } private RedFarState redFarState = RedFarState.DRIVE_TO_SCORE;
-    private enum BlueCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, PARK }  private BlueCloseState blueCloseState = BlueCloseState.DRIVE_TO_SCORE;
-    private enum BlueFarState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, PARK } private BlueFarState blueFarState = BlueFarState.DRIVE_TO_SCORE;
+    private enum RedFarState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, RED_FAR_ALIGN_SPIKEMARK3, RED_FAR_COLLECT_SPIKEMARK3_BALL1, RED_FAR_COLLECT_SPIKEMARK3_BALL2, RED_FAR_COLLECT_SPIKEMARK3_BALL3, DRIVE_TO_SCORE2, SET_DIVERTER_RIGHT, WAIT_FOR_DIVERTER, SHOOT_SEQUENCE2, RED_FAR_ALIGN_SPIKEMARK2, RED_FAR_COLLECT_SPIKEMARK2_BALL1, SET_DIVERTER_LEFT2, WAIT_FOR_DIVERTER2, RED_FAR_COLLECT_SPIKEMARK2_BALL2, RED_FAR_COLLECT_SPIKEMARK2_BALL3, DRIVE_TO_SCORE3, SHOOT_SEQUENCE3, WAIT_FOR_DIVERTER3, SET_DIVERTER_RIGHT2, PARK } private RedFarState redFarState = RedFarState.DRIVE_TO_SCORE;
+    private enum BlueCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL1, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL2, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3a, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3, GO_TO_BLUE_CLOSE_SPIKEMARK1_END, DRIVE_TO_SCORE_AFTER_SPIKE_MARK1, SHOOT_SEQUENCE2, PARK }  private BlueCloseState blueCloseState = BlueCloseState.DRIVE_TO_SCORE;
+    private enum BlueFarState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, BLUE_FAR_ALIGN_SPIKEMARK3, BLUE_FAR_COLLECT_SPIKEMARK3_BALL1, BLUE_FAR_COLLECT_SPIKEMARK3_BALL2, BLUE_FAR_COLLECT_SPIKEMARK3_BALL3, DRIVE_TO_SCORE2, SET_DIVERTER_RIGHT, WAIT_FOR_DIVERTER, SHOOT_SEQUENCE2, BLUE_FAR_ALIGN_SPIKEMARK2, BLUE_FAR_COLLECT_SPIKEMARK2_BALL1, SET_DIVERTER_LEFT2, WAIT_FOR_DIVERTER2, BLUE_FAR_COLLECT_SPIKEMARK2_BALL2, BLUE_FAR_COLLECT_SPIKEMARK2_BALL3, DRIVE_TO_SCORE3, SHOOT_SEQUENCE3, WAIT_FOR_DIVERTER3, SET_DIVERTER_RIGHT2, PARK } private BlueFarState blueFarState = BlueFarState.DRIVE_TO_SCORE;
 
     // --- Action-Specific Variables ---
     private int shotsFired = 0;
     private ElapsedTime waitTimer = new ElapsedTime();
-    final double WAIT_TIME = .500;
+    final double WAIT_TIME = .250;
 
     //================================================================================
     // INITIALIZATION
@@ -206,7 +206,6 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
      */
     private void runRedFarPath() {
         telemetry.addData("Current Path", "Red Far");
-        boolean collectingMore = true;
         // x= 8.3816 y= 12.0461 h= -25.3986
         switch (redFarState) {
             case DRIVE_TO_SCORE:
@@ -216,7 +215,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
 
                 // Drive to the scoring position.
                 // The driveTo() method is non-blocking and returns true when complete.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.5, 0.0)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.8, 0.0)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
@@ -236,54 +235,61 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                         redFarState = RedFarState.RED_FAR_ALIGN_SPIKEMARK3;
                     }
                 }
-                // While robot.feeder.isBusy() is true, we do nothing and let the shot finish.
                 break;
+
             case RED_FAR_ALIGN_SPIKEMARK3:
 
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_ALIGN, 0.75, 0.0)) {
-                    redFarState = RedFarState.RED_FAR_COLLECT_BALL1;
+                    redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK3_BALL1;
                 } else {
                     robot.intake.setDiverterLeft();
                 }
                 break;
-            case RED_FAR_COLLECT_BALL1:
+
+            case RED_FAR_COLLECT_SPIKEMARK3_BALL1:
                 //swap middle bar -op-or+ - after first bar - third spike mark , frwd 1, swp, fwd 1, p  , frwd 1
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_BALL1, 0.5, 0.10)) {
                     redFarState = RedFarState.SET_DIVERTER_RIGHT;
                 }
                 break;
+
             case SET_DIVERTER_RIGHT:
                 robot.intake.setDiverterRight();
                 waitTimer.reset();
                 redFarState = RedFarState.WAIT_FOR_DIVERTER;
                 break;
+
             case WAIT_FOR_DIVERTER:
-                if (waitTimer.seconds() > WAIT_TIME) {
-                    redFarState = RedFarState.RED_FAR_COLLECT_BALL2;
+                if (waitTimer.seconds() >= WAIT_TIME) {
+                    redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK3_BALL2;
                 }
                break;
-            case RED_FAR_COLLECT_BALL2:
+
+            case RED_FAR_COLLECT_SPIKEMARK3_BALL2:
                 if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_BALL2, 0.5, 0.0)){
-                    redFarState = RedFarState.RED_FAR_COLLECT_BALL3;
+                    redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK3_BALL3;
                 }
                 break;
-            case RED_FAR_COLLECT_BALL3:
+
+            case RED_FAR_COLLECT_SPIKEMARK3_BALL3:
                 if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK3_BALL3, 0.5, 0.0)){
                     redFarState = RedFarState.DRIVE_TO_SCORE2;
                 }
                 break;
+
             case DRIVE_TO_SCORE2:
                 // Drive to the scoring position.
                 // The driveTo() method is non-blocking and returns true when complete.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.50, 0.0)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.8, 0.0)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
                     redFarState = RedFarState.SHOOT_SEQUENCE2;
                 }
                 break;
+
             case SHOOT_SEQUENCE2:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.5, 0.0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.8, 0.0);
                 if (!robot.feeder.isBusy()) {
                     if (shotsFired < 3) {
                         LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
@@ -301,59 +307,68 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
 
             case RED_FAR_ALIGN_SPIKEMARK2:
 
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_ALIGN, 0.5, 0.0)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_ALIGN, 0.6, 0.0)) {
                     redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK2_BALL1;
                 } else {
                     robot.intake.setDiverterRight();
                 }
                 break;
+
             case RED_FAR_COLLECT_SPIKEMARK2_BALL1:
                 //swap middle bar -op-or+ - after first bar - third spike mark , frwd 1, swp, fwd 1, p  , frwd 1
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL1, 0.5, 0.20)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL1, 0.5, 0.1)) {
                     redFarState = RedFarState.SET_DIVERTER_LEFT2;
                 }
                 break;
+
             case SET_DIVERTER_LEFT2:
                 robot.intake.setDiverterLeft();
                 waitTimer.reset();
                 redFarState = RedFarState.WAIT_FOR_DIVERTER2;
                 break;
+
             case WAIT_FOR_DIVERTER2:
-                if (waitTimer.seconds() > WAIT_TIME) {
+                if (waitTimer.seconds() >= WAIT_TIME) {
                     redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK2_BALL2;
                 }
                 break;
+
             case RED_FAR_COLLECT_SPIKEMARK2_BALL2:
-                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL2, 0.75, 0.0)){
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL2, 0.50, 0.0)){
                     //redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK2_BALL3;
                     redFarState = RedFarState.SET_DIVERTER_RIGHT2;
                 }
                 break;
+
             case SET_DIVERTER_RIGHT2:
                 robot.intake.setDiverterRight();
                 waitTimer.reset();
                 redFarState = RedFarState.WAIT_FOR_DIVERTER3;
                 break;
+
             case WAIT_FOR_DIVERTER3:
-                if (waitTimer.seconds() > WAIT_TIME) {
+                if (waitTimer.seconds() >= WAIT_TIME) {
                     redFarState = RedFarState.RED_FAR_COLLECT_SPIKEMARK2_BALL3;
                 }
                 break;
+
             case RED_FAR_COLLECT_SPIKEMARK2_BALL3:
-                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL3, 0.75, 0.0)){
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_SPIKEMARK2_BALL3, 0.5, 0.0)){
                     redFarState = RedFarState.DRIVE_TO_SCORE3;
                 }
                 break;
+
             case DRIVE_TO_SCORE3:
                 // Drive to the scoring position.
                 // The driveTo() method is non-blocking and returns true when complete.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.75, 0.0)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.8, 0.0)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
                     redFarState = RedFarState.SHOOT_SEQUENCE3;
                 }
                 break;
+
             case SHOOT_SEQUENCE3:
                 robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_DRIVE_TO_SCORE, 0.25, 0.0);
                 if (!robot.feeder.isBusy()) {
@@ -371,7 +386,6 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                 }
                 break;
 
-
             case PARK:
                 // Drive to the final parking position.
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_FAR_PARK, .80, 0.25)) {
@@ -386,6 +400,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
 
     private void runBlueClosePath() {
         telemetry.addData("Current Path", "Blue Close");
+
         switch (blueCloseState) {
             case DRIVE_TO_SCORE:
                 // Drive to the scoring position.
@@ -396,7 +411,75 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                     blueCloseState = BlueCloseState.SHOOT_SEQUENCE;
                 }
                 break;
+
             case SHOOT_SEQUENCE:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25);
+                // This state handles firing all three pre-loaded artifacts.
+                // We keep the launcher spinning throughout the sequence.
+                robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
+
+                // Only start a new shot if the previous one is finished.
+                if(!robot.feeder.isBusy()) {
+                    if (shotsFired < 3) {
+                        LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                        if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.AUTO)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        // All 3 shots are fired. Turn off the launcher and move to the park state.
+                        robot.launcher.setMotorVelocity(0, 0);
+                        blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN;
+                    }
+                }
+                break;
+
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN:
+                // Drive to the final parking position.
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN, 0.5, 0.25)) {
+                    robot.intake.setIntakeMotorPower(1);
+                    robot.intake.setDiverterRight();
+                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL1;
+                }
+                break;
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL1:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_BALL1, 0.5, 0.25)) {
+                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL2;
+                }
+                break;
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL2:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_BALL2, 0.25, 0.25)) {
+                    robot.feeder.reverseLeftFeeder();
+                    robot.intake.setDiverterCenter();
+                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3a;
+                }
+                break;
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3a:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_BALL3a, 0.25, 0.25)) {
+                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3;
+                }
+                break;
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_BALL3, 0.25, 0.25)) {
+                    blueCloseState = BlueCloseState.GO_TO_BLUE_CLOSE_SPIKEMARK1_END;
+                }
+                break;
+            case GO_TO_BLUE_CLOSE_SPIKEMARK1_END:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_SPIKEMARK1_END, 0.25, 0.25)) {
+                    // Once parking is complete, the entire autonomous routine is done.
+                    blueCloseState = BlueCloseState.DRIVE_TO_SCORE_AFTER_SPIKE_MARK1;
+                }
+                break;
+            case DRIVE_TO_SCORE_AFTER_SPIKE_MARK1:
+                // Drive to the scoring position.
+                // The driveTo() method is non-blocking and returns true when complete.
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25)) {
+                    // When the drive is done, reset the shot counter and move to the shooting state.
+                    shotsFired = 0;
+                    blueCloseState = BlueCloseState.SHOOT_SEQUENCE2;
+                }
+                break;
+            case SHOOT_SEQUENCE2:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25);
                 // This state handles firing all three pre-loaded artifacts.
                 // We keep the launcher spinning throughout the sequence.
                 robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
@@ -433,9 +516,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
         switch (blueFarState) {
             case DRIVE_TO_SCORE:
                 // Drive to the scoring position.
-                // The driveTo() method is non-blocking and returns true when complete.
                 if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.5, 0.25)) {
-                    // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
                     blueFarState = BlueFarState.SHOOT_SEQUENCE;
@@ -443,6 +524,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                 break;
 
             case SHOOT_SEQUENCE:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.5, 0);
                 if (!robot.feeder.isBusy()) {
                     if (shotsFired < 3) {
                         LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
@@ -450,12 +532,153 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                             shotsFired++;
                         }
                     } else {
+                        blueFarState = BlueFarState.BLUE_FAR_ALIGN_SPIKEMARK3;
+                    }
+                }
+                break;
+
+            case BLUE_FAR_ALIGN_SPIKEMARK3:
+
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK3_ALIGN, 0.75, 0.0)) {
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK3_BALL1;
+                } else {
+                    robot.intake.setDiverterLeft();
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK3_BALL1:
+                //swap middle bar -op-or+ - after first bar - third spike mark , frwd 1, swp, fwd 1, p  , frwd 1
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK3_BALL1, 0.5, 0.10)) {
+                    blueFarState = BlueFarState.SET_DIVERTER_RIGHT;
+                }
+                break;
+
+            case SET_DIVERTER_RIGHT:
+                robot.intake.setDiverterRight();
+                waitTimer.reset();
+                blueFarState = BlueFarState.WAIT_FOR_DIVERTER;
+                break;
+
+            case WAIT_FOR_DIVERTER:
+                if (waitTimer.seconds() >= WAIT_TIME) {
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK3_BALL2;
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK3_BALL2:
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK3_BALL2, 0.5, 0.0)){
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK3_BALL3;
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK3_BALL3:
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK3_BALL3, 0.5, 0.0)){
+                    blueFarState = BlueFarState.DRIVE_TO_SCORE2;
+                }
+                break;
+
+            case DRIVE_TO_SCORE2:
+                // Drive to the scoring position.
+                // The driveTo() method is non-blocking and returns true when complete.
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.8, 0.0)) {
+                    // When the drive is done, reset the shot counter and move to the shooting state.
+                    shotsFired = 0;
+                    robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
+                    blueFarState = BlueFarState.SHOOT_SEQUENCE2;
+                }
+                break;
+
+            case SHOOT_SEQUENCE2:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.8, 0.0);
+                if (!robot.feeder.isBusy()) {
+                    if (shotsFired < 3) {
+                        LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                        if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.FAR)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        blueFarState = BlueFarState.BLUE_FAR_ALIGN_SPIKEMARK2;
+                    }
+                }
+                break;
+
+            case BLUE_FAR_ALIGN_SPIKEMARK2:
+
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK2_ALIGN, 0.6, 0.0)) {
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK2_BALL1;
+                } else {
+                    robot.intake.setDiverterRight();
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK2_BALL1:
+                //swap middle bar -op-or+ - after first bar - third spike mark , frwd 1, swp, fwd 1, p  , frwd 1
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK2_BALL1, 0.5, 0.1)) {
+                    blueFarState = BlueFarState.SET_DIVERTER_LEFT2;
+                }
+                break;
+
+            case SET_DIVERTER_LEFT2:
+                robot.intake.setDiverterLeft();
+                waitTimer.reset();
+                blueFarState = BlueFarState.WAIT_FOR_DIVERTER2;
+                break;
+
+            case WAIT_FOR_DIVERTER2:
+                if (waitTimer.seconds() >= WAIT_TIME) {
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK2_BALL2;
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK2_BALL2:
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK2_BALL2, 0.50, 0.0)){
+                    blueFarState = BlueFarState.SET_DIVERTER_RIGHT2;
+                }
+                break;
+
+            case SET_DIVERTER_RIGHT2:
+                robot.intake.setDiverterRight();
+                waitTimer.reset();
+                blueFarState = BlueFarState.WAIT_FOR_DIVERTER3;
+                break;
+
+            case WAIT_FOR_DIVERTER3:
+                if (waitTimer.seconds() >= WAIT_TIME) {
+                    blueFarState = BlueFarState.BLUE_FAR_COLLECT_SPIKEMARK2_BALL3;
+                }
+                break;
+
+            case BLUE_FAR_COLLECT_SPIKEMARK2_BALL3:
+                if(robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_SPIKEMARK2_BALL3, 0.5, 0.0)){
+                    blueFarState = BlueFarState.DRIVE_TO_SCORE3;
+                }
+                break;
+
+            case DRIVE_TO_SCORE3:
+                // Drive to the scoring position.
+                // The driveTo() method is non-blocking and returns true when complete.
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.8, 0.0)) {
+                    // When the drive is done, reset the shot counter and move to the shooting state.
+                    shotsFired = 0;
+                    robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.FAR_TARGET_VELOCITY, GGRobotConstants.Launcher.FAR_TARGET_VELOCITY);
+                    blueFarState = BlueFarState.SHOOT_SEQUENCE3;
+                }
+                break;
+            case SHOOT_SEQUENCE3:
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_FAR_DRIVE_TO_SCORE, 0.25, 0.0);
+                if (!robot.feeder.isBusy()) {
+                    if (shotsFired < 3) {
+                        LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                        if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.FAR)) {
+                            shotsFired++;
+                        }
+                    } else {
+
                         // All 3 shots are fired. Turn off the launcher and move to the park state.
                         robot.launcher.setMotorVelocity(0, 0);
                         blueFarState = BlueFarState.PARK;
                     }
                 }
-                // While robot.feeder.isBusy() is true, we do nothing and let the shot finish.
                 break;
 
             case PARK:

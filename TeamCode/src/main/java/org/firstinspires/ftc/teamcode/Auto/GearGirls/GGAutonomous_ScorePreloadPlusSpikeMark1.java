@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.GearGirls;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
@@ -19,6 +20,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
  * @version 004
  */
 @Autonomous(name="GG AUTO: Score 6", group="GGBot")
+@Disabled
 public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
 
     // --- Subsystems ---
