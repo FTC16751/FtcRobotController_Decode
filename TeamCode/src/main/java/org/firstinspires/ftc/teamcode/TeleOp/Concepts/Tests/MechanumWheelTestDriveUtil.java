@@ -23,6 +23,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.Concepts.Tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -31,7 +32,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 
 
 @TeleOp(name = "MechanumWheelTestDriveUtil", group = "Concepts")
-//@Disabled
+@Disabled
 public class MechanumWheelTestDriveUtil extends OpMode {
     //Declare SubSystems
     private DriveUtil2026b drive;

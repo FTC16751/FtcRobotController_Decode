@@ -6,10 +6,12 @@ import com.pedropathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name="Pedro Path DrivetrainTest", group="Concept")
+@Disabled
 public class PedroPatchDrivetrainTest extends OpMode{
 
     private Follower follower;

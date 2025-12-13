@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.utilities.Common;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 @TeleOp(name = "FlywheelTunerTutorial", group = " _GGopmodes")
+@Disabled
 public class FlywheelTunerTutorial extends OpMode {
     public DcMotorEx flywheelMotor_l,flywheelMotor_r;
 

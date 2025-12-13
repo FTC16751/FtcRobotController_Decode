@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
-@Autonomous(name="P3 AUTO: bot2 Score Preloads", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO Bot2: Score Preloads", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_Score3Preloads extends OpMode {
 
     // --- Subsystems ---

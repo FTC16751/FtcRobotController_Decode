@@ -15,10 +15,12 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name="Coach Pedro Path DrivetrainTest", group="Concept")
+@Disabled
 public class PedroPathTeleopCoachTest extends OpMode{
     private GGRobot robot;
     private Drivetrain pedro;

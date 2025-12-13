@@ -10,11 +10,13 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.function.Supplier;
 @Configurable
 @TeleOp(name="Example PedroPath Teleop", group="PedroPath")
+@Disabled
 public class ExampleTeleOp extends OpMode {
 
     private Follower follower;

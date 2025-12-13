@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.utilities.GBP2P.DriveToPoint;
 import java.util.Locale;
 
 @Autonomous(name="Pinpoint Navigation Example", group="Pinpoint")
-
+@Disabled
 
 public class SensorPinpointDriveToPoint extends LinearOpMode {
 

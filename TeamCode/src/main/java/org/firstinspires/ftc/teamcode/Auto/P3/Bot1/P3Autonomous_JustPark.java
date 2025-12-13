@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.P3.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 @Autonomous(name="P3 AUTO: bot1 Just Park", group="P3Bot1",preselectTeleOp = "P3: Teleop (Team Version)")
+@Disabled
 public class
 P3Autonomous_JustPark extends OpMode {
 

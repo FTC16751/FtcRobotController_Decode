@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.TeleOp.Other;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -16,7 +17,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchIndexer;
  */
 
 @TeleOp(name = "CoachBot", group = "Concept")
-//@Disabled
+@Disabled
 public class Coachbot extends OpMode {
     private static final double DRIVE_SPEED = 0.5;
     final double FEED_TIME_SECONDS = 0.80; //The feeder servos run this long when a shot is requested.

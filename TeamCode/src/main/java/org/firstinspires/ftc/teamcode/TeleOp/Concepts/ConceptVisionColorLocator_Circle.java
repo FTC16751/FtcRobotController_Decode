@@ -8,6 +8,7 @@ package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 import android.graphics.Color;
 import android.util.Size;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -25,6 +26,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import java.util.List;
 
 @TeleOp(name = "Concept: Vision Color-Locator (Circle) - Improved", group = "Concept")
+@Disabled
 public class ConceptVisionColorLocator_Circle extends LinearOpMode {
     private GGRobot robot;
 

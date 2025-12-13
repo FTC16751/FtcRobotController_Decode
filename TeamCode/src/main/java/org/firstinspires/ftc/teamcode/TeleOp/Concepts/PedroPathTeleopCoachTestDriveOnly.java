@@ -5,6 +5,7 @@ package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -30,6 +31,7 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
 import java.util.List;
 
 @TeleOp(name="Coach Pedro Path DrivetrainTest2 ", group="Concept")
+@Disabled
 public class PedroPathTeleopCoachTestDriveOnly extends OpMode{
     private static final double WHEEL_DIAMETER_IN = 9.6/2.54;
     private static final double TRACK_WIDTH = 17.5;

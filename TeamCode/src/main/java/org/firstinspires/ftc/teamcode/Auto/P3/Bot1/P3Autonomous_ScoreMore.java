@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.P3.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 @Autonomous(name="P3 AUTO: bot1 Score Preloads + 3", group="P3Bot1",preselectTeleOp = "P3: Teleop (Team Version)")
+@Disabled
 public class P3Autonomous_ScoreMore extends OpMode {
 
     // --- Subsystems ---
