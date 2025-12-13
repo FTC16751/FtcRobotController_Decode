@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  * This OpMode is only responsible for the high-level sequence of events.
  */
 
-@Autonomous(name="SKYLINE: Score 3 Preloads Far", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
+@Autonomous(name="SKYLINE: Score 3 Preloads Far", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (V2 RUN ME)")
 public class Skyline_Autonomous_Score3Preloads_FAR extends OpMode
 {
     // --- Main Robot Object ---
@@ -27,7 +27,7 @@ public class Skyline_Autonomous_Score3Preloads_FAR extends OpMode
 
     // --- Autonomous Constants ---
     // Constants for THIS specific path.
-    private static final double LAUNCHER_TARGET_VELOCITY = 1800;
+    private static final double LAUNCHER_TARGET_VELOCITY = 1680;
     private static final double LAUNCHER_MIN_VELOCITY = LAUNCHER_TARGET_VELOCITY-25;
     private static final double FEED_TIME = .40; // Adjusted feed time
     private static final double DRIVE_SPEED = 0.5;

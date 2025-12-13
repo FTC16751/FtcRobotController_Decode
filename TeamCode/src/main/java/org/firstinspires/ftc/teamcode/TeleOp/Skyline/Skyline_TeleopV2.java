@@ -54,14 +54,14 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "SKYLINE: Teleop (V2)", group = " _SLopmodes")
+@TeleOp(name = "SKYLINE: Teleop (V2 RUN ME)", group = " _SLopmodes")
 //@Disabled
 public class Skyline_TeleopV2 extends OpMode {
     // --- Constants for this OpMode ---
     private static final double DRIVE_SPEED = 0.80;
     private static final double FEED_TIME_SECONDS = 2.50;
     private static double LAUNCHER_TARGET_VELOCITY_NEAR = 1400;
-    private static double LAUNCHER_TARGET_VELOCITY_FAR = 1780;
+    private static double LAUNCHER_TARGET_VELOCITY_FAR = 1680;
     private static final double LAUNCHER_MIN_VELOCITY = 1350; // Adjusted for a reasonable threshold
 
     // --- Main Robot Object ---
@@ -171,7 +171,7 @@ public class Skyline_TeleopV2 extends OpMode {
         }
 
         // Pressing ANY of the manual override buttons will switch to MANUAL_OVERRIDE mode.
-        if (gamepad1.a || gamepad1.b || gamepad1.dpadUpWasPressed() || gamepad1.dpadDownWasPressed()) {
+        if (gamepad1.a || gamepad1.dpadUpWasPressed() || gamepad1.dpadDownWasPressed() || gamepad1.dpadLeftWasReleased() || gamepad1.dpadRightWasReleased()) {
             launcherMode = LauncherMode.MANUAL_OVERRIDE;
         }
         switch (launcherMode) {

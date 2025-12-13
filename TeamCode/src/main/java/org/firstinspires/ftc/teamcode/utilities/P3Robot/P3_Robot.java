@@ -67,8 +67,8 @@ public class P3_Robot {
         flywheelTable.add(30.0, 950.0);
         flywheelTable.add(40.0,  960.0);
         flywheelTable.add(50.0, 1080.0);
-        flywheelTable.add(60.0, 1120.0);
-        flywheelTable.add(70.0, 1180.0);
+        flywheelTable.add(60.0, 1100.0);
+        flywheelTable.add(70.0, 1160.0);
         flywheelTable.add(80.0, 1220.0);
         flywheelTable.add(90.0, 1320.0);
         flywheelTable.add(100.0, 1400.0);

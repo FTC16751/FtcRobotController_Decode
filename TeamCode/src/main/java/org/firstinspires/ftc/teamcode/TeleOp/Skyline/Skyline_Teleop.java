@@ -34,6 +34,7 @@ package org.firstinspires.ftc.teamcode.TeleOp.Skyline;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -63,7 +64,7 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  */
 
 @TeleOp(name = "SKYLINE: Teleop (RUN ME)", group = " _SLopmodes")
-//@Disabled
+@Disabled
 public class Skyline_Teleop extends OpMode {
     // --- Constants for this OpMode ---
     private static final double DRIVE_SPEED = 0.80;

@@ -70,7 +70,7 @@ public class P3_Teleop extends OpMode
         RED,
         BLUE
     }
-    private double requestedMotorVelocity = 1100;
+    private double requestedMotorVelocity = 0;
 
 
     // TODO: set this at init
@@ -262,7 +262,7 @@ public class P3_Teleop extends OpMode
         }
 
         // Pressing ANY of the manual override buttons will switch to MANUAL_OVERRIDE mode.
-        if (gamepad1.a || gamepad1.b || gamepad1.dpadUpWasPressed() || gamepad1.dpadDownWasPressed()) {
+        if (gamepad1.x || gamepad1.dpadLeftWasPressed() || gamepad1.dpadRightWasPressed() || gamepad1.dpadUpWasPressed() || gamepad1.dpadDownWasPressed()) {
             launcherMode = LauncherMode.MANUAL_OVERRIDE;
         }
         switch (launcherMode) {

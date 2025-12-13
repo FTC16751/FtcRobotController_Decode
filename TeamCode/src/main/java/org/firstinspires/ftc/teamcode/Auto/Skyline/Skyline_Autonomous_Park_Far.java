@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
  * This OpMode is only responsible for the high-level sequence of events.
  */
 
-@Autonomous(name="SKYLINE: PARK FAR ", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (RUN ME)")
+@Autonomous(name="SKYLINE: PARK FAR ", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (V2 RUN ME)")
 public class Skyline_Autonomous_Park_Far extends OpMode
 {
     // --- Main Robot Object ---
