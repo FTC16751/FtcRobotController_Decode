@@ -33,8 +33,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.TeleOp.Skyline.Skyline_TeleopV2;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
+import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_HoodServoUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
@@ -86,6 +88,11 @@ public class P3_Teleop extends OpMode
     double angleOnTarget = 0.0;
     public final double TX_ALIGN_TOLERANCE_DEG = 1.0;
     public final double SHOOTER_VELOCITY_TOLERANCE_PERCENT = 0.95;
+    private enum LauncherMode {
+        AUTO_TARGETING, // Continuously updates velocity from vision/sensors
+        MANUAL_OVERRIDE  // Velocity is set by direct button presses (A, B, D-pad)
+    }
+    private LauncherMode launcherMode = LauncherMode.MANUAL_OVERRIDE; // Default to manual mode
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -227,28 +234,72 @@ public class P3_Teleop extends OpMode
             robot.launcher.setStopPosition();
         }
 
+//        if (gamepad1.yWasPressed()) {
+//            requestedMotorVelocity = 1200;//calcShooterVelocity();
+//            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+//            // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
+//        }
+//        if (gamepad1.xWasPressed()) {
+//            robot.launcher.setShooterMotorVelocity(0);
+//        }
+//
+//        if (gamepad1.dpadUpWasPressed()) {
+//            requestedMotorVelocity = requestedMotorVelocity+25;
+//            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+//
+//        } else if (gamepad1.dpadDownWasPressed()){
+//            requestedMotorVelocity = requestedMotorVelocity-25;
+//            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+//
+//        } else if (gamepad1.startWasPressed()){
+//            requestedMotorVelocity = 1200;
+//            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
+//
+//        }
+        // Press 'Y' to enter AUTO_TARGETING mode.
         if (gamepad1.yWasPressed()) {
-            requestedMotorVelocity = 1200;//calcShooterVelocity();
-            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
-            // CHANGE THIS BACK TO CALC SHOOTER VELOCITY LATER
-        }
-        if (gamepad1.xWasPressed()) {
-            robot.launcher.setShooterMotorVelocity(0);
+            launcherMode = LauncherMode.AUTO_TARGETING;
         }
 
-        if (gamepad1.dpadUpWasPressed()) {
-            requestedMotorVelocity = requestedMotorVelocity+100;
-            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
-
-        } else if (gamepad1.dpadDownWasPressed()){
-            requestedMotorVelocity = requestedMotorVelocity-100;
-            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
-
-        } else if (gamepad1.startWasPressed()){
-            requestedMotorVelocity = 1200;
-            robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
-
+        // Pressing ANY of the manual override buttons will switch to MANUAL_OVERRIDE mode.
+        if (gamepad1.a || gamepad1.b || gamepad1.dpadUpWasPressed() || gamepad1.dpadDownWasPressed()) {
+            launcherMode = LauncherMode.MANUAL_OVERRIDE;
         }
+        switch (launcherMode) {
+            case AUTO_TARGETING:
+                // In this mode, we continuously get the velocity from the robot's calculation.
+                requestedMotorVelocity = robot.updateAndGetTargetVelocity();
+                telemetry.addData("Launcher Mode", "AUTO (Y)");
+                break;
+
+            case MANUAL_OVERRIDE:
+                if (gamepad1.dpadLeftWasReleased()) {
+                    // Set predefined "far" velocity
+                    requestedMotorVelocity = P3RobotConstants.Launcher.FAR_TARGET_VELOCITY;
+                    telemetry.addData("Launcher Mode", "MANUAL (A - Far)");
+                } else if (gamepad1.dpadRightWasReleased()) {
+                    // Set predefined 'near' velocity
+                    requestedMotorVelocity = P3RobotConstants.Launcher.CLOSE_TARGET_VELOCITY;
+                    telemetry.addData("Launcher Mode", "MANUAL (A - Far)");
+                } else if (gamepad1.x) {
+                    // Stop the launcher
+                    requestedMotorVelocity = 0;
+                    telemetry.addData("Launcher Mode", "MANUAL (B - Off)");
+                } else if (gamepad1.dpadUpWasReleased()) {
+                    // Increase the CURRENT velocity by 100
+                    requestedMotorVelocity += 100;
+                    telemetry.addData("Launcher Mode", "MANUAL (+100)");
+                } else if (gamepad1.dpadDownWasReleased()) {
+                    // Decrease the CURRENT velocity by 100
+                    requestedMotorVelocity -= 100;
+                    telemetry.addData("Launcher Mode", "MANUAL (-100)");
+                }
+                // If no manual override button is being pressed, 'launcherVelocity' simply
+                // retains its last value, which is exactly the behavior you want.
+                break;
+        }
+
+        robot.launcher.setShooterMotorVelocity(requestedMotorVelocity);
     }
 
     private void handleCopilotControls() {

@@ -46,7 +46,7 @@ public class P3_Robot {
     private static final double COOLDOWN_TIME_SECONDS = 0.25; // Brief pause between shots.
     // ---------------------------------------------------
 
-
+    private double lastKnownGoodVelocity = 0.0;
     /**
      * Constructor for the P3_Robot class.
      */
@@ -64,24 +64,19 @@ public class P3_Robot {
         launcher.setStopPosition();
 
         flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 1000.0);
-        flywheelTable.add(40.0, 1050.0);
-        flywheelTable.add(45.0, 1100.0);
-        flywheelTable.add(50.0, 1030.0);
-        flywheelTable.add(55.0, 1070.0);
-        flywheelTable.add(60.0, 1110.0);
-        flywheelTable.add(65.0, 1150.0);
+        flywheelTable.add(30.0, 950.0);
+        flywheelTable.add(40.0,  960.0);
+        flywheelTable.add(50.0, 1080.0);
+        flywheelTable.add(60.0, 1120.0);
         flywheelTable.add(70.0, 1180.0);
-        flywheelTable.add(75.0, 1220.0);
-        flywheelTable.add(80.0, 1260.0);
+        flywheelTable.add(80.0, 1220.0);
         flywheelTable.add(90.0, 1320.0);
-        flywheelTable.add(100.0, 1390.0);
+        flywheelTable.add(100.0, 1400.0);
         flywheelTable.add(110.0, 1440.0);
-        flywheelTable.add(120.0, 1500.0);
-        flywheelTable.add(125.0, 1530.0);
-        flywheelTable.add(130.0, 1560.0);
-        flywheelTable.add(135.0, 1580.0);
-        flywheelTable.add(140.0, 1600.0);
+        flywheelTable.add(120.0, 1480.0);
+        flywheelTable.add(130.0, 1520.0);
+        flywheelTable.add(140.0, 1560.0);
+        flywheelTable.add(150.0, 1600.0);
     }
 
     /**
@@ -244,5 +239,28 @@ public class P3_Robot {
             led.setColor(LedUtil.Color.BLUE);
         }
     }
+    public double updateAndGetTargetVelocity() {
+        final double METERS_TO_INCHES = 39.3701;
+        String dataSource; // For telemetry
+        double newVelocity; // A temporary variable for the new calculation
 
+        if (vision.isTargetVisible()) {
+            // Limelight Vision
+            dataSource = "VISION";
+            double distanceInches = vision.getDistanceToTagInches();
+            newVelocity = getTargetVelocityForDistance(distanceInches);
+
+            // We have a high-confidence value, so we update our fallback state.
+            this.lastKnownGoodVelocity = newVelocity;
+
+        }
+        else {
+            dataSource = "LAST KNOWN";
+            // DO NOT calculate a new value. Use the last one we successfully stored.
+            newVelocity = this.lastKnownGoodVelocity;
+        }
+
+        telemetry.addData("Aiming Data Source", dataSource);
+        return newVelocity; // Return the result of this loop's calculation.
+    }
 }
