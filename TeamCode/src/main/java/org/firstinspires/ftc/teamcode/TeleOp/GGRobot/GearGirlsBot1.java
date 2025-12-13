@@ -109,7 +109,7 @@ public class GearGirlsBot1 extends OpMode {
     private static final double TX_ALIGN_TOLERANCE_DEG = 1.0; // The 1-degree tolerance you requested.
     private enum DriveMode { FIELD_CENTRIC, ARCADE }
     private DriveMode DRIVEMODE = DriveMode.ARCADE;
-
+    double angleOnTarget = 0.0;
     /**
      * Code to run ONCE when the driver hits INIT
      */
@@ -213,29 +213,43 @@ public class GearGirlsBot1 extends OpMode {
         double driveInput  = -gamepad1.left_stick_y;
         double strafeInput = gamepad1.left_stick_x;
         double turnInput = gamepad1.right_stick_x;
-        boolean isSnappingToTarget = gamepad2.leftBumperWasPressed() && robot.vision.isTargetVisible();
+        boolean isSnappingToTarget = gamepad1.right_stick_button && robot.vision.isTargetVisible();
+        double txError = robot.vision.getTargetAngleX();;
 
-        if (isSnappingToTarget) {
-            //camera-relative auto-aim using just the 'tx' value.
-
-            // Get the angle error directly from the vision subsystem.
-            double txError = robot.vision.getTargetAngleX();
-
-            // Check if we are already within our tolerance.
-            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
-                // We are aimed correctly, so don't turn.
-                turnInput = 0.0;
-            } else {
-                // We are not aimed. Calculate the turn power using the P-controller.
-                turnInput = TX_ALIGN_KP * txError;
-            }
-            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
-
+        if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+            angleOnTarget = 0.0;
         } else {
-            // use normal turning
-            turnInput = gamepad1.right_stick_x;
-            telemetry.addData("AutoAim", "OFF");
+            angleOnTarget = TX_ALIGN_KP * txError;
         }
+        if (isSnappingToTarget) {
+            turnInput = angleOnTarget;
+            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
+        } else {
+            // normal right-stick turning
+            turnInput = gamepad1.right_stick_x;
+        }
+
+//        if (isSnappingToTarget) {
+//            //camera-relative auto-aim using just the 'tx' value.
+//
+//            // Get the angle error directly from the vision subsystem.
+//            double txError = robot.vision.getTargetAngleX();
+//
+//            // Check if we are already within our tolerance.
+//            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+//                // We are aimed correctly, so don't turn.
+//                turnInput = 0.0;
+//            } else {
+//                // We are not aimed. Calculate the turn power using the P-controller.
+//                turnInput = TX_ALIGN_KP * txError;
+//            }
+//            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
+//
+//        } else {
+//            // use normal turning
+//            turnInput = gamepad1.right_stick_x;
+//            telemetry.addData("AutoAim", "OFF");
+//        }
 
 
 

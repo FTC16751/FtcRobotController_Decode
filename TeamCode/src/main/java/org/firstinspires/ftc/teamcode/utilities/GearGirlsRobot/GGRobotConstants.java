@@ -114,7 +114,7 @@ public class GGRobotConstants {
 
         /* Blue Alliance Poses */
         /**** BLUE CLOSE TO GOAL PATHS ****/
-        public static final Pose2D BLUE_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-26, -31, AngleUnit.DEGREES,45);
+        public static final Pose2D BLUE_CLOSE_DRIVE_AWAY = new Pose2D(DistanceUnit.INCH,-13.7, -17, AngleUnit.DEGREES,45);
         public static final Pose2D BLUE_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,-12, -3, AngleUnit.DEGREES,45);
         public static final Pose2D BLUE_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-30, -31, AngleUnit.DEGREES,90);
         public static final Pose2D BLUE_CLOSE_SPIKEMARK1_BALL1 = new Pose2D(DistanceUnit.INCH,-30, -19.5, AngleUnit.DEGREES,90);
