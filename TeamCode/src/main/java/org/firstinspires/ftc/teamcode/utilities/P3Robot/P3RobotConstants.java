@@ -120,7 +120,7 @@ public class P3RobotConstants {
         public static final Pose2D RED_CLOSE_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,26, -26, AngleUnit.DEGREES,-54);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,-6, -14, AngleUnit.DEGREES,0);
         public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,45, -26, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,45, -6, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,45, 0, AngleUnit.DEGREES,90);
 
         // ---- FAR FROM GOAL START ----//
         public static final Pose2D RED_FAR_START_POSITION = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
@@ -144,9 +144,27 @@ public class P3RobotConstants {
         public static final Pose2D BLUE_FAR_PARKING_LOCATION = new Pose2D(DistanceUnit.INCH,-27, 0, AngleUnit.DEGREES,0);
 
 
+        //blue alidng to spikemark 3
+        //
+
         // -- SPIKE MARK LOCATIONS -- //
-        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,47, 26, AngleUnit.DEGREES,-90);
-        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,47, 2, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,49, 26, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,49, 2, AngleUnit.DEGREES,-90);
+
+        // ---- FAR FROM GOAL START ----//
+        // blue far shoot
+        // x = -8.5 y = 3.7295  heading = 18.3
+        //blue align to spikemark 3
+        // x = -12.0 y = 10.1 heading = 90
+        //blue sm3 collect
+        // x = -12.1 y = -25 heading = 90
+        public static final Pose2D BLUE_FAR_START_POSITION = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
+        public static final Pose2D BLUE_FAR_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,-8.5, 4, AngleUnit.DEGREES,22);
+        public static final Pose2D BLUE_FAR_PARK_POSITION = new Pose2D(DistanceUnit.INCH,-24, 0, AngleUnit.DEGREES,0);
+        public static final Pose2D BLUE_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,-12, 5, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,-12, -25, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,-36, 5, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,-36, -25, AngleUnit.DEGREES,-90); // CHANGE
 
     }
 }

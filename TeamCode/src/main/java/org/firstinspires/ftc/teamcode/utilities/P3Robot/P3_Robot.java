@@ -67,16 +67,16 @@ public class P3_Robot {
         flywheelTable.add(30.0, 950.0);
         flywheelTable.add(40.0,  960.0);
         flywheelTable.add(50.0, 1080.0);
-        flywheelTable.add(60.0, 1100.0);
-        flywheelTable.add(70.0, 1160.0);
-        flywheelTable.add(80.0, 1220.0);
-        flywheelTable.add(90.0, 1320.0);
-        flywheelTable.add(100.0, 1400.0);
-        flywheelTable.add(110.0, 1440.0);
-        flywheelTable.add(120.0, 1480.0);
-        flywheelTable.add(130.0, 1520.0);
-        flywheelTable.add(140.0, 1560.0);
-        flywheelTable.add(150.0, 1600.0);
+        flywheelTable.add(60.0, 1120.0);
+        flywheelTable.add(70.0, 1180.0-100);
+        flywheelTable.add(80.0, 1220.0-100);
+        flywheelTable.add(90.0, 1320.0-100);
+        flywheelTable.add(100.0, 1400.0-100);
+        flywheelTable.add(110.0, 1440.0-100);
+        flywheelTable.add(120.0, 1480.0-100);
+        flywheelTable.add(130.0, 1520.0-100);
+        flywheelTable.add(140.0, 1560.0-100);
+        flywheelTable.add(150.0, 1600.0-100);
     }
 
     /**

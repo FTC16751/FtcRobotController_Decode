@@ -38,7 +38,7 @@ public class P3Autonomous_ScoreMore extends OpMode {
     private enum BlueCloseState { START, MOVE_AWAY_FROM_GOAL,START_SHOOTING,
         SHOOTING, DRIVE_TO_SPIKEMARK1, MOVE_TO_SPIKE_MARK1, INTAKE_ARTIFACTS_FROM_SPIKEMARK1, DRIVE_TO_SCORE_LINE, START_SHOOTING2, SHOOTING2, PARK }
     private BlueCloseState blueCloseState = BlueCloseState.START;
-    private enum BlueFarState {START, PARK }
+    private enum BlueFarState {START, MOVE_TO_SHOOTING_LOCATION, START_SHOOTING, SHOOTING, MOVE_TO_SPIKE_MARK3, INTAKE_ARTIFACTS_FROM_SPIKEMARK3, DRIVE_TO_SCORE_LINE, START_SHOOTING2, SHOOTING2, PARK }
     private BlueFarState blueFarState = BlueFarState.START;
     private ElapsedTime driveTimer = new ElapsedTime();
     final double DRIVE_TIME = 5.0;
@@ -409,16 +409,81 @@ public class P3Autonomous_ScoreMore extends OpMode {
     private void runBlueFarPath() {
         telemetry.addData("Current Path", "Blue Far");
         switch (blueFarState) {
-            case START:
-                blueFarState = BlueFarState.PARK;
-                break;
-            case PARK:
-//                robot.drive.turnTo(45,0.5,.25);
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Waypoints.BLUE_FAR_PARK, 0.5, 0.25)) {
-                    autonomousState = AutonomousState.COMPLETE;
-                }
-                autonomousState = AutonomousState.COMPLETE;
-                break;
+                case START:
+                    blueFarState = BlueFarState.MOVE_TO_SHOOTING_LOCATION;
+                    break;
+                case MOVE_TO_SHOOTING_LOCATION:
+                    robot.intake.setIntakePower(1.0);
+                    robot.launcher.setShooterMotorVelocity(1000);
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25)) {
+                        shotsFired = 0;
+                        blueFarState = BlueFarState.START_SHOOTING;
+                    }
+                    break;
+                case START_SHOOTING:
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25);
+                    autoTargetVelocity = 1350;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
+                    robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
+                    driveTimer.reset();
+                    blueFarState = BlueFarState.SHOOTING;
+                    break;
+                case SHOOTING:
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25);
+                    telemetry.addData("Path State", blueFarState);
+                    if (shotsFired < 3) {
+                        // Start the sequence
+                        telemetry.addData("Launch Sequence", "launch!");
+                        if (robot.launchSequence(true, autoTargetVelocity)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        // All 3 shots are done, move to the next auto state (e.g., PARK).
+                        blueFarState = BlueFarState.MOVE_TO_SPIKE_MARK3;
+                    }
+                    break;
+                case MOVE_TO_SPIKE_MARK3:
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_ALIGN, 0.3, .25)) {
+                        telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
+                        blueFarState = BlueFarState.INTAKE_ARTIFACTS_FROM_SPIKEMARK3;
+                    }
+                    break;
+                case INTAKE_ARTIFACTS_FROM_SPIKEMARK3:
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_COLLECT, 0.2, .25)) {
+                        telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
+                        blueFarState = BlueFarState.DRIVE_TO_SCORE_LINE;
+                    }
+                    break;
+                case DRIVE_TO_SCORE_LINE:
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25)) {
+                        shotsFired = 0;
+                        blueFarState = BlueFarState.START_SHOOTING2;
+                    }
+                    break;
+                case START_SHOOTING2:
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25);
+                    autoTargetVelocity = 1350;//robot.getTargetVelocityForDistance(robot.vision.getDistanceToTagMeters()* 39.3701);
+                    robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
+                    blueFarState = BlueFarState.SHOOTING2;
+                    break;
+                case SHOOTING2:
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION, 0.35, 0.25);
+                    telemetry.addData("Path State", blueFarState);
+                    if (shotsFired < 3) {
+                        // Start the sequence
+                        telemetry.addData("Launch Sequence", "launch!");
+                        if (robot.launchSequence(true, autoTargetVelocity)) {
+                            shotsFired++;
+                        }
+                    } else {
+                        // All 3 shots are done, move to the next auto state (e.g., PARK).
+                        blueFarState = BlueFarState.PARK;
+                    }
+                    break;
+                case PARK:
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARK_POSITION, 0.3, .25)) {
+                        autonomousState = AutonomousState.COMPLETE;
+                    }
+                    break;
         }
     }
 
