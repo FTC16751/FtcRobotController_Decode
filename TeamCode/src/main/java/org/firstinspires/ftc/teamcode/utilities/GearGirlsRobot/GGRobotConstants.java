@@ -142,5 +142,13 @@ public class GGRobotConstants {
         public static final Pose2D BLUE_FAR_SPIKEMARK2_BALL2 = new Pose2D(DistanceUnit.INCH,47, 23, AngleUnit.DEGREES,90);
         public static final Pose2D BLUE_FAR_SPIKEMARK2_BALL3 = new Pose2D(DistanceUnit.INCH,47, 39, AngleUnit.DEGREES,90);
 
+
+        public static final Pose2D RED_CLOSE_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,-13.7, 17, AngleUnit.DEGREES,-45);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-30, 31, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL1 = new Pose2D(DistanceUnit.INCH,-30, 19.5, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL2 = new Pose2D(DistanceUnit.INCH,-30, 14, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL3a = new Pose2D(DistanceUnit.INCH,-35, 15, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL3 = new Pose2D(DistanceUnit.INCH,-35, 8, AngleUnit.DEGREES,-90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_END = new Pose2D(DistanceUnit.INCH,-36, 5, AngleUnit.DEGREES,-90);
     }
 }

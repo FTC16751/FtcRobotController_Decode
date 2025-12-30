@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
@@ -35,7 +38,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
     private AutonomousState autonomousState = AutonomousState.PRE_START;
 
     // --- Path-Specific State Machines ---
-    private enum RedCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, PARK } private RedCloseState redCloseState = RedCloseState.DRIVE_TO_SCORE;
+    private enum RedCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, RED_CLOSE_ALIGN_SPIKEMARK1, RED_CLOSE_COLLECT_SPIKEMARK1_BALL1, SET_DIVERTER_RIGHT, WAIT_FOR_DIVERTER, RED_CLOSE_COLLECT_SPIKEMARK1_BALL2, RED_CLOSE_COLLECT_SPIKEMARK1_BALL3, PARK } private RedCloseState redCloseState = RedCloseState.DRIVE_TO_SCORE;
 
     private enum RedFarState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, RED_FAR_ALIGN_SPIKEMARK3, RED_FAR_COLLECT_SPIKEMARK3_BALL1, RED_FAR_COLLECT_SPIKEMARK3_BALL2, RED_FAR_COLLECT_SPIKEMARK3_BALL3, DRIVE_TO_SCORE2, SET_DIVERTER_RIGHT, WAIT_FOR_DIVERTER, SHOOT_SEQUENCE2, RED_FAR_ALIGN_SPIKEMARK2, RED_FAR_COLLECT_SPIKEMARK2_BALL1, SET_DIVERTER_LEFT2, WAIT_FOR_DIVERTER2, RED_FAR_COLLECT_SPIKEMARK2_BALL2, RED_FAR_COLLECT_SPIKEMARK2_BALL3, DRIVE_TO_SCORE3, SHOOT_SEQUENCE3, WAIT_FOR_DIVERTER3, SET_DIVERTER_RIGHT2, PARK } private RedFarState redFarState = RedFarState.DRIVE_TO_SCORE;
     private enum BlueCloseState { DRIVE_TO_SCORE, SHOOT_SEQUENCE, GO_TO_BLUE_CLOSE_SPIKEMARK1_ALIGN, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL1, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL2, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3a, GO_TO_BLUE_CLOSE_SPIKEMARK1_BALL3, GO_TO_BLUE_CLOSE_SPIKEMARK1_END, DRIVE_TO_SCORE_AFTER_SPIKE_MARK1, SHOOT_SEQUENCE2, PARK }  private BlueCloseState blueCloseState = BlueCloseState.DRIVE_TO_SCORE;
@@ -61,6 +64,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
     public void init_loop() {
         robot.vision.setMotifDetectionMode();
         robot.vision.update(); // Continuously update vision to detect the motif
+        robot.update();
 
         // --- Driver Selections ---
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
@@ -77,7 +81,12 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
         telemetry.addData("Location", "%s (Y=Close, A=Far)", location);
         telemetry.addData("Detected Motif", detectedMotif);
         telemetry.addLine("\nReady to Start!");
+        telemetry.addData("X: ", robot.drive.pinpoint.getPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("Y: ", robot.drive.pinpoint.getPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("Heading: ", robot.drive.pinpoint.getPosition().getHeading(AngleUnit.DEGREES));
+
         telemetry.update();
+
     }
 
     @Override
@@ -161,7 +170,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
             case DRIVE_TO_SCORE:
                 // Drive to the scoring position.
                 // The driveTo() method is non-blocking and returns true when complete.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.5, 0.0)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_TO_SCORE, 0.5, 0.0)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     redCloseState = RedCloseState.SHOOT_SEQUENCE;
@@ -169,7 +178,7 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                 break;
 
             case SHOOT_SEQUENCE:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_AWAY, 0.5, 0.0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_DRIVE_TO_SCORE, 0.5, 0.0);
                 // This state handles firing all three pre-loaded artifacts.
                 // We keep the launcher spinning throughout the sequence.
                 robot.launcher.setMotorVelocity(GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY, GGRobotConstants.Launcher.AUTO_TARGET_VELOCITY);
@@ -184,10 +193,50 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
                     } else {
                         // All 3 shots are fired. Turn off the launcher and move to the park state.
                         robot.launcher.setMotorVelocity(0, 0);
-                        redCloseState = RedCloseState.PARK;
+                        redCloseState = RedCloseState.RED_CLOSE_ALIGN_SPIKEMARK1;
                     }
                 //}
                 // While robot.feeder.isBusy() is true, we do nothing and let the shot finish.
+                break;
+            case RED_CLOSE_ALIGN_SPIKEMARK1:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_SPIKEMARK1_ALIGN, 0.5, 0.0)) {
+                    redCloseState = RedCloseState.RED_CLOSE_COLLECT_SPIKEMARK1_BALL1;
+                } else
+                {
+                    robot.intake.setDiverterLeft();
+                }
+            break;
+                case RED_CLOSE_COLLECT_SPIKEMARK1_BALL1:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_SPIKEMARK1_BALL1, 0.5, 0.0)) {
+                    redCloseState = RedCloseState.SET_DIVERTER_RIGHT;
+                }
+                break;
+            case SET_DIVERTER_RIGHT:
+                robot.intake.setDiverterRight();
+                waitTimer.reset();
+                redCloseState = RedCloseState.WAIT_FOR_DIVERTER;
+                break;
+
+            case WAIT_FOR_DIVERTER:
+                if (waitTimer.seconds() >= WAIT_TIME) {
+                    redCloseState = RedCloseState.RED_CLOSE_COLLECT_SPIKEMARK1_BALL2;
+                }
+                break;
+            case RED_CLOSE_COLLECT_SPIKEMARK1_BALL2:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_SPIKEMARK1_BALL2, 0.5, 0.0)) {
+                    redCloseState = RedCloseState.RED_CLOSE_COLLECT_SPIKEMARK1_BALL3;
+                } else
+                {
+                    robot.intake.setDiverterCenter();
+                }
+                break;
+            case RED_CLOSE_COLLECT_SPIKEMARK1_BALL3:
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.RED_CLOSE_SPIKEMARK1_BALL3, 0.5, 0.0)) {
+                    redCloseState = RedCloseState.PARK;
+                } else
+                {
+                    redCloseState = RedCloseState.PARK;
+                }
                 break;
 
             case PARK:
@@ -691,6 +740,60 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
         }
         telemetry.addData("Path State", blueFarState);
     }
+
+    private void handleBlueFarShootSequence(Pose2D holdPose, BlueFarState nextState) {
+        // 1. Command the robot to hold its position.
+        robot.drive.driveTo(robot.drive.pinpoint.getPosition(), holdPose, 0.5, 0.0);
+
+        // 2. This logic is now centralized here.
+        if (!robot.feeder.isBusy()) {
+            if (shotsFired < 3) {
+                LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.FAR)) {
+                    shotsFired++;
+                }
+            } else {
+                // All shots are done. Transition to the next major step.
+                blueFarState = nextState;
+            }
+        }
+    }
+
+    private void handleBlueCloseShootSequence(Pose2D holdPose, BlueCloseState nextState) {
+        // 1. Command the robot to hold its position.
+        robot.drive.driveTo(robot.drive.pinpoint.getPosition(), holdPose, 0.5, 0.0);
+
+        // 2. This logic is now centralized here.
+        if (!robot.feeder.isBusy()) {
+            if (shotsFired < 3) {
+                LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.CLOSE)) {
+                    shotsFired++;
+                }
+            } else {
+                // All shots are done. Transition to the next major step.
+                blueCloseState = nextState;
+            }
+        }
+    }
+    private void handleRedFarShootSequence(Pose2D holdPose, RedFarState nextState) {
+        // 1. Command the robot to hold its position.
+        robot.drive.driveTo(robot.drive.pinpoint.getPosition(), holdPose, 0.5, 0.0);
+
+        // 2. This logic is now centralized here.
+        if (!robot.feeder.isBusy()) {
+            if (shotsFired < 3) {
+                LaunchIndexer.FeederSide side = getSideForShot(shotsFired, detectedMotif);
+                if (robot.launchSequence(true, side, GGRobotConstants.LauncherDistance.FAR)) {
+                    shotsFired++;
+                }
+            } else {
+                // All shots are done. Transition to the next major step.
+                redFarState = nextState;
+            }
+        }
+    }
+
     /**
      * A helper method to determine which side to shoot from based on the shot number and motif.
      * @param shotNumber The shot we are on (0, 1, or 2).
@@ -721,5 +824,8 @@ public class GGAutonomous_ScorePreloadplus3 extends OpMode {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+
+
     }
 }
