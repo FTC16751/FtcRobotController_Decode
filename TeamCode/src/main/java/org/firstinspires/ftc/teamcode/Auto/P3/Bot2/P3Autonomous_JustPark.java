@@ -176,7 +176,7 @@ P3Autonomous_JustPark extends OpMode {
                 blueCloseState = BlueCloseState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARKING_LOCATION, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -192,7 +192,7 @@ P3Autonomous_JustPark extends OpMode {
                 blueFarState = BlueFarState.PARK;
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARKING_LOCATION, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARK_POSITION, 0.5, 0.25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;

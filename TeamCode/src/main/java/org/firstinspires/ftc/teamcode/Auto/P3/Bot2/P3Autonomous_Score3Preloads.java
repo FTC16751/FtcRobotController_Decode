@@ -260,18 +260,18 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                 case MOVE_AWAY_FROM_GOAL:
                     robot.intake.startIntake();
                     robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.35, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.35, .25)) {
                         shotsFired = 0;
                         blueCloseState = BlueCloseState.START_SHOOTING;
                     }
                     break;
                 case START_SHOOTING:
-                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.35, 0);
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.35, 0);
                     robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
                     blueCloseState = BlueCloseState.SHOOTING;
                     break;
                 case SHOOTING:
-                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.35, 0);
+                    robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.35, 0);
                     telemetry.addData("Path State", blueCloseState);
                     if (shotsFired < 3) {
                         // Start the sequence
@@ -288,7 +288,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                     //}
                     break;
                 case PARK:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARKING_LOCATION, 0.5, 0.25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARK, 0.5, 0.25)) {
                         autonomousState = AutonomousState.COMPLETE;
                     }
                     break;
@@ -305,7 +305,7 @@ public class P3Autonomous_Score3Preloads extends OpMode {
                     break;
                 case PARK:
 //                robot.drive.turnTo(45,0.5,.25);
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARKING_LOCATION, 0.5, 0.25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARK_POSITION, 0.5, 0.25)) {
                         autonomousState = AutonomousState.COMPLETE;
                     }
                     autonomousState = AutonomousState.COMPLETE;

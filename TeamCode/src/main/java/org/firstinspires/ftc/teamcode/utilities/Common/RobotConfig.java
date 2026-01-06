@@ -234,8 +234,8 @@ public class RobotConfig {
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
                 ),
                 new PointToPointTuning(
-                        15.0, 0.055, 0.002950, 0.00003, 0.000002,
-                        10.0, 5.0, 0.03, 10.0
+                        15.0, 0.055, 0.00295, 0.00008, 0.000002,
+                        10, 5.0, 0.03, 10.0
                 ),
                 // P3 robot also uses Pedro Pathing, but with different tuning.
                 new PedroPathingConfig(

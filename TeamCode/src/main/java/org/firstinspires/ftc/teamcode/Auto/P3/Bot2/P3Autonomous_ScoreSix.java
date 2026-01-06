@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.Auto.P3.Bot1.P3Autonomous_ScoreMore;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
 //import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+
 
 @Autonomous(name="P3 AUTO Bot2: Score 6 (RUN ME)", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
 public class P3Autonomous_ScoreSix extends OpMode {
@@ -178,7 +178,7 @@ public class P3Autonomous_ScoreSix extends OpMode {
                     }
                 break;
             case MOVE_TO_SPIKE_MARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_ALIGN, 0.5, .35)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_ALIGN, 0.5, .35)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                     redCloseState = RedCloseState.INTAKE_ARTIFACTS_FROM_SPIKEMARK1;
                 } else {
@@ -186,7 +186,7 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 }
                 break;
             case INTAKE_ARTIFACTS_FROM_SPIKEMARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_COLLECT, 0.2, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_COLLECT, 0.2, .25)) {
                     telemetry.addData("DONE WITH COLLECT", "GO SCORE!");
                     redCloseState = RedCloseState.DRIVE_TO_SCORE_LINE;
                 }
@@ -329,19 +329,19 @@ public class P3Autonomous_ScoreSix extends OpMode {
             case MOVE_AWAY_FROM_GOAL:
                 robot.intake.startIntake();
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.5, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.5, .25)) {
                     shotsFired = 0;
                     blueCloseState = BlueCloseState.START_SHOOTING;
                 }
                 break;
             case START_SHOOTING:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.5, 0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.5, 0);
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
                 robot.launcher.setShootingPosition();
                 blueCloseState = BlueCloseState.SHOOTING;
                 break;
             case SHOOTING:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.55, 0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.55, 0);
                 telemetry.addData("Path State", blueCloseState);
                 if (shotsFired < 3) {
                     // Start the sequence
@@ -359,32 +359,32 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 break;
 
             case MOVE_TO_SPIKE_MARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN, 0.5, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_ALIGN, 0.5, .25)) {
                     blueCloseState = BlueCloseState.INTAKE_ARTIFACTS_FROM_SPIKEMARK1;
                 } else {
                     robot.launcher.setStopPosition();
                 }
                 break;
             case INTAKE_ARTIFACTS_FROM_SPIKEMARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_COLLECT, 0.25, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_COLLECT, 0.25, .25)) {
                     blueCloseState = BlueCloseState.DRIVE_TO_SCORE_LINE;
                 }
                 break;
             case DRIVE_TO_SCORE_LINE:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.5, 0.25))
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.5, 0.25))
                 {
                     shotsFired = 0;
                     blueCloseState = BlueCloseState.START_SHOOTING2;
                 }
                 break;
             case START_SHOOTING2:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.5, 0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.5, 0);
                 robot.launcher.setShooterMotorVelocity(autoTargetVelocity);
                 robot.launcher.setShootingPosition();
                 blueCloseState = BlueCloseState.SHOOTING2;
                 break;
             case SHOOTING2:
-                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_LOCATION, 0.5, 0);
+                robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION, 0.5, 0);
                 telemetry.addData("Path State", blueCloseState);
                 //if (!robot.isLaunchSequenceBusy()) {
                 if (shotsFired < 3) {
@@ -401,7 +401,7 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 //}
                 break;
             case PARK:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARKING_LOCATION, 0.5, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARK, 0.5, .25)) {
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
