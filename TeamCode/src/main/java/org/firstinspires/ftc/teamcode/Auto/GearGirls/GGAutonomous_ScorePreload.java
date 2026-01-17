@@ -251,7 +251,7 @@ public class GGAutonomous_ScorePreload extends OpMode {
             case DRIVE_TO_SCORE:
                 // Drive to the scoring position.
                 // The driveTo() method is non-blocking and returns true when complete.
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_AWAY, 0.5, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), GGRobotConstants.Waypoints.BLUE_CLOSE_DRIVE_TO_SCORE, 0.5, 0.25)) {
                     // When the drive is done, reset the shot counter and move to the shooting state.
                     shotsFired = 0;
                     blueCloseState = BlueCloseState.SHOOT_SEQUENCE;

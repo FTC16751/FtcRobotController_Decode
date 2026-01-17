@@ -42,8 +42,8 @@ public class P3_Robot {
 
     // These constants define the timing of the launch sequence. They belong here
     // as they define a robot-level behavior.
-    private static final double FEED_TIME_SECONDS = .5; // How long to run the indexer for each shot.
-    private static final double COOLDOWN_TIME_SECONDS = 0.25; // Brief pause between shots.
+    private static final double FEED_TIME_SECONDS = .3; // How long to run the indexer for each shot.
+    private static final double COOLDOWN_TIME_SECONDS = 0.1; // Brief pause between shots.
     // ---------------------------------------------------
 
     private double lastKnownGoodVelocity = 0.0;
@@ -155,7 +155,7 @@ public class P3_Robot {
 
                 // Continuously command the velocity to ensure it gets there.
                 launcher.setShooterMotorVelocity(targetVelocity);
-                if (launcher.getShooterMotorVelocity() >= targetVelocity * 0.98) {
+                if (launcher.getShooterMotorVelocity() >= targetVelocity * 0.97) {
                     launcher.setIndexerServoPower(-1.0);
                     feeder.setFeederMotorPower(-1.0);
                     launcher.setShootingPosition();

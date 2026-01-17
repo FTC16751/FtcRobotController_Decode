@@ -46,13 +46,15 @@ public class P3Autonomous_Queue extends OpMode {
         DRIVE_TO_SHOOT_CYCLE_2,
         SHOOT_CYCLE_2,
         PARK,
-        INIT_WAIT, WAIT_FOR_TIMER, OPEN_GATE, ALIGN_GATE, IDLE // A final state for when a path is done
+        INIT_WAIT, WAIT_FOR_TIMER, OPEN_GATE, ALIGN_GATE, DRIVE_TO_SHOOT_CYCLE_3, SHOOT_CYCLE_3, IDLE // A final state for when a path is done
     }
     private PathState currentState = PathState.START;
 
     // === 2. A "SCRIPT" for each path ===
     // A Queue is a "First-In, First-Out" list, perfect for a sequence of steps.
     private final Queue<PathState> pathScript = new LinkedList<>();
+    private int selectedCycles = 3; // Default to 3 cycles
+    private boolean enableGate = false; // Default gate enabled
 
     // === 3. Waypoint and Velocity Variables ===
     // These will be loaded in start() based on the selected path.
@@ -74,21 +76,33 @@ public class P3Autonomous_Queue extends OpMode {
     private double shootingDriveSpeed;
     private double shootingHoldTime;
     private double spike1AlignSpeed = 0.5;
-    private double spike1CollectSpeed= 0.2;
+    private double spike1CollectSpeed= 0.75;
     private double spike2AlignSpeed = 0.5;
-    private double spike2CollectSpeed= 0.2;
+    private double spike2CollectSpeed= 0.75;
     private double spike3AlignSpeed = 0.5;
-    private double spike3CollectSpeed= 0.2;
-    private double openGateAlignSpeed=0.5;
+    private double spike3CollectSpeed= 0.75;
+    private double openGateAlignSpeed=0.75;
     private double openGateSpeed= 0.5;
     private boolean useFeederOnSpikeMarkCollection;
 
     // --- Action-Specific Variables ---
     private int shotsFired = 0;
-    private static final double TX_ALIGN_KP = 0.02; // Proportional gain for turning
+    private static final double TX_ALIGN_KP = 0.027; // Proportional gain for turning
     private static final double TX_ALIGN_TOLERANCE_DEG = 1.0;
+    // This adds a small correction to the aim based on the alliance.
+    // Based on your request, we add a -2.5 degree offset for the RED alliance.
+    private static final double RED_AIM_OFFSET_DEG = 2.5;
+    private static final double BLUE_AIM_OFFSET_DEG = 0.0;
     private final ElapsedTime waitTimer = new ElapsedTime();
     private double waitDuration = 0.0;
+    private static final double AUTONOMOUS_TIMEOUT_SECONDS = 27.0; // Leave 3 sec buffer before 30s
+    private static final double STATE_TIMEOUT_DRIVE = 5.0;
+    private static final double STATE_TIMEOUT_COLLECT = 5.0;
+    private static final double STATE_TIMEOUT_SHOOT = 4.0;
+    private static final double STATE_TIMEOUT_AIM = 2.5;
+    private final ElapsedTime autonomousTimer = new ElapsedTime();
+    private final ElapsedTime stateTimer = new ElapsedTime();
+
     //================================================================================
     // INITIALIZATION
     //================================================================================
@@ -102,12 +116,22 @@ public class P3Autonomous_Queue extends OpMode {
     @Override
     public void init_loop() {
         robot.update();
-        // Use else-if for exclusive choices
+
+
+        // Alliance and Location selection
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
         else if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
 
         if (gamepad1.y) { location = P3RobotConstants.Location.CLOSE; }
         else if (gamepad1.a) { location = P3RobotConstants.Location.FAR; }
+
+       // Cycle selection
+        if (gamepad1.dpadLeftWasPressed() && selectedCycles > 0) { selectedCycles--; }
+        else if (gamepad1.dpadRightWasPressed() && selectedCycles < 4) { selectedCycles++; }
+
+        // NEW: Gate toggle
+        if (gamepad1.leftBumperWasPressed()) { enableGate = false; }
+        else if (gamepad1.rightBumperWasPressed()) { enableGate = true; }
 
         if (gamepad1.dpadUpWasPressed()) { waitDuration += 1; }
         else if (gamepad1.dpadDownWasPressed()) { waitDuration -= 1; }
@@ -116,17 +140,23 @@ public class P3Autonomous_Queue extends OpMode {
         telemetry.addLine("--- Autonomous Configuration ---");
         telemetry.addData("Alliance", "%s (X=Blue, B=Red)", alliance);
         telemetry.addData("Location", "%s (Y=Close, A=Far)", location);
-        telemetry.addData("Wait Duration (Dpad up +1 sec, Dpad down -1 sec)", waitDuration);
-        telemetry.addLine("Ready to Start!");
+        telemetry.addData("Cycles", "%d (DPad Left/Right)", selectedCycles);
+        telemetry.addData("Gate", "%s (LB=Off, RB=On)", enableGate ? "ENABLED" : "DISABLED");
+        telemetry.addData("Wait Duration", "%.1f sec (DPad Up/Down)", waitDuration);
         telemetry.addLine();
-        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
-        telemetry.update();
+//        telemetry.addLine("--- INIT Telemetry Data ---");
+//        telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+//        telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+//        telemetry.addData("robot location: HEADING", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+//        telemetry.update();
     }
+
 
     @Override
     public void start() {
+        autonomousTimer.reset();
+        autonomousState = AutonomousState.RUNNING_PATH;
+
         // --- 4. BUILD THE SCRIPT AND LOAD THE WAYPOINTS ---
         // This block now defines the entire "plan" for the chosen path.
 
@@ -134,158 +164,140 @@ public class P3Autonomous_Queue extends OpMode {
             if (location == P3RobotConstants.Location.CLOSE) {
                 // Set the waypoints for this path
                 shootingPosition = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SHOOTING_POSITION;
-                spike1Align = P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_ALIGN;
-                spike1Collect = P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_COLLECT;
+
+                spike1Align = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_ALIGN;
+                spike1Collect = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_COLLECT;
+
                 spike2Align = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK2_ALIGN;
                 spike2Collect = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK2_COLLECT;
+
+                alignOpenGate = P3RobotConstants.Bot2_Waypoints.RED_ALIGN_GATE;
+                openGate = P3RobotConstants.Bot2_Waypoints.RED_OPEN_GATE;
+
                 parkPosition = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_PARK;
-                shootingVelocity = 1100;
+
+                spike3Align = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK3_ALIGN;
+                spike3Collect = P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK3_COLLECT;
+
+                shootingVelocity = 1050;
                 
                 // Set path-specific parameters
-                driveToShootSpeed = 0.5;
-                driveToShootHoldTime = 0.25;
-                shootingDriveSpeed = 0.35;
-                shootingHoldTime = 0.25;
-                spike1AlignSpeed = 0.5;
-                spike1CollectSpeed = 0.2;
+                driveToShootSpeed = 0.70;
+                driveToShootHoldTime = 0.125;
+                shootingDriveSpeed = 0.5;
+                shootingHoldTime = 0.0;
+                spike1AlignSpeed = 0.75;
+                spike1CollectSpeed = 0.70;
+                spike2AlignSpeed = 0.8;
+                spike2CollectSpeed = 0.75;
+                spike3AlignSpeed = 0.8;
+                spike3CollectSpeed = 0.80;
                 useFeederOnSpikeMarkCollection = true;
 
                 // Build the script for Red Close
-                if (waitDuration > 0){
-                    pathScript.add(PathState.INIT_WAIT);
-                    pathScript.add(PathState.WAIT_FOR_TIMER);
-                }
-                pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
-                pathScript.add(PathState.SHOOT_PRELOAD);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_1);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
-                pathScript.add(PathState.SHOOT_CYCLE_1);
-                pathScript.add(PathState.ALIGN_GATE);
-                pathScript.add(PathState.OPEN_GATE);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_2);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
-                pathScript.add(PathState.SHOOT_CYCLE_2);
-                pathScript.add(PathState.PARK);
+                buildRedCloseScript();
 
             } else { // RED FAR
                 shootingPosition = P3RobotConstants.Bot2_Waypoints.RED_FAR_SHOOTING_POSITION;
-                spike3Align = P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK3_ALIGN;
-                spike3Collect = P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK3_COLLECT;
-                parkPosition = P3RobotConstants.Bot2_Waypoints.RED_FAR_PARK_POSITION;
+
+                spike1Align = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK1_ALIGN;      // NEW
+                spike1Collect = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK1_COLLECT;  // NEW
+
                 spike2Align = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK2_ALIGN;
                 spike2Collect = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK2_COLLECT;
-                shootingVelocity = 1400;
-                
+
+                spike3Align = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK3_ALIGN;
+                spike3Collect = P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK3_COLLECT;
+
+                parkPosition = P3RobotConstants.Bot2_Waypoints.RED_FAR_PARK_POSITION;
+
+                shootingVelocity = 1425;
+
                 // Set path-specific parameters
-                driveToShootSpeed = 0.35;
+                driveToShootSpeed = 0.7;
                 driveToShootHoldTime = 0.25;
                 shootingDriveSpeed = 0.5;
-                shootingHoldTime = 0.25;
-                spike3AlignSpeed = 0.5;
-                spike3CollectSpeed = 0.2;
-                useFeederOnSpikeMarkCollection = false;
-                
-                // Initialize launcher position for Red Far
+                shootingHoldTime = 0.0;
+                spike1AlignSpeed = 0.7;      // NEW
+                spike1CollectSpeed = 0.7;    // NEW
+                spike2AlignSpeed = 0.7;
+                spike2CollectSpeed = 0.67;
+                spike3AlignSpeed = 0.7;
+                spike3CollectSpeed = 0.7;
+                useFeederOnSpikeMarkCollection = true;
+
                 robot.launcher.setStopPosition();
 
                 // Build the script for Red Far
-                if (waitDuration > 0){
-                    pathScript.add(PathState.INIT_WAIT);
-                    pathScript.add(PathState.WAIT_FOR_TIMER);
-                }
-                pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
-                pathScript.add(PathState.SHOOT_PRELOAD);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_3);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
-                pathScript.add(PathState.SHOOT_CYCLE_1);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_2);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
-                pathScript.add(PathState.SHOOT_CYCLE_2);
-                pathScript.add(PathState.PARK);
+                buildRedFarScript();
             }
         } else { // BLUE
             if (location == P3RobotConstants.Location.CLOSE) {
                 shootingPosition = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SHOOTING_POSITION;
-                spike1Align = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_ALIGN;
-                spike1Collect = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_COLLECT;
+
+                spike1Align = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN;
+                spike1Collect = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_COLLECT;
+
                 spike2Align = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK2_ALIGN;
                 spike2Collect = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK2_COLLECT;
+
+                spike3Align = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK3_ALIGN;
+                spike3Collect = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK3_COLLECT;
+
                 alignOpenGate = P3RobotConstants.Bot2_Waypoints.BLUE_ALIGN_GATE;
                 openGate = P3RobotConstants.Bot2_Waypoints.BLUE_OPEN_GATE;
+
                 parkPosition = P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_PARK;
+
                 shootingVelocity = 1050;
 
-                // Set path-specific parameters (Blue Close uses tighter heading control)
+                // Set path-specific parameters
                 driveToShootSpeed = 0.75;
                 driveToShootHoldTime = 0.20;
                 shootingDriveSpeed = 0.6;
-                shootingHoldTime = 0.0; // Strict heading control during shooting
+                shootingHoldTime = 0.0;
                 spike1AlignSpeed = 0.75;
                 spike1CollectSpeed = 0.75;
+                spike2AlignSpeed = 0.75;
+                spike2CollectSpeed = 0.75;
+                spike3AlignSpeed = 0.80;
+                spike3CollectSpeed = 0.75;
                 useFeederOnSpikeMarkCollection = true;
 
                 // Build script for Blue Close
-                if (waitDuration > 0){
-                    pathScript.add(PathState.INIT_WAIT);
-                    pathScript.add(PathState.WAIT_FOR_TIMER);
-                }
-                    pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
-                    pathScript.add(PathState.AIM_AT_TARGET);
-                    pathScript.add(PathState.SHOOT_PRELOAD);
-                    pathScript.add(PathState.DRIVE_TO_SPIKE_1);
-                    pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
-                    pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
-                    pathScript.add(PathState.AIM_AT_TARGET);
-                    pathScript.add(PathState.SHOOT_CYCLE_1);
-                    pathScript.add(PathState.ALIGN_GATE);
-                    pathScript.add(PathState.OPEN_GATE);
-                    pathScript.add(PathState.DRIVE_TO_SPIKE_2);
-                    pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
-                    pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
-                    pathScript.add(PathState.AIM_AT_TARGET);
-                    pathScript.add(PathState.SHOOT_CYCLE_2);
-                    pathScript.add(PathState.PARK);
+                buildBlueCloseScript();
 
             } else { // BLUE FAR
                 shootingPosition = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SHOOTING_POSITION;
-                spike3Align = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_ALIGN;
-                spike3Collect = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_COLLECT;
-                spike2Align = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK2_ALIGN;
-                spike2Collect = P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK2_COLLECT;
+
+                spike1Align = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK1_ALIGN;
+                spike1Collect = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK1_COLLECT;
+
+                spike2Align = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK2_ALIGN;
+                spike2Collect = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK2_COLLECT;
+
+                spike3Align = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_ALIGN;
+                spike3Collect = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_COLLECT;
+
                 parkPosition = P3RobotConstants.Bot2_Waypoints.BLUE_FAR_PARK_POSITION;
-                shootingVelocity = 1460;
-                
+
+                shootingVelocity = 1420;
+
                 // Set path-specific parameters
-                driveToShootSpeed = 0.5;
-                driveToShootHoldTime = 0.0; // Strict heading control
-                shootingDriveSpeed = 0.5;
+                driveToShootSpeed = 0.75;
+                driveToShootHoldTime = 0.20;
+                shootingDriveSpeed = 0.6;
                 shootingHoldTime = 0.0;
-                spike3AlignSpeed = 0.5;
-                spike3CollectSpeed = 0.7; // Blue Far uses faster collection
-                spike2AlignSpeed = 0.5;
-                spike2CollectSpeed = 0.2;
-                useFeederOnSpikeMarkCollection = true; // Blue Far uses feeder motor
+                spike1AlignSpeed = 0.75;      // NEW
+                spike1CollectSpeed = 0.75;    // NEW
+                spike2AlignSpeed = 0.75;
+                spike2CollectSpeed = 0.75;
+                spike3AlignSpeed = 0.75;
+                spike3CollectSpeed = 0.75;
+                useFeederOnSpikeMarkCollection = true;
 
                 // Build the most complex script for Blue Far
-                if (waitDuration > 0){
-                    pathScript.add(PathState.INIT_WAIT);
-                    pathScript.add(PathState.WAIT_FOR_TIMER);
-                }
-                pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
-                pathScript.add(PathState.SHOOT_PRELOAD);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_3);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
-                pathScript.add(PathState.SHOOT_CYCLE_1);
-                pathScript.add(PathState.DRIVE_TO_SPIKE_2);
-                pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
-                pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
-                pathScript.add(PathState.SHOOT_CYCLE_2);
-                pathScript.add(PathState.PARK);
+                buildBlueFarScript();
             }
         }
 
@@ -306,6 +318,194 @@ public class P3Autonomous_Queue extends OpMode {
         autonomousState = AutonomousState.RUNNING_PATH;
     }
 
+    private void buildRedCloseScript() {
+        // Optional wait
+        if (waitDuration > 0) {
+            pathScript.add(PathState.INIT_WAIT);
+            pathScript.add(PathState.WAIT_FOR_TIMER);
+        }
+
+        // CYCLE 1: Preload
+        if (selectedCycles >= 1) {
+            pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_PRELOAD);
+        }
+
+        // CYCLE 2: Spike 1
+        if (selectedCycles >= 2) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_1);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
+
+            // Gate opening (only if enabled and we're doing cycle 2+)
+            if (enableGate) {
+                pathScript.add(PathState.ALIGN_GATE);
+                pathScript.add(PathState.OPEN_GATE);
+            }
+
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_1);
+        }
+
+        // CYCLE 3: Spike 2
+        if (selectedCycles >= 3) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_2);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_2);
+        }
+
+        // CYCLE 4: Spike 3
+        if (selectedCycles >= 4) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_3);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_3);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_3);
+        }
+
+        // Always park at the end
+        pathScript.add(PathState.PARK);
+    }
+
+    private void buildRedFarScript() {
+        if (waitDuration > 0) {
+            pathScript.add(PathState.INIT_WAIT);
+            pathScript.add(PathState.WAIT_FOR_TIMER);
+        }
+
+        // CYCLE 1: Preload
+        if (selectedCycles >= 1) {
+            pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_PRELOAD);
+        }
+
+        // CYCLE 2: Spike 3
+        if (selectedCycles >= 2) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_3);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_1);
+        }
+
+        // CYCLE 3: Spike 2
+        if (selectedCycles >= 3) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_2);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_2);
+        }
+
+        // CYCLE 4: Spike 1 (NEW!)
+        if (selectedCycles >= 4) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_1);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_3);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_3);
+        }
+
+        pathScript.add(PathState.PARK);
+    }
+
+    private void buildBlueCloseScript() {
+        if (waitDuration > 0) {
+            pathScript.add(PathState.INIT_WAIT);
+            pathScript.add(PathState.WAIT_FOR_TIMER);
+        }
+
+        // CYCLE 1: Preload
+        if (selectedCycles >= 1) {
+            pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_PRELOAD);
+        }
+
+        // CYCLE 2: Spike 1
+        if (selectedCycles >= 2) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_1);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
+
+            // Gate for Blue Close comes after first cycle
+            if (enableGate) {
+                pathScript.add(PathState.ALIGN_GATE);
+                pathScript.add(PathState.OPEN_GATE);
+            }
+
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_1);
+        }
+
+        // CYCLE 3: Spike 2
+        if (selectedCycles >= 3) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_2);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_2);
+        }
+
+        // CYCLE 4: Spike 3 (NEW!)
+        if (selectedCycles >= 4) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_3);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_3);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_3);
+        }
+
+        pathScript.add(PathState.PARK);
+    }
+
+    private void buildBlueFarScript() {
+        if (waitDuration > 0) {
+            pathScript.add(PathState.INIT_WAIT);
+            pathScript.add(PathState.WAIT_FOR_TIMER);
+        }
+
+        // CYCLE 1: Preload
+        if (selectedCycles >= 1) {
+            pathScript.add(PathState.DRIVE_TO_SHOOT_PRELOAD);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_PRELOAD);
+        }
+
+        // CYCLE 2: Spike 3
+        if (selectedCycles >= 2) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_3);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_3);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_1);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_1);
+        }
+
+        // CYCLE 3: Spike 2
+        if (selectedCycles >= 3) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_2);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_2);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_2);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_2);
+        }
+
+        // CYCLE 4: Spike 1 (NEW!)
+        if (selectedCycles >= 4) {
+            pathScript.add(PathState.DRIVE_TO_SPIKE_1);
+            pathScript.add(PathState.COLLECT_FROM_SPIKE_1);
+            pathScript.add(PathState.DRIVE_TO_SHOOT_CYCLE_3);
+            pathScript.add(PathState.AIM_AT_TARGET);
+            pathScript.add(PathState.SHOOT_CYCLE_3);
+        }
+
+        pathScript.add(PathState.PARK);
+    }
+
     //================================================================================
     // MAIN LOOP
     //================================================================================
@@ -324,8 +524,19 @@ public class P3Autonomous_Queue extends OpMode {
                 break;
         }
 
-        telemetry.addData("Current Path", alliance + " " + location);
-        telemetry.addData("Current State", currentState);
+//        telemetry.addData("Current Path", alliance + " " + location);
+//        telemetry.addData("Current State", currentState);
+        // Enhanced telemetry with warnings
+        telemetry.addData("Path", "%s %s (Cycle %d)", alliance, location, selectedCycles);
+        telemetry.addData("State", currentState);
+        telemetry.addData("State Time", "%.1f s", stateTimer.seconds());
+        telemetry.addData("Total Time", "%.1f / %.0f s",
+                autonomousTimer.seconds(), AUTONOMOUS_TIMEOUT_SECONDS);
+
+        // Visual warning if running out of time
+        if (autonomousTimer.seconds() > AUTONOMOUS_TIMEOUT_SECONDS - 5.0) {
+            telemetry.addLine("⚠️ WARNING: LOW TIME!");
+        }
         telemetry.addData("imu heading: ", robot.drive.heading);
         telemetry.addData("robot location X: ", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
         telemetry.addData("robot location: Y ", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
@@ -346,6 +557,7 @@ public class P3Autonomous_Queue extends OpMode {
      * If the queue is empty, it returns the IDLE state.
      */
     private PathState getNextState() {
+        stateTimer.reset();
         if (!pathScript.isEmpty()) {
             return pathScript.poll(); // .poll() retrieves and removes the head of the queue
         }
@@ -378,6 +590,16 @@ public class P3Autonomous_Queue extends OpMode {
     //================================================================================
 
     private void runPath() {
+        if (autonomousTimer.seconds() > AUTONOMOUS_TIMEOUT_SECONDS) {
+            if (currentState != PathState.PARK && currentState != PathState.IDLE) {
+                telemetry.log().add("!!! GLOBAL TIMEOUT at %.1f sec - Forcing PARK !!!", autonomousTimer.seconds());
+                pathScript.clear();
+                pathScript.add(PathState.PARK);
+                currentState = getNextState();
+                return; // Exit immediately to start parking
+            }
+        }
+
         switch (currentState) {
             case START:
                 currentState = getNextState();
@@ -386,7 +608,13 @@ public class P3Autonomous_Queue extends OpMode {
             case DRIVE_TO_SHOOT_PRELOAD:
                 robot.intake.startIntake();
                 robot.launcher.setShooterMotorVelocity(shootingVelocity);
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), shootingPosition, driveToShootSpeed, driveToShootHoldTime)) {
+
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), shootingPosition,
+                        driveToShootSpeed, driveToShootHoldTime)) {
+                    shotsFired = 0;
+                    currentState = getNextState();
+                } else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: DRIVE_TO_SHOOT_PRELOAD at %.1f sec", stateTimer.seconds());
                     shotsFired = 0;
                     currentState = getNextState();
                 }
@@ -394,10 +622,28 @@ public class P3Autonomous_Queue extends OpMode {
 
             case AIM_AT_TARGET:
                 double turnPower;
+
+                if (stateTimer.seconds() > STATE_TIMEOUT_AIM) {
+                    telemetry.log().add("TIMEOUT: AIM_AT_TARGET at %.1f sec", stateTimer.seconds());
+                    robot.drive.stopRobot();
+                    currentState = getNextState();
+                    break;
+                }
                 if (robot.vision.isTargetVisible()) {
                     double txError = robot.vision.getTargetAngleX();
 
                     // Check if our aim is within the tolerance.
+                    double allianceOffSet = 0;
+                    if (alliance == CommonConstants.Alliance.RED && location == P3RobotConstants.Location.FAR) {
+                        allianceOffSet = RED_AIM_OFFSET_DEG;
+                    } else if (alliance == CommonConstants.Alliance.BLUE && location == P3RobotConstants.Location.FAR){
+                        allianceOffSet = BLUE_AIM_OFFSET_DEG;
+                    } else {
+                        allianceOffSet = 0.0;
+                    }
+
+                    txError += allianceOffSet;
+
                     if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
                         // Aim is good! Stop turning and move to the next state (SHOOTING).
                         turnPower = 0.0;
@@ -431,45 +677,72 @@ public class P3Autonomous_Queue extends OpMode {
                 robot.launcher.setStopPosition();
                 if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike1Align, spike1AlignSpeed, 0.0)) {
                     currentState = getNextState();
+                } else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: DRIVE_TO_SPIKE_1");
+                    currentState = getNextState();
                 }
                 break;
 
             case COLLECT_FROM_SPIKE_1:
                 if (useFeederOnSpikeMarkCollection) {
-                    robot.feeder.setFeederMotorPower(-0.450);
+                    robot.feeder.setFeederMotorPower(-0.480);
                 }
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike1Collect, spike1CollectSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike1Collect, spike1CollectSpeed, 0.0)) {
                     if (useFeederOnSpikeMarkCollection) {
                         robot.feeder.setFeederMotorPower(0.0);
                     }
                     currentState = getNextState();
-                }
+                } else if (stateTimer.seconds() > STATE_TIMEOUT_COLLECT) {
+                telemetry.log().add("TIMEOUT: COLLECT_FROM_SPIKE_1");
+                    if (useFeederOnSpikeMarkCollection) {
+                        robot.feeder.setFeederMotorPower(0.0);
+                    }
+                    currentState = getNextState();
+            }
                 break;
 
             case ALIGN_GATE:
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), alignOpenGate, openGateAlignSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), alignOpenGate, openGateAlignSpeed, 0.0)) {
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: ALIGN_GATE");
                     currentState = getNextState();
                 }
                 break;
 
             case OPEN_GATE:
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), openGate, openGateSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), openGate, openGateSpeed, 0.0)) {
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: OPEN_GATE");
                     currentState = getNextState();
                 }
                 break;
 
             case DRIVE_TO_SPIKE_2:
                 robot.launcher.setStopPosition();
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike2Align, spike2AlignSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike2Align, spike2AlignSpeed, 0.0)) {
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: DRIVE_TO_SPIKE_2");
                     currentState = getNextState();
                 }
                 break;
 
             case COLLECT_FROM_SPIKE_2:
                 if (useFeederOnSpikeMarkCollection) {
-                    robot.feeder.setFeederMotorPower(-0.450);
+                    robot.feeder.setFeederMotorPower(-0.480);
                 }
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike2Collect, spike2CollectSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike2Collect, spike2CollectSpeed, 0.0)) {
+                    if (useFeederOnSpikeMarkCollection) {
+                        robot.feeder.setFeederMotorPower(0.0);
+                    }
+                    currentState = getNextState();
+                } else if (stateTimer.seconds() > STATE_TIMEOUT_COLLECT) {
+                    telemetry.log().add("TIMEOUT: COLLECT_FROM_SPIKE_2");
                     if (useFeederOnSpikeMarkCollection) {
                         robot.feeder.setFeederMotorPower(0.0);
                     }
@@ -479,16 +752,26 @@ public class P3Autonomous_Queue extends OpMode {
 
             case DRIVE_TO_SPIKE_3:
                 robot.launcher.setStopPosition();
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike3Align, spike3AlignSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike3Align, spike3AlignSpeed, 0.0)) {
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: DRIVE_TO_SPIKE_3");
                     currentState = getNextState();
                 }
                 break;
 
             case COLLECT_FROM_SPIKE_3:
                 if (useFeederOnSpikeMarkCollection) {
-                    robot.feeder.setFeederMotorPower(-0.45);
+                    robot.feeder.setFeederMotorPower(-0.48);
                 }
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike3Collect, spike3CollectSpeed, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), spike3Collect, spike3CollectSpeed, 0.0)) {
+                    if (useFeederOnSpikeMarkCollection) {
+                        robot.feeder.setFeederMotorPower(0.0);
+                    }
+                    currentState = getNextState();
+                } else if (stateTimer.seconds() > STATE_TIMEOUT_COLLECT) {
+                    telemetry.log().add("TIMEOUT: COLLECT_FROM_SPIKE_3");
                     if (useFeederOnSpikeMarkCollection) {
                         robot.feeder.setFeederMotorPower(0.0);
                     }
@@ -498,7 +781,13 @@ public class P3Autonomous_Queue extends OpMode {
 
             case DRIVE_TO_SHOOT_CYCLE_1:
             case DRIVE_TO_SHOOT_CYCLE_2: // Can combine logic if the action is the same
+            case DRIVE_TO_SHOOT_CYCLE_3:
                 if (robot.drive.driveTo(robot.drive.getOdoPosition(), shootingPosition, driveToShootSpeed, driveToShootHoldTime)) {
+                    shotsFired = 0;
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_DRIVE) {
+                    telemetry.log().add("TIMEOUT: DRIVE_TO_SHOOT_CYCLE");
                     shotsFired = 0;
                     currentState = getNextState();
                 }
@@ -506,14 +795,20 @@ public class P3Autonomous_Queue extends OpMode {
 
             case SHOOT_CYCLE_1:
             case SHOOT_CYCLE_2: // Can combine logic
+            case SHOOT_CYCLE_3:
                 if (shootCycle(3)) {
+                    currentState = getNextState();
+                }
+                else if (stateTimer.seconds() > STATE_TIMEOUT_SHOOT) {
+                    telemetry.log().add("TIMEOUT: SHOOTING at %.1f sec (fired %d/3)",
+                            stateTimer.seconds(), shotsFired);
                     currentState = getNextState();
                 }
                 break;
 
             case PARK:
                 robot.launcher.setStopPosition();
-                if (robot.drive.driveTo(robot.drive.getOdoPosition(), parkPosition, 0.3, 0.25)) {
+                if (robot.drive.driveTo(robot.drive.getOdoPosition(), parkPosition, 0.9, 0.25)) {
                     currentState = getNextState();
                 }
                 break;

@@ -116,37 +116,45 @@ public class P3RobotConstants {
         /* Red Alliance Poses */
         // ---- CLOSE TO GOAL START ----//
         public static final Pose2D START_RED_CLOSE = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
-        public static final Pose2D RED_CLOSE_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,26, -26, AngleUnit.DEGREES,-54);
+        public static final Pose2D RED_CLOSE_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,34, -26, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,-6, -14, AngleUnit.DEGREES,0);
 
 
         // ---- FAR FROM GOAL START ----//
         public static final Pose2D RED_FAR_START_POSITION = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
-        public static final Pose2D RED_FAR_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,-8.5, -12, AngleUnit.DEGREES,-24);
+        public static final Pose2D RED_FAR_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,-8.5, -6, AngleUnit.DEGREES,-30);
         public static final Pose2D RED_FAR_PARK_POSITION = new Pose2D(DistanceUnit.INCH,-24, 0, AngleUnit.DEGREES,0);
 
 
         // * RED SPIKEMARK POSITIONS */
-        public static final Pose2D RED_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,45, -26, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,45, 0, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_CLOSE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,69, -26, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_CLOSE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,69, 0, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,-26, -6, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,-26, 0, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,-49, -6, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_FAR_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,-49, 0, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,42, -15, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,42, 11, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,66, -15, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,66, 17, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,90, -15, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_CLOSE_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,90, 17, AngleUnit.DEGREES,90);
+
+
+        /** RED FAR **/
+        public static final Pose2D RED_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,-28, 14, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_FAR_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,-28, 49, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,-52, 14, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_FAR_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,-52, 49, AngleUnit.DEGREES,90);
+
+        public static final Pose2D RED_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH, -76, 14,AngleUnit.DEGREES, 90);
+        public static final Pose2D RED_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH, -76, 42,AngleUnit.DEGREES, 90);
 
 
 
         // ALIGN AND OPEN GATE RED //
-        public static final Pose2D RED_ALIGN_GATE = new Pose2D(DistanceUnit.INCH,52, -26, AngleUnit.DEGREES,90);
-        public static final Pose2D RED_OPEN_GATE = new Pose2D(DistanceUnit.INCH,52, 2, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_ALIGN_GATE = new Pose2D(DistanceUnit.INCH,54, 0, AngleUnit.DEGREES,90);
+        public static final Pose2D RED_OPEN_GATE = new Pose2D(DistanceUnit.INCH,54, 11.5, AngleUnit.DEGREES,90);
 
 
         // * Blue Alliance Poses */
         // ---- CLOSE TO GOAL START ----//
         public static final Pose2D START_BLUE_CLOSE = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,0);
-        public static final Pose2D BLUE_CLOSE_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,26, 18, AngleUnit.DEGREES,45);
+        public static final Pose2D BLUE_CLOSE_SHOOTING_POSITION = new Pose2D(DistanceUnit.INCH,34, 26, AngleUnit.DEGREES,45);
         public static final Pose2D BLUE_CLOSE_PARK = new Pose2D(DistanceUnit.INCH,-6, 14, AngleUnit.DEGREES,0);
 
 
@@ -157,19 +165,26 @@ public class P3RobotConstants {
 
 
         // -- BLUE SPIKE MARK LOCATIONS -- //
-        public static final Pose2D BLUE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,55, 26, AngleUnit.DEGREES,-90);
-        public static final Pose2D BLUE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,56, -1.0, AngleUnit.DEGREES,-90);
-        public static final Pose2D BLUE_CLOSE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,79, 26, AngleUnit.DEGREES,-90); // CHANGE
-        public static final Pose2D BLUE_CLOSE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,80, -1.0, AngleUnit.DEGREES,-90); // CHANGE
-        public static final Pose2D BLUE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,-36, 5, AngleUnit.DEGREES,-90); // CHANGE
-        public static final Pose2D BLUE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,-36, -25, AngleUnit.DEGREES,-90); // CHANGE
-        public static final Pose2D BLUE_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,-12, 5, AngleUnit.DEGREES,-90); // CHANGE
-        public static final Pose2D BLUE_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,-12, -25, AngleUnit.DEGREES,-90); // CHANGE
+        //NEAR SIDE
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,42, 18, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,42, -12.0, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,66, 26, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,66, -20.0, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,90, 26, AngleUnit.DEGREES,-90); // CHANGE
+        public static final Pose2D BLUE_CLOSE_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,90, -20.0, AngleUnit.DEGREES,-90); // CHANGE
+
+        //FAR SIDE:
+        public static final Pose2D BLUE_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-76, -14, AngleUnit.DEGREES,-90); // CHANGED
+        public static final Pose2D BLUE_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH,-76, -41, AngleUnit.DEGREES,-90); // CHANGED
+        public static final Pose2D BLUE_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH,-52, -14, AngleUnit.DEGREES,-90); // CHANGED
+        public static final Pose2D BLUE_FAR_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH,-52, -49, AngleUnit.DEGREES,-90); // CHANGED
+        public static final Pose2D BLUE_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH,-28, -14, AngleUnit.DEGREES,-90); // CHANGED
+        public static final Pose2D BLUE_FAR_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH,-28, -49, AngleUnit.DEGREES,-90); // CHANGED
 
 
         // ALIGN AND OPEN GATE BLUE //
-        public static final Pose2D BLUE_ALIGN_GATE = new Pose2D(DistanceUnit.INCH,71, 26, AngleUnit.DEGREES,-90);
-        public static final Pose2D BLUE_OPEN_GATE = new Pose2D(DistanceUnit.INCH,71, -2, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_ALIGN_GATE = new Pose2D(DistanceUnit.INCH,52, 4, AngleUnit.DEGREES,-90);
+        public static final Pose2D BLUE_OPEN_GATE = new Pose2D(DistanceUnit.INCH,52, -13, AngleUnit.DEGREES,-90);
 
         // ---- FAR FROM GOAL START ----//
         // blue far shoot

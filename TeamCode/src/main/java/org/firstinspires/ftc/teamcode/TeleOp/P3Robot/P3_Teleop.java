@@ -228,11 +228,14 @@ public class P3_Teleop extends OpMode
         if (gamepad1.right_trigger > 0.8) {
             robot.feeder.setFeederMotorPower(-1.0);
             robot.launcher.setShootingPosition();
+        } else if (gamepad1.left_trigger > 0.8) {
+            robot.feeder.setFeederMotorPower(-1.0);
         }
         else {
             robot.feeder.setFeederMotorPower(0.0);
             robot.launcher.setStopPosition();
         }
+
 
 //        if (gamepad1.yWasPressed()) {
 //            requestedMotorVelocity = 1200;//calcShooterVelocity();

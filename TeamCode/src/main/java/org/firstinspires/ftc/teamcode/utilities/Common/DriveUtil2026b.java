@@ -90,6 +90,7 @@ public class DriveUtil2026b {
     private static double yawPGain = 5.0;
     private static double yawDGain = 0.0;
     private static double yawAccel = 20.0;
+
     // === NEW CONSTANTS FOR ENCODER BASED AUTONOMOUS USING PID ===
     private static final double DRIVE_GAIN          = 0.085;    // Strength of axial position control
     private static final double DRIVE_ACCEL         = 2.0;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
@@ -800,11 +801,23 @@ public class DriveUtil2026b {
     private double calculatePID(Pose2D currentPosition, Pose2D targetPosition, Direction direction){
         if(direction ==Direction.x){
             double xError = targetPosition.getX(MM) - currentPosition.getX(MM);
-            return xPID.calculateAxisPID(xError, config.pointToPointTuning.pGain, config.pointToPointTuning.dGain, config.pointToPointTuning.accel,PIDTimer.seconds(), xyTolerance);
+            return xPID.calculateAxisPID(xError,
+                    config.pointToPointTuning.pGain,
+                    config.pointToPointTuning.iGain,  // ADDED THIS
+                    config.pointToPointTuning.dGain,
+                    config.pointToPointTuning.accel,
+                    PIDTimer.seconds(),
+                    xyTolerance);
         }
         if(direction == Direction.y){
             double yError = targetPosition.getY(MM) - currentPosition.getY(MM);
-            return yPID.calculateAxisPID(yError, config.pointToPointTuning.pGain, config.pointToPointTuning.dGain, config.pointToPointTuning.accel, PIDTimer.seconds(), xyTolerance);
+            return yPID.calculateAxisPID(yError,
+                    config.pointToPointTuning.pGain,
+                    config.pointToPointTuning.iGain,  // ADDED THIS
+                    config.pointToPointTuning.dGain,
+                    config.pointToPointTuning.accel,
+                    PIDTimer.seconds(),
+                    xyTolerance);
         }
         if(direction == Direction.h){
             double targetH = targetPosition.getHeading(AngleUnit.RADIANS);
@@ -815,7 +828,13 @@ public class DriveUtil2026b {
                 hPID.pidReset();
                 return 0.0;
             }
-            return hPID.calculateAxisPID(hError, config.pointToPointTuning.yawPGain, config.pointToPointTuning.yawDGain, config.pointToPointTuning.yawAccel, PIDTimer.seconds(), yawTolerance);
+            return hPID.calculateAxisPID(hError,
+                    config.pointToPointTuning.yawPGain,
+                    config.pointToPointTuning.yawIGain,  // ADD THIS (you'll need to add this to your tuning config)
+                    config.pointToPointTuning.yawDGain,
+                    config.pointToPointTuning.yawAccel,
+                    PIDTimer.seconds(),
+                    yawTolerance);
         }
         return 0;
     }
@@ -1127,43 +1146,91 @@ public class DriveUtil2026b {
         private double previousError;
         private double previousTime;
         private double previousOutput;
-
+        private double integralSum;
+        private double filteredD;
         private double errorR;
-        private double integralError = 0.0;
-        private static final double I_LIMIT = 0.3; // anti-windup clamp, tune as needed
-        private final double iGain = 0.000002; // start tiny
 
+        public double calculateAxisPID(double error, double pGain, double iGain, double dGain, double accel, double currentTime, double tolerance)
+        {
 
-        public double calculateAxisPID(double error, double pGain, double dGain, double accel, double currentTime, double tolerance) {
-            double p = error * pGain;
+            // First call initialization
+            if (previousTime == 0.0) {
+                previousTime = currentTime;
+                previousError = error;
+                return 0;
+            }
+
             double cycleTime = currentTime - previousTime;
-            double d = dGain * (previousError - error) / (cycleTime);
-            double output = p + d;
+            if (cycleTime <= 1e-3) cycleTime = 1e-3;
+
+            // Check if we're settled - partial reset to avoid pause
+            if (Math.abs(error) <= tolerance && Math.abs(previousOutput) < 0.05) {
+                previousOutput = 0;
+                integralSum = 0;
+                filteredD = 0;
+                previousError = error;
+                previousTime = currentTime;
+                return 0;
+            }
+
+            // P term
+            double p = error * pGain;
+
+            // I term with anti-windup
+            integralSum += error * cycleTime;
+            if (iGain > 1e-9) {
+                double iMaxOutput = 0.2;  // Max contribution from integral
+                double maxIntegral = iMaxOutput / iGain;
+                integralSum = Math.max(-maxIntegral, Math.min(maxIntegral, integralSum));
+            } else {
+                integralSum = 0;
+            }
+            double i = iGain * integralSum;
+
+            // D term - FIX: CORRECTED SIGN (for real this time!)
+            double rawD = (error - previousError) / cycleTime;  // Negative error rate
+            filteredD = 0.85 * filteredD + 0.15 * rawD;         // Slower filter for odometry
+            double d = dGain * filteredD;
+
+            double output = p + i + d;
+
+
+            // Asymmetric acceleration limiting
             double dV = cycleTime * accel;
+            double outputChange = output - previousOutput;
 
-            double max = Math.abs(output);
-            if(max > 1.0){
-                output /= max;
-            }
+            boolean isBraking = Math.abs(output) < Math.abs(previousOutput);
+            boolean isReversing = (output * previousOutput) < 0;
 
-            if((output - previousOutput) > dV){
-                output = previousOutput + dV;
-            } else if ((output - previousOutput) < -dV){
-                output = previousOutput - dV;
+            if (!isBraking || isReversing) {
+                // Limit acceleration and direction changes
+                if (outputChange > dV) {
+                    output = previousOutput + dV;
+                } else if (outputChange < -dV) {
+                    output = previousOutput - dV;
+                }
             }
+            // Allow unlimited deceleration when braking (not reversing)
+
+
+            // Final clamp to maxPower
+            output = Math.max(-1.0, Math.min(1.0, output));
+
 
             previousOutput = output;
-            previousError  = error;
-            previousTime   = currentTime;
-
+            previousError = error;
+            previousTime = currentTime;
             errorR = error;
 
             return output;
         }
+
         public void pidReset() {
             previousOutput = 0.0;
             previousError = 0.0;
             previousTime = 0.0;
+            integralSum = 0.0;
+            filteredD = 0.0;
         }
     }
     public class SimplifiedOdoDriveUtilProportionalControl {

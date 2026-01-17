@@ -442,13 +442,13 @@ public class P3Autonomous_ScoreMore extends OpMode {
                     }
                     break;
                 case MOVE_TO_SPIKE_MARK3:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_ALIGN, 0.3, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_ALIGN, 0.3, .25)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                         blueFarState = BlueFarState.INTAKE_ARTIFACTS_FROM_SPIKEMARK3;
                     }
                     break;
                 case INTAKE_ARTIFACTS_FROM_SPIKEMARK3:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_COLLECT, 0.2, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_COLLECT, 0.2, .25)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                         blueFarState = BlueFarState.DRIVE_TO_SCORE_LINE;
                     }

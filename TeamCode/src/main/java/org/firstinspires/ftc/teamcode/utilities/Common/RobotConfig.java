@@ -80,8 +80,9 @@ public class RobotConfig {
         public final double yawPGain;
         public final double yawDGain;
         public final double yawAccel;
+        public final double yawIGain;
 
-        public PointToPointTuning(double xy, double yaw, double p, double d, double i, double a, double yp, double yd, double ya) {
+        public PointToPointTuning(double xy, double yaw, double p, double d, double i, double a, double yp, double yd, double yi,double ya) {
             this.xyTolerance = xy;
             this.yawTolerance = yaw;
             this.pGain = p;
@@ -90,6 +91,7 @@ public class RobotConfig {
             this.accel = a;
             this.yawPGain = yp;
             this.yawDGain = yd;
+            this.yawIGain = yi;
             this.yawAccel = ya;
         }
     }
@@ -176,6 +178,7 @@ public class RobotConfig {
                         10.0,
                         5.0,
                         0.0,
+                        0.0,
                         20.0
                 ),
                 // Gear Girls robot uses Pedro Pathing, so we provide its config.
@@ -208,7 +211,7 @@ public class RobotConfig {
                 ),
                 new PointToPointTuning(
                         17.0, 0.055, 0.002, 0.00003, 0.000002,
-                        10.0, 5.0, 0.03, 10.0
+                        10.0, 5.0, 0.03,0.0, 10.0
                 ),
                 // P3 robot also uses Pedro Pathing, but with different tuning.
                 new PedroPathingConfig(
@@ -227,16 +230,41 @@ public class RobotConfig {
                         DcMotorEx.Direction.REVERSE, DcMotorEx.Direction.FORWARD
                 ),
                 new OdometryConfig(
-                        -38.0, 165.0,
+                        50, -152.0,
+                        //-140.0, 0.0,
                         GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED
                 ),
                 new ImuConfig(
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP
                 ),
+//                new PointToPointTuning(
+//                        18.0, 0.055, 0.00390, 0.00012, 0.000002,
+//                        8, 5.0, 0.03, 10.0
+//                ),
                 new PointToPointTuning(
-                        15.0, 0.055, 0.00295, 0.00008, 0.000002,
-                        10, 5.0, 0.03, 10.0
+                        18.0,      // xy tolerance
+                        0.055,     // yaw tolerance
+                        0.00350,   // p (lateral)
+                        0.00035,   // d (lateral)
+                        0.000010,  // i (lateral)
+                        8.0,       // acceleration (lateral)
+                        2.5,       // yp (yaw P)
+                        0.08,      // yd (yaw D)
+                        0.00005,   // yi (yaw I) - ADD THIS
+                        10.0       // ya (yaw acceleration)
                 ),
+//                new PointToPointTuning(
+//                        18.0,       // xy tolerance (mm)
+//                        0.055,      // yaw tolerance (rad)
+//                        0.0022,     // p (lateral)
+//                        0.00018,    // d (lateral)
+//                        0.0,        // i (lateral)  <-- off for now
+//                        8.0,        // acceleration (lateral)
+//                        2.5,        // yp (yaw P)
+//                        0.08,       // yd (yaw D)
+//                        0.0,        // yi (yaw I)   <-- off for now
+//                        10.0        // ya (yaw acceleration)
+//                ),
                 // P3 robot also uses Pedro Pathing, but with different tuning.
                 new PedroPathingConfig(
                         4.5, -30.0, -60.0,
@@ -265,7 +293,7 @@ public class RobotConfig {
                 ),
                 new PointToPointTuning( // It has its own simple PID tuning
                         15.5, 0.0349066, 0.01905, 0.00111, 0.000002,
-                        8.0, 5.0, 0.0, 20.0
+                        8.0, 5.0, 0.0, 0.0,20.0
                 ),
                 // This robot does NOT use Pedro Pathing, so we pass null.
                 null
@@ -289,7 +317,7 @@ public class RobotConfig {
                 ),
                 new PointToPointTuning( // It has its own simple PID tuning
                         15.5, 0.0349066, 0.01905, 0.00111, 0.000002,
-                        8.0, 5.0, 0.0, 20.0
+                        8.0, 5.0, 0.0, 0.0,20.0
                 ),
                 // This robot does NOT use Pedro Pathing, so we pass null.
                 null

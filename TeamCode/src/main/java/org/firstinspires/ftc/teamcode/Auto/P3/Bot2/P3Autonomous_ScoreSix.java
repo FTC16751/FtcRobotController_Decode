@@ -178,7 +178,7 @@ public class P3Autonomous_ScoreSix extends OpMode {
                     }
                 break;
             case MOVE_TO_SPIKE_MARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_ALIGN, 0.5, .35)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_ALIGN, 0.5, .35)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                     redCloseState = RedCloseState.INTAKE_ARTIFACTS_FROM_SPIKEMARK1;
                 } else {
@@ -186,7 +186,7 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 }
                 break;
             case INTAKE_ARTIFACTS_FROM_SPIKEMARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK1_COLLECT, 0.2, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_CLOSE_SPIKEMARK1_COLLECT, 0.2, .25)) {
                     telemetry.addData("DONE WITH COLLECT", "GO SCORE!");
                     redCloseState = RedCloseState.DRIVE_TO_SCORE_LINE;
                 }
@@ -268,13 +268,13 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 }
                 break;
             case MOVE_TO_SPIKE_MARK3:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK3_ALIGN, 0.5, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK3_ALIGN, 0.5, .25)) {
                     telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                     redFarState = RedFarState.INTAKE_ARTIFACTS_FROM_SPIKEMARK3;
                 }
                 break;
             case INTAKE_ARTIFACTS_FROM_SPIKEMARK3:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_SPIKEMARK3_COLLECT, 0.2, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.RED_FAR_SPIKEMARK3_COLLECT, 0.2, .25)) {
                     telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                     redFarState = RedFarState.DRIVE_TO_SCORE_LINE;
                 }
@@ -359,14 +359,14 @@ public class P3Autonomous_ScoreSix extends OpMode {
                 break;
 
             case MOVE_TO_SPIKE_MARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_ALIGN, 0.5, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN, 0.5, .25)) {
                     blueCloseState = BlueCloseState.INTAKE_ARTIFACTS_FROM_SPIKEMARK1;
                 } else {
                     robot.launcher.setStopPosition();
                 }
                 break;
             case INTAKE_ARTIFACTS_FROM_SPIKEMARK1:
-                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK1_COLLECT, 0.25, .25)) {
+                if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_CLOSE_SPIKEMARK1_COLLECT, 0.25, .25)) {
                     blueCloseState = BlueCloseState.DRIVE_TO_SCORE_LINE;
                 }
                 break;
@@ -445,13 +445,13 @@ public class P3Autonomous_ScoreSix extends OpMode {
                     }
                     break;
                 case MOVE_TO_SPIKE_MARK3:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_ALIGN, 0.5, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_ALIGN, 0.5, .25)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                         blueFarState = BlueFarState.INTAKE_ARTIFACTS_FROM_SPIKEMARK3;
                     }
                     break;
                 case INTAKE_ARTIFACTS_FROM_SPIKEMARK3:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK3_COLLECT, 0.5, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK3_COLLECT, 0.5, .25)) {
                         robot.feeder.setFeederMotorPower(0.0);
 
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
@@ -489,13 +489,13 @@ public class P3Autonomous_ScoreSix extends OpMode {
                     break;
 
                 case MOVE_TO_SPIKE_MARK2:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK2_ALIGN, 0.5, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK2_ALIGN, 0.5, .25)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                         blueFarState = BlueFarState.INTAKE_ARTIFACTS_FROM_SPIKEMARK2;
                     }
                     break;
                 case INTAKE_ARTIFACTS_FROM_SPIKEMARK2:
-                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_SPIKEMARK2_COLLECT, 0.2, .25)) {
+                    if (robot.drive.driveTo(robot.drive.pinpoint.getPosition(), P3RobotConstants.Bot2_Waypoints.BLUE_FAR_SPIKEMARK2_COLLECT, 0.2, .25)) {
                         telemetry.addData("DONE WITH ALIGN", "GO COLLECT!");
                         blueFarState = BlueFarState.DRIVE_TO_SCORE_LINE_AGAIN;
                     }

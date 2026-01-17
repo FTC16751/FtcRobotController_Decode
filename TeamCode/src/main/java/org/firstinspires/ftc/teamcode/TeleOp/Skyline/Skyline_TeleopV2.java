@@ -178,6 +178,10 @@ public class Skyline_TeleopV2 extends OpMode {
             case AUTO_TARGETING:
                 // In this mode, we continuously get the velocity from the robot's calculation.
                 launcherVelocity = robot.updateAndGetTargetVelocity();
+                if (SharedState.alliance == CommonConstants.Alliance.BLUE)
+                {
+                    launcherVelocity = launcherVelocity * 1.04;
+                }
                 telemetry.addData("Launcher Mode", "AUTO (Y)");
                 break;
 
