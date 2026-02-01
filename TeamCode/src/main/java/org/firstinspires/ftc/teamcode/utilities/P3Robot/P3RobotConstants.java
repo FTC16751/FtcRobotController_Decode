@@ -52,6 +52,39 @@ public class P3RobotConstants {
         public static final double INTAKE_SPEED = 1.0;
         public static final double OUTTAKE_SPEED = -1.0;
     }
+
+    public static final class Turret {
+        // Manual control speeds
+        public static final double MANUAL_SPEED = 0.5;
+        public static final double FINE_SPEED = 0.3;
+        public static final double COARSE_SPEED = 0.8;
+
+        // Auto-aim parameters
+        public static final double AUTO_AIM_KP = 0.02;
+        public static final double AIM_TOLERANCE_DEG = 2.0;
+
+        // Preset positions
+        public static final double PRESET_LEFT = -45.0;
+        public static final double PRESET_RIGHT = 45.0;
+        public static final double PRESET_CENTER = 0.0;
+    }
+
+    public static final class TeleOp {
+        // Drive speed multipliers
+        public static final double DRIVE_SPEED_NORMAL = 0.85;
+        public static final double DRIVE_SPEED_PRECISION = 0.50;
+        public static final double DRIVE_SPEED_TURBO = 1.00;
+        public static final double FINE_ADJUSTMENT_SPEED = 0.15;
+
+        // Launcher velocity presets (ticks/sec)
+        public static final double NEAR_SHOT_VELOCITY = 2500.0;
+        public static final double FAR_SHOT_VELOCITY = 3500.0;
+        public static final double VELOCITY_INCREMENT = 100.0;
+
+        // Launch parameters
+        public static final double SHOOTER_VELOCITY_TOLERANCE_PERCENT = 0.95;
+    }
+
     public enum LauncherSystemState {
         IDLE,
         ACTIVE

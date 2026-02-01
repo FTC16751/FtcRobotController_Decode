@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.function.Supplier;
 @Configurable
 @TeleOp(name="Example PedroPath Teleop", group="PedroPath")
-@Disabled
+
 public class ExampleTeleOp extends OpMode {
 
     private Follower follower;
@@ -73,8 +73,8 @@ public class ExampleTeleOp extends OpMode {
             //In case the drivers want to use a "slowMode" you can scale the vectors
             //This is the normal version to use in the TeleOp
             if (!slowMode) follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x,
+                    gamepad1.left_stick_y,
+                    gamepad1.left_stick_x,
                     gamepad1.right_stick_x,
                     false // Robot Centric
             );

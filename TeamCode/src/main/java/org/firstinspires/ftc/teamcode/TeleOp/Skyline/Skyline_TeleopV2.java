@@ -180,7 +180,7 @@ public class Skyline_TeleopV2 extends OpMode {
                 launcherVelocity = robot.updateAndGetTargetVelocity();
                 if (SharedState.alliance == CommonConstants.Alliance.BLUE)
                 {
-                    launcherVelocity = launcherVelocity * 1.04;
+                    launcherVelocity = launcherVelocity * 1.00;
                 }
                 telemetry.addData("Launcher Mode", "AUTO (Y)");
                 break;

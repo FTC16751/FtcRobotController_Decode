@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.TeleOp.Concepts;
 
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -30,7 +29,7 @@ import java.util.List;
  * @author Your Team Name
  */
 @TeleOp(name = "Test: Intake Sensor FUSION", group = "Test")
-@Disabled
+
 public class Test_IntakeSensorFusion extends OpMode {
 
     // The single instance of our sensor fusion utility class.
@@ -90,8 +89,12 @@ public class Test_IntakeSensorFusion extends OpMode {
         telemetry.addData("Inventory Contents", inventory.toString());
 
         // Test the getColorOfSlot() method for a specific slot
-        IntakeSensorFusion001.ArtifactColor left1Color = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.LEFT_1);
-        telemetry.addData("getColorOfSlot(LEFT_1)", left1Color);
+        IntakeSensorFusion001.ArtifactColor leftColor = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.LEFT);
+        telemetry.addData("getColorOfSlot(LEFT_1)", leftColor);
+
+        // Test the getColorOfSlot() method for a specific slot
+        IntakeSensorFusion001.ArtifactColor rightColor = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.RIGHT);
+        telemetry.addData("getColorOfSlot(LEFT_2)", rightColor);
     }
 }
 

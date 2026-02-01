@@ -71,7 +71,8 @@ public class GGRobotConstants {
 
     public enum LauncherTargetingMode {
         AUTO,    // Use velocity calculated from vision or odometry
-        PRESET   // Use the manually toggled CLOSE/FAR presets
+        PRESET,   // Use the manually toggled CLOSE/FAR presets,
+        MANUAL
     }
     // --- NEW: Public Enums for Autonomous Selection ---
     public enum Alliance { RED, BLUE }
@@ -110,7 +111,7 @@ public class GGRobotConstants {
         public static final Pose2D RED_FAR_SPIKEMARK2_BALL3 = new Pose2D(DistanceUnit.INCH,47, -39, AngleUnit.DEGREES,-90);
 // use+declare
 
-        public static final Pose2D RED_CLOSE_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,-15, 22, AngleUnit.DEGREES,-45);
+        public static final Pose2D RED_CLOSE_DRIVE_TO_SCORE = new Pose2D(DistanceUnit.INCH,-20, 27, AngleUnit.DEGREES,-45);
         public static final Pose2D RED_CLOSE_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH,-33, 28, AngleUnit.DEGREES,-90);
         public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL1 = new Pose2D(DistanceUnit.INCH,-33, 18.5, AngleUnit.DEGREES,-90);
         public static final Pose2D RED_CLOSE_SPIKEMARK1_BALL2 = new Pose2D(DistanceUnit.INCH,-33, 12, AngleUnit.DEGREES,-90);

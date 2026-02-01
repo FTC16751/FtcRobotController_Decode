@@ -23,7 +23,7 @@ public class IntakeSensorFusion001 {
 
     // Public enums for easy access from other classes like your OpMode.
     public enum ArtifactColor { PURPLE, GREEN, UNKNOWN }
-    public enum IntakeSlot { LEFT_1, LEFT_2, RIGHT_1, RIGHT_2 }
+    public enum IntakeSlot {LEFT, RIGHT, CENTER }
 
     /**
      * A private inner class that manages the state and logic for a single physical color sensor.
@@ -49,7 +49,7 @@ public class IntakeSensorFusion001 {
         private boolean isOccupied = false;
 
         // Constants (can be moved to a separate GGRobotConstants file if desired)
-        private static final double DISTANCE_THRESHOLD_CM = 5.0; // How close an artifact must be to be "detected".
+        private static final double DISTANCE_THRESHOLD_CM = 7.0; // How close an artifact must be to be "detected".
         private static final double SAMPLING_DURATION_MSEC = 300; // How long to sample colors.
 
         /**
@@ -163,10 +163,10 @@ public class IntakeSensorFusion001 {
     // This is the public-facing part of the utility.
     // =================================================================================
 
-    private final ArtifactSensor leftSlot1;
-    private final ArtifactSensor leftSlot2;
-    private final ArtifactSensor rightSlot1;
-    private final ArtifactSensor rightSlot2;
+    private final ArtifactSensor leftSlot;
+    private final ArtifactSensor rightSlot;
+//    private final ArtifactSensor rightSlot1;
+//    private final ArtifactSensor rightSlot2;
     private final List<ArtifactSensor> allSensors = new ArrayList<>();
     private final Telemetry telemetry;
 
@@ -179,15 +179,11 @@ public class IntakeSensorFusion001 {
         this.telemetry = telemetry;
         // Initialize one ArtifactSensor for each physical sensor on the robot.
         // The names MUST match your robot configuration.
-        leftSlot1 = new ArtifactSensor("sensor_L1", hardwareMap, telemetry);
-        leftSlot2 = new ArtifactSensor("sensor_L2", hardwareMap, telemetry);
-        rightSlot1 = new ArtifactSensor("sensor_R1", hardwareMap, telemetry);
-        rightSlot2 = new ArtifactSensor("sensor_R2", hardwareMap, telemetry);
+        leftSlot = new ArtifactSensor("sensor_color", hardwareMap, telemetry);
+        rightSlot = new ArtifactSensor("sensor_color2", hardwareMap, telemetry);
 
-        allSensors.add(leftSlot1);
-        allSensors.add(leftSlot2);
-        allSensors.add(rightSlot1);
-        allSensors.add(rightSlot2);
+        allSensors.add(leftSlot);
+        allSensors.add(rightSlot);
     }
 
     /**
@@ -207,10 +203,8 @@ public class IntakeSensorFusion001 {
      */
     public ArtifactColor getColorOfSlot(IntakeSlot slot) {
         switch (slot) {
-            case LEFT_1: return leftSlot1.getColor();
-            case LEFT_2: return leftSlot2.getColor();
-            case RIGHT_1: return rightSlot1.getColor();
-            case RIGHT_2: return rightSlot2.getColor();
+            case LEFT: return leftSlot.getColor();
+            case RIGHT: return rightSlot.getColor();
             default: return ArtifactColor.UNKNOWN;
         }
     }
@@ -222,10 +216,8 @@ public class IntakeSensorFusion001 {
      */
     public boolean isSlotOccupied(IntakeSlot slot) {
         switch (slot) {
-            case LEFT_1: return leftSlot1.isOccupied();
-            case LEFT_2: return leftSlot2.isOccupied();
-            case RIGHT_1: return rightSlot1.isOccupied();
-            case RIGHT_2: return rightSlot2.isOccupied();
+            case LEFT: return leftSlot.isOccupied();
+            case RIGHT: return rightSlot.isOccupied();
             default: return false;
         }
     }
@@ -249,10 +241,8 @@ public class IntakeSensorFusion001 {
      */
     public void addTelemetry() {
         telemetry.addLine("--- Intake Inventory ---");
-        leftSlot1.addTelemetry();
-        leftSlot2.addTelemetry();
-        rightSlot1.addTelemetry();
-        rightSlot2.addTelemetry();
+        leftSlot.addTelemetry();
+        rightSlot.addTelemetry();
         telemetry.addData("Total Artifacts", getInventory().size());
     }
 }

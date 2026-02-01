@@ -51,7 +51,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
  */
 
 @TeleOp(name="P3: BOT1 Teleop (Team Version)", group=" _P3opmodes")
-@Disabled
+
 public class P3_Teleop_BOT1 extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;
@@ -82,6 +82,23 @@ public class P3_Teleop_BOT1 extends OpMode
     double angleOnTarget = 0.0;
     public final double TX_ALIGN_TOLERANCE_DEG = 1.0;
     public final double SHOOTER_VELOCITY_TOLERANCE_PERCENT = 0.95;
+    public static final double TURRET_RIGHT_ANGLE = 90.0;
+    public static final double TURRET_LEFT_ANGLE = -90.0;
+    public static final double TURRET_BACK_ANGLE = -180.0; // Note: -180 and 180 are the same position.
+    public static final double TURRET_HOME_ANGLE = 0.0;
+
+    public static final double TURRET_MANUAL_ADJUST_DEGREES = 5.0;
+    public static final double JOYSTICK_DEADBAND = 0.05; // Increased slightly for robustness
+
+    // In P3_Teleop_BOT1.java, with your other member variables
+
+    // --- NEW: State for Turret Control ---
+    private enum TurretControlMode {
+        ANGLE_CONTROL, // When using setTargetAngle()
+        POWER_CONTROL  // When using the joystick for direct power
+    }
+    private TurretControlMode turretControlMode = TurretControlMode.ANGLE_CONTROL; // Default to angle control
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -115,11 +132,13 @@ public class P3_Teleop_BOT1 extends OpMode
     @Override
     public void loop() {
         robot.update();
-        doDriveControls();
+       // doDriveControls();
         handleIntakeControls();
-        calcShooterVelocity();
+//        calcShooterVelocity();
         handleLauncherControls();
-        
+        handleTurret();
+
+
 //        telemetry.addData("Left Front motor position: ", robot.drive.getmotorPosition(robot.drive.leftFrontMotor));
 //        telemetry.addData("Left Rearmotor position: ", robot.drive.getmotorPosition(robot.drive.leftRearMotor));
 //        telemetry.addData("Right Front motor position: ", robot.drive.getmotorPosition(robot.drive.rightFrontMotor));
@@ -130,6 +149,87 @@ public class P3_Teleop_BOT1 extends OpMode
         telemetry.addData("requested motor velocity: ", requestedMotorVelocity);
         telemetry.addData("actual motor velocity: ", robot.launcher.getShooterMotorVelocity());
         telemetry.addData("tx error: ", txError);
+        // Turret information
+        robot.turret.addTelemetry(telemetry);
+        telemetry.addLine();
+
+        // Control hints
+        telemetry.addData("turretControlMode: ", turretControlMode);
+        telemetry.addData("Right Stick X", "%.2f", gamepad1.right_stick_x);
+        telemetry.addLine("─────────────────────");
+        telemetry.addLine("Controls:");
+        telemetry.addLine("  Right Stick X = Rotate");
+        telemetry.addLine("  A = Home Position");
+        telemetry.addLine("  B = Emergency Stop");
+        telemetry.addLine("  D-pad L/R = Fine Adjust ±5°");
+        telemetry.update();
+
+    }
+
+    private void handleTurret() {
+        // --- Input Detection ---
+        boolean isAngleButtonJustPressed = gamepad2.bWasPressed() || gamepad2.xWasPressed() ||
+                gamepad2.yWasPressed() || gamepad2.aWasPressed() ||
+                gamepad2.dpadLeftWasPressed() || gamepad2.dpadRightWasPressed();
+
+        boolean isJoystickActive = Math.abs(gamepad2.right_stick_x) > JOYSTICK_DEADBAND;
+
+        // --- State Switching Logic ---
+        // If the joystick is moved, switch to POWER_CONTROL mode.
+        if (isJoystickActive) {
+            turretControlMode = TurretControlMode.POWER_CONTROL;
+        }
+        // If any angle button is pressed, switch to ANGLE_CONTROL mode.
+        else if (isAngleButtonJustPressed) {
+            turretControlMode = TurretControlMode.ANGLE_CONTROL;
+        }
+
+        // --- State Action Logic ---
+        switch (turretControlMode) {
+            case ANGLE_CONTROL:
+                telemetry.addData("in angle contrul: ", " pressed a button");
+
+                // In this mode, we only listen for button presses that set a target angle.
+                // We do NOT send any power commands.
+                if (gamepad2.bWasReleased()) {
+                    telemetry.addData("b button: ", " was pressed");
+                    robot.turret.setTargetAngle(TURRET_RIGHT_ANGLE);
+                } else if (gamepad2.xWasReleased()) {
+                    telemetry.addData("x button: ", " was pressed");
+
+                    robot.turret.setTargetAngle(TURRET_LEFT_ANGLE);
+                } else if (gamepad2.y) {
+                    telemetry.addData("y button: ", " was pressed");
+
+                    robot.turret.returnToHome();
+                } else if (gamepad2.aWasReleased()) {
+                    robot.turret.setTargetAngle(TURRET_BACK_ANGLE);
+                } else if (gamepad2.dpadLeftWasReleased()) {
+                    robot.turret.rotateRelative(-TURRET_MANUAL_ADJUST_DEGREES);
+                } else if (gamepad2.dpadRightWasReleased()) {
+                    robot.turret.rotateRelative(TURRET_MANUAL_ADJUST_DEGREES);
+                }
+                // When in ANGLE_CONTROL and no buttons are pressed, we do nothing.
+                // This allows the motor's RUN_TO_POSITION controller to continue
+                // working without interference.
+                break;
+
+            case POWER_CONTROL:
+                // In this mode, we only listen to the joystick.
+                // The setTurretPower method should handle switching the motor mode
+                // to RUN_USING_ENCODER or RUN_WITHOUT_ENCODER.
+                if (isJoystickActive) {
+                    robot.turret.setTurretPower(gamepad2.right_stick_x);
+                } else {
+                    // Joystick has returned to center. Stop manual power control.
+                    robot.turret.setTurretPower(0);
+                    // IMPORTANT: We should now tell the turret to hold its current position
+                    // using its angle controller. This prevents it from drifting.
+                    robot.turret.holdPosition();
+                    turretControlMode = TurretControlMode.ANGLE_CONTROL; // Return to default mode
+                }
+                break;
+        }
     }
 
     /*

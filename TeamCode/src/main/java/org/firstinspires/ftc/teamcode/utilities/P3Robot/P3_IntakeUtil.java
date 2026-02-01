@@ -28,7 +28,7 @@ public class P3_IntakeUtil {
         }
         //Intake Motor (new bot)
         intakeMotor = hardwareMap.get(DcMotor.class, INTAKE_MOTOR_NAME);
-        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        intakeMotor.setDirection(DcMotor.Direction.REVERSE);
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
@@ -44,8 +44,8 @@ public class P3_IntakeUtil {
      */
     public void setIntakePower(double power) {
         intakeMotor.setPower(power);
-        intakeServo.setPower(-power);
-        intakeServo2.setPower(-power);
+//        intakeServo.setPower(-power);
+//        intakeServo2.setPower(-power);
 
     }
 
@@ -62,7 +62,7 @@ public class P3_IntakeUtil {
     }
 
     public void setIntakeServos() {
-        intakeServo.setPower(-1.0);
+        intakeServo.setPower(1.0);
         intakeServo2.setPower(-1.0);
 
     }
@@ -74,7 +74,7 @@ public class P3_IntakeUtil {
     }
 
     public void reverseIntakeServos() {
-        intakeServo.setPower(1.0);
+        intakeServo.setPower(-1.0);
         intakeServo2.setPower(1.0);
     }
 

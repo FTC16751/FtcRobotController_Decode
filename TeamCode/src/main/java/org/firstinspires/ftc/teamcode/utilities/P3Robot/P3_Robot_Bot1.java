@@ -16,13 +16,16 @@ import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
  * P3_Robot is the central hub that orchestrates all of the P3 robot's subsystems.
  * It owns all the hardware and utility classes, providing a clean interface for OpModes.
  */
-public class P3_Robot_Bot1 {
+public class
+        P3_Robot_Bot1 {
 
     // --- PUBLIC SUBSYSTEMS ---
     // These are public so the OpMode can access them directly (e.g., robot.drive.arcadeDrive(...))
     public final DriveUtil2026b drive;
     public final P3_IntakeUtil intake;
     public final P3_LauncherUtil launcher;
+    public final P3_TurretUtil_Velocity turret;
+
     public final VisionUtil vision;
     public final Telemetry telemetry;
     public final IMU imu;
@@ -60,6 +63,7 @@ public class P3_Robot_Bot1 {
         vision = new VisionUtil(hardwareMap, telemetry);
         imu = hardwareMap.get(IMU.class, "imu");
         led = new LedUtil(hardwareMap, "light");
+        turret = new P3_TurretUtil_Velocity(hardwareMap);
 
 
         flywheelTable = new InterpolatingLookupTable();
@@ -94,7 +98,7 @@ public class P3_Robot_Bot1 {
         vision.update();
         drive.update();
         if (led != null) updateLedStatus();
-
+        turret.update();
 
     }
 
