@@ -36,9 +36,9 @@ public class LauncherMotors {
         rightLauncher.setZeroPowerBehavior(FLOAT);
 
         leftLauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(305, 0, 0, 17.998));
+                new PIDFCoefficients(271, 0, 0, 14));
         rightLauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(305, 0, 0, 17.998));
+                new PIDFCoefficients(271, 0, 0, 14));
     }
 
     /**

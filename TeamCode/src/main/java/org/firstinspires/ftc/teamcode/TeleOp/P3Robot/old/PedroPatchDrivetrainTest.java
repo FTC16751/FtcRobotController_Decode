@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
+package org.firstinspires.ftc.teamcode.TeleOp.P3Robot.old;
 
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.follower.Follower;
@@ -7,13 +7,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.Drivetrain;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name="Pedro Path DrivetrainTest", group="Concept")
-
+@Disabled
 public class PedroPatchDrivetrainTest extends OpMode{
     private VisionUtil vision;
     private Follower follower;

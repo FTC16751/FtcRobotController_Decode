@@ -23,6 +23,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -65,7 +66,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
  *
  */
 @TeleOp(name = "Gear Girls Telop (RUN ME)", group = " _GGopmodes")
-//@Disabled
+@Disabled
 public class GearGirlsBot1 extends OpMode {
     //Declare SubSystems
     private GGRobot robot;

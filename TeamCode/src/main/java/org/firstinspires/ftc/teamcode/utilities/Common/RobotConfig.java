@@ -164,22 +164,22 @@ public class RobotConfig {
                 ),
                 new OdometryConfig(
                         -0.0, -203.0,
-                        GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD
                 ),
                 new ImuConfig(
                         RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 ),
                 new PointToPointTuning(
-                        17.0,
+                        32,
                         0.0349,
-                        0.006,
-                        0.00003,
-                        0.000002,
+                        0.0035,
+                        0.00125,
+                        0.000003,
                         10.0,
-                        5.0,
-                        0.0,
-                        0.0,
-                        20.0
+                        2.0,
+                        0.21000,
+                        0.00000,
+                        10.0
                 ),
                 // Gear Girls robot uses Pedro Pathing, so we provide its config.
                 new PedroPathingConfig(

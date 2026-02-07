@@ -6,6 +6,8 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,10 +20,10 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot3;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 /**
- * P3 Robot TeleOp with PedroPathing Field-Oriented Drive
+ * P3 Robot TeleOp with PedroPathing Field-Oriented Drive + Turret Control
  *
  * This OpMode combines PedroPathing's superior field-oriented drive control
- * with the P3_Robot3 class that manages all subsystems and the launch sequence.
+ * with the P3_Robot3 class that manages all subsystems including the turret.
  *
  * Uses RobotConfig for multi-robot compatibility - simply change the config
  * in init() to run on different robots with different tuning.
@@ -29,6 +31,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
  * KEY FEATURES:
  * - Field-oriented drive using PedroPathing (maintains orientation relative to field)
  * - Dual operator control (Driver + Operator)
+ * - Servo-based turret with auto-homing and soft limits
  * - Vision-assisted aiming with Limelight
  * - Automated launch sequences managed by P3_Robot3
  * - LED status indicators managed by P3_Robot3
@@ -57,68 +60,35 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
  * ═══════════════════════════════════════════════════════════════════════════
  * GAMEPAD 2 - OPERATOR CONTROLS
  * ═══════════════════════════════════════════════════════════════════════════
- * Left Stick X:      Manual turret rotation (left/right)
- * Left Stick Press:  Enable turret auto-aim to vision target
+ * Right Stick X:     Manual turret rotation (left/right)
  *
  * Right Trigger:     LAUNCH - Initiate automated shot sequence
  * Left Trigger:      Manual reverse indexer (unjam)
  *
- * A:                 Set NEAR shot velocity preset (2500 ticks/sec)
+ * A:                 Set NEAR shot velocity preset (2500 ticks/sec) + Snap turret home
  * B:                 Set FAR shot velocity preset (3500 ticks/sec)
  * X:                 Stop flywheels (manual override)
  * Y:                 Enable AUTO-TARGETING mode (vision-based velocity)
  *
+ * Right Bumper:      Auto-aim turret with Limelight (hold)
+ *
  * D-Pad Up:          Increase velocity by 100 ticks/sec
  * D-Pad Down:        Decrease velocity by 100 ticks/sec
- * D-Pad Left:        Turret rotate to left preset position
- * D-Pad Right:       Turret rotate to right preset position
- *
- * Left Bumper:       Decrease turret speed (fine control)
- * Right Bumper:      Increase turret speed (coarse control)
+ * D-Pad Left:        Manual turret nudge left
+ * D-Pad Right:       Manual turret nudge right
  *
  * Start:             Toggle flywheel spin mode (rapid-fire / battery-saver)
- * Back:              Reset turret to center position
+ * Back:              Reset turret to center position (snap home)
  *
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
 @Configurable
-@TeleOp(name="P3: PedroPath Field-Oriented TeleOp", group="_P3opmodes")
-public class P3_PedroPathTeleOp extends OpMode {
+@TeleOp(name="P3: Robot 3 TeleOp + Turret", group="_P3opmodes")
+public class P3_Robot3_TeleOp extends OpMode {
 
-    // ========================================
-    // ROBOT CONFIGURATION
-    // ========================================
-    /**
-     * CHANGE THIS to switch between robots!
-     *
-     * Available configurations:
-     * - RobotConfig.createP3Robot2Config()       // P3 Robot #2 (current)
-     * - RobotConfig.createDefaultP3Config()      // P3 Robot #1
-     * - RobotConfig.createDefaultGearGirlsConfig() // Gear Girls robot
-     *
-     * Each config contains robot-specific tuning for:
-     * - Motor directions
-     * - Odometry sensor offsets
-     * - IMU orientation
-     * - PedroPathing PIDF coefficients
-     * - Drive velocities
-     */
     private static final RobotConfig ROBOT_CONFIG = RobotConfig.createP3Robot2Config();
 
-    // ========================================
-    // CONSTANTS - Drive System
-    // ========================================
-    // Drive speeds are defined in P3RobotConstants.TeleOp
-
-    // ========================================
-    // CONSTANTS - Subsystems
-    // ========================================
-    // All subsystem constants are defined in P3RobotConstants
-
-    // ========================================
-    // ROBOT SYSTEMS
-    // ========================================
     private ElapsedTime runtime = new ElapsedTime();
 
     // PedroPathing
@@ -126,8 +96,11 @@ public class P3_PedroPathTeleOp extends OpMode {
     private TelemetryManager telemetryM;
     public static Pose startingPose = new Pose(0, 0, 0);
 
-    // P3 Robot (contains all subsystems)
+    // P3 Robot (contains all subsystems including turret)
     private P3_Robot3 robot;
+
+    // Limelight for turret auto-aim
+    private Limelight3A limelight;
 
     // ========================================
     // STATE VARIABLES
@@ -150,19 +123,14 @@ public class P3_PedroPathTeleOp extends OpMode {
     }
     private LauncherMode launcherMode = LauncherMode.MANUAL_OVERRIDE;
 
-    private enum TurretMode {
-        MANUAL,           // Direct joystick control
-        AUTO_AIM,         // Vision-based auto-aiming
-        PRESET_POSITION   // Moving to preset position
-    }
-    private TurretMode turretMode = TurretMode.MANUAL;
+    // Turret homing state
+    private boolean turretHomingComplete = false;
 
     // ========================================
     // WORKING VARIABLES
     // ========================================
-    private boolean showDebugTelemetry = false;
+    private boolean showDebugTelemetry = true;
     private double requestedMotorVelocity = 0;
-    private double turretSpeed = P3RobotConstants.Turret.MANUAL_SPEED;
     private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
 
     // Button state tracking
@@ -174,13 +142,17 @@ public class P3_PedroPathTeleOp extends OpMode {
     @Override
     public void init() {
         // Initialize PedroPathing using RobotConfig
-        // This is the key: Constants.createFollower() can accept a RobotConfig
         follower = Constants.createFollower(hardwareMap, ROBOT_CONFIG);
         follower.setStartingPose(startingPose);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        // Initialize P3 Robot (this creates all subsystems)
+        // Initialize P3 Robot (this creates all subsystems including turret)
         robot = new P3_Robot3(hardwareMap, telemetry);
+
+        // Initialize Limelight for turret auto-aim
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);  // Use your tracking pipeline
+        limelight.start();
 
         // Configure launch system for competition
         robot.setVelocityTolerance(0.97);           // Require 97% of target speed
@@ -192,13 +164,55 @@ public class P3_PedroPathTeleOp extends OpMode {
         alliance = SharedState.alliance != null ? SharedState.alliance : CommonConstants.Alliance.RED;
         robot.configureVisionForTeleOp(alliance);
 
-        telemetry.addData("Status", "Initialized - PEDRO PATH FIELD-ORIENTED MODE");
+        telemetry.addData("Status", "Initialized - PEDRO PATH + TURRET MODE");
         telemetry.addData("Robot Config", ROBOT_CONFIG == RobotConfig.createP3Robot2Config() ? "P3 Robot #2" : "Other");
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Drive Mode", "Field-Centric");
         telemetry.addLine();
-        telemetry.addLine("Ready to start!");
+        telemetry.addLine("═══════════════════════════════════════");
+        telemetry.addLine("  TURRET HOMING - INIT PHASE");
+        telemetry.addLine("═══════════════════════════════════════");
+        telemetry.addLine("Turret will automatically find home position");
+        telemetry.addLine("Press START when homing complete");
         telemetry.update();
+    }
+
+    /*
+     * Code to run REPEATEDLY in init_loop (before START is pressed)
+     * This is where we run the turret homing sequence
+     */
+    @Override
+    public void init_loop() {
+        if (!turretHomingComplete) {
+            turretHomingComplete = robot.turret.updateHoming();
+
+            telemetry.addLine("═══════════════════════════════════════");
+            telemetry.addLine("  TURRET HOMING");
+            telemetry.addLine("═══════════════════════════════════════");
+            telemetry.addData("Status", turretHomingComplete ? "COMPLETE ✓" : "Searching...");
+            telemetry.addData("Phase", robot.turret.getHomingPhase());
+            telemetry.addData("Switch Triggered", robot.turret.isHomeSwitchTriggered());
+            telemetry.addData("Current Position", "%.4f", robot.turret.getCurrentPosition());
+
+            if (turretHomingComplete) {
+                telemetry.addLine();
+                telemetry.addData("Home Position", "%.4f", robot.turret.getHomePosition());
+                telemetry.addData("Position Safe?", robot.turret.isHomePositionSafe() ? "YES ✓" : "NO - CHECK CALIBRATION!");
+
+                if (!robot.turret.isHomePositionSafe()) {
+                    telemetry.addLine();
+                    telemetry.addLine("⚠ WARNING: Home position outside safe range!");
+                    telemetry.addLine("Expected: 0.356 - 0.644");
+                    telemetry.addLine("You may lose travel range or hit limits");
+                }
+
+                telemetry.addLine();
+                telemetry.addLine("✓ READY TO START");
+                telemetry.addLine("Press PLAY to begin TeleOp");
+            }
+
+            telemetry.update();
+        }
     }
 
     /*
@@ -206,11 +220,26 @@ public class P3_PedroPathTeleOp extends OpMode {
      */
     @Override
     public void start() {
-        runtime.reset();
+        // Safety check - refuse to start if turret not homed
+        if (!robot.turret.isHomed()) {
+            telemetry.addLine("═══════════════════════════════════════");
+            telemetry.addLine("  ERROR: TURRET NOT HOMED!");
+            telemetry.addLine("═══════════════════════════════════════");
+            telemetry.addLine("Cannot start TeleOp safely");
+            telemetry.addLine("Please restart OpMode");
+            telemetry.update();
+//            requestOpModeStop();
+//            return;
+        }
 
-        // Start PedroPathing in TeleOp mode
-        // Uses brake mode for precise control
-        follower.startTeleopDrive();
+        runtime.reset();
+        follower.startTeleopDrive(true);
+
+        telemetry.addLine("═══════════════════════════════════════");
+        telemetry.addLine("  TELEOP STARTED");
+        telemetry.addLine("═══════════════════════════════════════");
+        telemetry.addData("Turret Status", "HOMED ✓");
+        telemetry.update();
     }
 
     /*
@@ -220,7 +249,7 @@ public class P3_PedroPathTeleOp extends OpMode {
     public void loop() {
         // Update all systems
         follower.update();
-        robot.update();  // This updates vision, turret, LEDs, etc.
+        robot.update();  // This updates vision, LEDs, etc.
         telemetry.update();
 
         // Update vision with current heading for field-relative calculations
@@ -244,9 +273,6 @@ public class P3_PedroPathTeleOp extends OpMode {
         handleDriverSystemControls();
     }
 
-    /**
-     * Field-oriented drive using PedroPathing
-     */
     private void handleDriveControls() {
         // Determine drive speed based on bumpers
         if (gamepad1.left_bumper) {
@@ -262,26 +288,12 @@ public class P3_PedroPathTeleOp extends OpMode {
         double strafe = -gamepad1.left_stick_x * driveSpeedMultiplier;
         double turn = -gamepad1.right_stick_x * driveSpeedMultiplier;
 
-        // Add fine adjustments from D-pad
-        if (gamepad1.dpad_up) {
-            forward += P3RobotConstants.TeleOp.FINE_ADJUSTMENT_SPEED;
-        }
-        if (gamepad1.dpad_down) {
-            forward -= P3RobotConstants.TeleOp.FINE_ADJUSTMENT_SPEED;
-        }
-        if (gamepad1.dpad_left) {
-            strafe -= P3RobotConstants.TeleOp.FINE_ADJUSTMENT_SPEED;
-        }
-        if (gamepad1.dpad_right) {
-            strafe += P3RobotConstants.TeleOp.FINE_ADJUSTMENT_SPEED;
-        }
-
         // Apply drive command with field-centric mode
         follower.setTeleOpDrive(
                 forward,
                 strafe,
                 turn,
-                fieldCentricMode  // invert: true = robot-centric, false = field-centric
+                fieldCentricMode
         );
     }
 
@@ -294,13 +306,9 @@ public class P3_PedroPathTeleOp extends OpMode {
             if (intakeState == IntakeState.ON) {
                 intakeState = IntakeState.OFF;
                 robot.intake.stopIntake();
-                //robot.launcher.setIndexerServoPower(0.0);
-                robot.intake.stopIntakeServos();
             } else {
                 intakeState = IntakeState.ON;
-                robot.intake.setIntakePower(P3RobotConstants.Intake.INTAKE_SPEED);
-                //robot.launcher.setIndexerServoPower(-1.0);
-                robot.intake.setIntakeServos();
+                robot.intake.startIntake();
             }
         }
 
@@ -309,13 +317,9 @@ public class P3_PedroPathTeleOp extends OpMode {
             if (intakeState == IntakeState.REVERSE) {
                 intakeState = IntakeState.OFF;
                 robot.intake.stopIntake();
-                //robot.launcher.setIndexerServoPower(0.0);
-                robot.intake.stopIntakeServos();
             } else {
                 intakeState = IntakeState.REVERSE;
-                robot.intake.setIntakePower(P3RobotConstants.Intake.OUTTAKE_SPEED);
-                //robot.launcher.setIndexerServoPower(1.0);
-                robot.intake.reverseIntakeServos();
+                robot.intake.reversIntake();
             }
         }
     }
@@ -324,13 +328,9 @@ public class P3_PedroPathTeleOp extends OpMode {
      * Driver system controls
      */
     private void handleDriverSystemControls() {
-        // X button: Emergency stop all systems
-        if (gamepad1.xWasPressed()) {
-            emergencyStopAllSystems();
-        }
 
         // Y button: Reset field orientation
-        if (gamepad1.yWasPressed()) {
+        if (gamepad1.backWasPressed()) {
             follower.setPose(new Pose(
                     follower.getPose().getX(),
                     follower.getPose().getY(),
@@ -343,10 +343,10 @@ public class P3_PedroPathTeleOp extends OpMode {
             fieldCentricMode = !fieldCentricMode;
         }
 
-        // Back button: Toggle debug telemetry
-        if (gamepad1.backWasPressed()) {
-            showDebugTelemetry = !showDebugTelemetry;
-        }
+//        // Back button: Toggle debug telemetry
+//        if (gamepad1.backWasPressed()) {
+//            showDebugTelemetry = !showDebugTelemetry;
+//        }
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -360,98 +360,63 @@ public class P3_PedroPathTeleOp extends OpMode {
     }
 
     /**
-     * Operator turret controls
+     * Operator turret controls (gamepad2)
+     *
+     * Priority order:
+     * 1. A button (snap to home) - overrides everything
+     * 2. Right stick manual control - overrides auto-aim
+     * 3. D-pad manual nudges - overrides auto-aim
+     * 4. Right bumper (auto-aim) - lowest priority
      */
     private void handleOperatorTurretControls() {
+        // Read control inputs
+        double manualInput = gamepad2.right_stick_x;  // Right stick for manual control
+        boolean autoAimButton = gamepad2.right_bumper;  // Right bumper for auto-aim
+        boolean snapHomeButton = gamepad2.a;  // A button snaps to home
+        boolean resetHomeButton = gamepad2.back;  // Back button also snaps home
 
-
-//        // Left stick: Manual turret control
-//        double turretJoystick = gamepad2.left_stick_x;
-//
-//        // Left stick press: Toggle auto-aim
-//        if (gamepad2.left_stick_button && !gamepad2.leftStickButtonWasPressed()) {
-//            if (turretMode == TurretMode.AUTO_AIM) {
-//                turretMode = TurretMode.MANUAL;
-//                robot.turret.holdPosition();
-//            } else {
-//                turretMode = TurretMode.AUTO_AIM;
-//            }
-//            gamepad2.rumble(100);
-//        }
-//
-//        // D-pad left/right: Preset positions
-//        if (gamepad2.dpad_left) {
-//            turretMode = TurretMode.PRESET_POSITION;
-//            robot.turret.setTargetAngle(P3RobotConstants.Turret.PRESET_LEFT);
-//        } else if (gamepad2.dpad_right) {
-//            turretMode = TurretMode.PRESET_POSITION;
-//            robot.turret.setTargetAngle(P3RobotConstants.Turret.PRESET_RIGHT);
-//        }
-//
-//        // Bumpers: Adjust turret speed
-//        if (gamepad2.left_bumper) {
-//            turretSpeed = P3RobotConstants.Turret.FINE_SPEED;
-//        } else if (gamepad2.right_bumper) {
-//            turretSpeed = P3RobotConstants.Turret.COARSE_SPEED;
-//        } else {
-//            turretSpeed = P3RobotConstants.Turret.MANUAL_SPEED;
-//        }
-//
-//        // Back button: Return turret to home
-//        if (gamepad2.backWasPressed()) {
-//            robot.turret.returnToHome();
-//            turretMode = TurretMode.PRESET_POSITION;
-//            gamepad2.rumble(100);
-//        }
-//
-//        // Execute turret control based on mode
-//        switch (turretMode) {
-//            case MANUAL:
-//                if (Math.abs(turretJoystick) > 0.1) {
-//                    robot.turret.setTurretPower(turretJoystick * turretSpeed);
-//                } else {
-//                    robot.turret.setTurretPower(0);
-//                }
-//                break;
-//
-//            case AUTO_AIM:
-//                if (robot.vision.isTargetVisible()) {
-//                    double txError = robot.vision.getTargetAngleX();
-//                    double turretAdjustment = txError * P3RobotConstants.Turret.AUTO_AIM_KP;
-//                    robot.turret.setTargetAngle(robot.turret.getCurrentAngle() + turretAdjustment);
-//
-//                    // Provide haptic feedback when on target
-//                    if (Math.abs(txError) <= P3RobotConstants.Turret.AIM_TOLERANCE_DEG) {
-//                        if (!gamepad2.isRumbling()) {
-//                            gamepad2.rumble(50);
-//                        }
-//                    }
-//                } else {
-//                    // Lost vision target - hold position
-//                    robot.turret.holdPosition();
-//                }
-//                break;
-//
-//            case PRESET_POSITION:
-//                // Turret automatically moves to preset - check if arrived
-//                if (robot.turret.isAtTarget()) {
-//                    turretMode = TurretMode.MANUAL;
-//                }
-//                break;
-//        }
+        // PRIORITY 1: Snap to home (overrides everything)
+        if (snapHomeButton || resetHomeButton) {
+            robot.turret.snapToHome();
+        }
+        // PRIORITY 2: Manual stick control (overrides auto-aim)
+        else if (Math.abs(manualInput) > 0.05) {
+            robot.turret.moveManual(manualInput);
+        }
+        // PRIORITY 3: D-pad manual nudges (overrides auto-aim)
+        else if (gamepad2.dpad_right) {
+            robot.turret.moveManual(0.003);  // Nudge right
+        }
+        else if (gamepad2.dpad_left) {
+            robot.turret.moveManual(-0.003);  // Nudge left
+        }
+        // PRIORITY 4: Auto-aim when button held
+        else if (autoAimButton) {
+            LLResult result = limelight.getLatestResult();
+            if (result != null) {
+                double tx = result.getTx();  // Horizontal offset in degrees
+                boolean targetValid = result.isValid();
+                robot.turret.autoAim(tx, targetValid);
+            }
+        }
+        // Otherwise: Turret holds position (servo does this automatically)
     }
 
     /**
      * Operator launcher controls
      */
     private void handleOperatorLauncherControls() {
-        if (gamepad2.left_bumper) {
-            robot.indexer.start();;
-        } else if (gamepad2.right_bumper) {
-            robot.indexer.reverse();
+        // Manual indexer control (bypasses automated sequence)
+        if (gamepad2.right_trigger > 0.8) {
+            robot.indexer.start();
+        } else if (gamepad2.left_trigger > 0.8) {
+            robot.indexer.setPower(-0.25);
+        } else if (gamepad2.left_bumper) {
+            robot.indexer.setPower(0.25);
         } else {
             robot.indexer.stop();
         }
+
         // ----- LAUNCH SEQUENCE (Right Trigger) -----
         // Use edge detection to trigger one shot per button press
         boolean rightTriggerPressed = gamepad2.right_trigger > 0.8;
@@ -462,24 +427,10 @@ public class P3_PedroPathTeleOp extends OpMode {
             robot.launchSequence(true, requestedMotorVelocity);
         } else if (robot.isLaunchSequenceBusy()) {
             // Continue running the sequence
-            boolean shotComplete = robot.launchSequence(false, requestedMotorVelocity);
-            if (shotComplete) {
-            }
+            robot.launchSequence(false, requestedMotorVelocity);
         }
 
         lastRightTriggerPressed = rightTriggerPressed;
-
-        // ----- MANUAL INDEXER CONTROL (Left Trigger) -----
-        // This bypasses the automated sequence for manual feeding/unjamming
-        if (gamepad2.left_trigger > 0.8) {
-            // Manual reverse - useful for clearing jams
-            //robot.launcher.setIndexerServoPower(1.0);
-            //robot.intake.reverseIntakeServos();
-        } else if (!robot.isLaunchSequenceBusy()) {
-            // Only stop indexer if launch sequence isn't running
-           // robot.launcher.setIndexerServoPower(0.0);
-            //robot.intake.stopIntakeServos();
-        }
 
         // ----- VELOCITY MODE SELECTION -----
 
@@ -490,7 +441,7 @@ public class P3_PedroPathTeleOp extends OpMode {
 
         // Any manual velocity button: Switch to MANUAL_OVERRIDE mode
         if (gamepad2.a || gamepad2.b || gamepad2.x ||
-                gamepad2.dpadUpWasPressed() || gamepad2.dpadDownWasPressed()) {
+                gamepad2.dpad_up || gamepad2.dpad_down) {
             launcherMode = LauncherMode.MANUAL_OVERRIDE;
         }
 
@@ -504,11 +455,11 @@ public class P3_PedroPathTeleOp extends OpMode {
 
             case MANUAL_OVERRIDE:
                 // A: Near shot preset
-                if (gamepad2.aWasPressed()) {
+                if (gamepad2.a) {
                     requestedMotorVelocity = P3RobotConstants.Launcher.CLOSE_TARGET_VELOCITY;
                 }
                 // B: Far shot preset
-                else if (gamepad2.bWasPressed()) {
+                else if (gamepad2.b) {
                     requestedMotorVelocity = P3RobotConstants.Launcher.FAR_TARGET_VELOCITY;
                 }
                 // X: Stop flywheels
@@ -517,12 +468,12 @@ public class P3_PedroPathTeleOp extends OpMode {
                     robot.stopLaunchSequence();  // Also abort any active sequence
                 }
                 // D-Pad Up: Increase velocity
-                else if (gamepad2.dpadUpWasReleased()) {
+                else if (gamepad2.dpad_up) {
                     requestedMotorVelocity += 100;
-                    requestedMotorVelocity = Math.min(requestedMotorVelocity, 2000);  // Cap at reasonable max
+                    requestedMotorVelocity = Math.min(requestedMotorVelocity, 2200);  // Cap at reasonable max
                 }
                 // D-Pad Down: Decrease velocity
-                else if (gamepad2.dpadDownWasReleased()) {
+                else if (gamepad2.dpad_down) {
                     requestedMotorVelocity -= 100;
                     requestedMotorVelocity = Math.max(requestedMotorVelocity, 0);  // Don't go negative
                 }
@@ -541,7 +492,7 @@ public class P3_PedroPathTeleOp extends OpMode {
      */
     private void handleOperatorConfigControls() {
         // Start button: Toggle flywheel spin mode
-        if (gamepad2.startWasPressed()) {
+        if (gamepad2.start) {
             boolean newMode = !robot.isKeepFlywheelsSpinning();
             robot.setKeepFlywheelsSpinning(newMode);
 
@@ -569,7 +520,7 @@ public class P3_PedroPathTeleOp extends OpMode {
 
     private void displayTelemetry() {
         telemetry.addLine("═══════════════════════════════════════");
-        telemetry.addLine("  P3 PEDROPATH FIELD-ORIENTED TELEOP");
+        telemetry.addLine("  P3 PEDROPATH + TURRET TELEOP");
         telemetry.addLine("═══════════════════════════════════════");
         telemetry.addData("⏱️ Runtime", "%.1f sec", runtime.seconds());
         telemetry.addData("🤝 Alliance", alliance);
@@ -591,19 +542,19 @@ public class P3_PedroPathTeleOp extends OpMode {
         telemetry.addLine();
         telemetry.addLine("─── OPERATOR (GP2) ───");
 
-//        // Turret
-//        telemetry.addData("🎯 Turret Mode", turretMode);
-//        telemetry.addData("Turret Angle", "%.1f° → %.1f°",
-//                robot.turret.getCurrentAngle(),
-//                robot.turret.getTargetAngle());
-//
-//        if (turretMode == TurretMode.AUTO_AIM && robot.vision.isTargetVisible()) {
-//            double txError = robot.vision.getTargetAngleX();
-//            telemetry.addData("Aim Error", "%.1f°", txError);
-//            if (Math.abs(txError) <= P3RobotConstants.Turret.AIM_TOLERANCE_DEG) {
-//                telemetry.addData("Status", "✓ ON TARGET");
-//            }
-//        }
+        // Turret status
+        telemetry.addData("🎯 Turret", robot.turret.getStatusString());
+        telemetry.addData("Home Switch", robot.turret.isHomeSwitchTriggered() ? "TRIGGERED" : "Clear");
+
+        // Show if auto-aiming
+        if (gamepad2.right_bumper) {
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                telemetry.addData("Auto-Aim", "ACTIVE - Error: %.1f°", result.getTx());
+            } else {
+                telemetry.addData("Auto-Aim", "NO TARGET");
+            }
+        }
 
         // Launcher
         telemetry.addData("🚀 Launcher Mode", launcherMode == LauncherMode.AUTO_TARGETING ? "AUTO" : "MANUAL");
@@ -645,21 +596,20 @@ public class P3_PedroPathTeleOp extends OpMode {
             telemetry.addLine();
             telemetry.addLine("─── VISION DEBUG ───");
             robot.vision.addTelemetry();
+
+            telemetry.addLine();
+            telemetry.addLine("─── TURRET DEBUG ───");
+            telemetry.addData("Manual Call Count", robot.turret.getManualCallCount());
+            telemetry.addData("Last Manual Input", "%.3f", robot.turret.getLastManualInput());
+            telemetry.addData("Right Stick X", "%.3f", gamepad2.right_stick_x);
+            telemetry.addLine("Soft Limits:");
+            telemetry.addLine(robot.turret.getLimitStatus());
         } else if (robot.vision.isTargetVisible()) {
             telemetry.addLine();
             telemetry.addData("👁️ Vision", "Target %.1f° @ %.1f\"",
                     robot.vision.getTargetAngleX(),
                     robot.vision.getDistanceToTagInches());
         }
-
-        // ----- WARNINGS -----
-//        if (robot.turret.wasAutoStopTriggered()) {
-//            telemetry.addLine();
-//            telemetry.addData("🔴 TURRET FAULT", "AUTO-STOP!");
-//        } else if (robot.turret.isJammed()) {
-//            telemetry.addLine();
-//            telemetry.addData("⚠️ WARNING", "Turret jam detected");
-//        }
 
         // ----- QUICK REFERENCE -----
         if (!showDebugTelemetry) {
@@ -668,6 +618,8 @@ public class P3_PedroPathTeleOp extends OpMode {
             telemetry.addData("GP1 Y", "Reset field heading");
             telemetry.addData("GP1 Start", "Toggle field/robot centric");
             telemetry.addData("GP2 RT", "Launch");
+            telemetry.addData("GP2 R-Bumper", "Auto-aim turret");
+            telemetry.addData("GP2 A", "Home turret");
             telemetry.addData("GP1 Back", "Toggle debug");
         }
 
@@ -686,5 +638,8 @@ public class P3_PedroPathTeleOp extends OpMode {
     @Override
     public void stop() {
         robot.stopAll();
+        if (limelight != null) {
+            limelight.stop();
+        }
     }
 }

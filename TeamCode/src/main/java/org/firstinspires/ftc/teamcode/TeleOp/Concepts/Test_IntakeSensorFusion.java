@@ -88,13 +88,16 @@ public class Test_IntakeSensorFusion extends OpMode {
         telemetry.addData("getInventory() size", inventory.size());
         telemetry.addData("Inventory Contents", inventory.toString());
 
-        // Test the getColorOfSlot() method for a specific slot
-        IntakeSensorFusion001.ArtifactColor leftColor = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.LEFT);
-        telemetry.addData("getColorOfSlot(LEFT_1)", leftColor);
+        // Test the isSlotOccupied() method for each slot
+        boolean leftOccupied = intakeSensors.isSlotOccupied(IntakeSensorFusion001.IntakeSlot.LEFT);
+        boolean rightOccupied = intakeSensors.isSlotOccupied(IntakeSensorFusion001.IntakeSlot.RIGHT);
+        telemetry.addData("isSlotOccupied(LEFT)", leftOccupied);
+        telemetry.addData("isSlotOccupied(RIGHT)", rightOccupied);
 
-        // Test the getColorOfSlot() method for a specific slot
+        // Test the getColorOfSlot() method for each slot
+        IntakeSensorFusion001.ArtifactColor leftColor = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.LEFT);
         IntakeSensorFusion001.ArtifactColor rightColor = intakeSensors.getColorOfSlot(IntakeSensorFusion001.IntakeSlot.RIGHT);
-        telemetry.addData("getColorOfSlot(LEFT_2)", rightColor);
+        telemetry.addData("getColorOfSlot(LEFT)", leftColor);
+        telemetry.addData("getColorOfSlot(RIGHT)", rightColor);  // FIXED: Was showing "LEFT_2"
     }
 }
-

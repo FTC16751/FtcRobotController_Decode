@@ -491,7 +491,7 @@ public class DriveUtil2026b {
         double leftFrontPower = drive + strafe + yaw;
         double rightFrontPower = drive - strafe - yaw;
         double leftBackPower = drive - strafe + yaw;
-        double rightBackPower = drive + strafe - yaw;
+        double rightBackPower = (drive + strafe - yaw)*1.15;
 
         // Normalize the motor powers
         double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
@@ -754,8 +754,57 @@ public class DriveUtil2026b {
 //        }
     }
 
-    public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
-        boolean atTarget;
+//    public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
+//        boolean atTarget;
+//        double xPWR = calculatePID(currentPosition, targetPosition, Direction.x);
+//        double yPWR = calculatePID(currentPosition, targetPosition, Direction.y);
+//        double hOutput = calculatePID(currentPosition, targetPosition, Direction.h);
+//
+//        double heading = currentPosition.getHeading(AngleUnit.RADIANS);
+//        double cosine = Math.cos(heading);
+//        double sine = Math.sin(heading);
+//
+//        double xOutput = (xPWR * cosine) + (yPWR * sine);
+//        double yOutput = (xPWR * sine) - (yPWR * cosine);
+//
+//        moveRobot(xOutput * power, yOutput * power, -(hOutput * power));
+//        //moveRobot(xOutput * power, yOutput * power, 0);
+//
+//        if(inBounds(currentPosition,targetPosition) == InBounds.IN_BOUNDS){
+//            atTarget = true;
+//        }
+//        else {
+//            GBholdTimer.reset();
+//            atTarget = false;
+//        }
+//
+//        if(atTarget && GBholdTimer.time() > holdTime){
+//            return true;
+//        }
+//        return false;
+//    }
+public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
+    boolean atTarget;
+
+    // Check if we're at target FIRST
+    InBounds boundsStatus = inBounds(currentPosition, targetPosition);
+
+    if(boundsStatus == InBounds.IN_BOUNDS){
+        // We're at target - STOP ALL MOTORS
+        moveRobot(0, 0, 0);
+        atTarget = true;
+
+        // Check if we've held position long enough
+        if(GBholdTimer.time() > holdTime){
+            return true;  // Done!
+        }
+        return false;  // Still holding
+
+    } else {
+        // Not at target yet - calculate PID and move
+        GBholdTimer.reset();
+        atTarget = false;
+
         double xPWR = calculatePID(currentPosition, targetPosition, Direction.x);
         double yPWR = calculatePID(currentPosition, targetPosition, Direction.y);
         double hOutput = calculatePID(currentPosition, targetPosition, Direction.h);
@@ -769,20 +818,9 @@ public class DriveUtil2026b {
 
         moveRobot(xOutput * power, yOutput * power, -(hOutput * power));
 
-        if(inBounds(currentPosition,targetPosition) == InBounds.IN_BOUNDS){
-            atTarget = true;
-        }
-        else {
-            GBholdTimer.reset();
-            atTarget = false;
-        }
-
-        if(atTarget && GBholdTimer.time() > holdTime){
-            return true;
-        }
-        return false;
+        return false;  // Still driving
     }
-
+}
     private void calculateTankOutput(double forward, double yaw){
         double left = forward - yaw;
         double right = forward + yaw;
@@ -801,23 +839,33 @@ public class DriveUtil2026b {
     private double calculatePID(Pose2D currentPosition, Pose2D targetPosition, Direction direction){
         if(direction ==Direction.x){
             double xError = targetPosition.getX(MM) - currentPosition.getX(MM);
+            // ADD THIS: Early return if within tolerance (same as yaw has)
+            if (Math.abs(xError) < config.pointToPointTuning.xyTolerance) {
+                xPID.pidReset();
+                return 0.0;
+            }
             return xPID.calculateAxisPID(xError,
                     config.pointToPointTuning.pGain,
                     config.pointToPointTuning.iGain,  // ADDED THIS
                     config.pointToPointTuning.dGain,
                     config.pointToPointTuning.accel,
                     PIDTimer.seconds(),
-                    xyTolerance);
+                    config.pointToPointTuning.xyTolerance);
         }
         if(direction == Direction.y){
             double yError = targetPosition.getY(MM) - currentPosition.getY(MM);
+            // ADD THIS: Early return if within tolerance (same as yaw has)
+            if (Math.abs(yError) < config.pointToPointTuning.xyTolerance) {
+                yPID.pidReset();
+                return 0.0;
+            }
             return yPID.calculateAxisPID(yError,
                     config.pointToPointTuning.pGain,
                     config.pointToPointTuning.iGain,  // ADDED THIS
                     config.pointToPointTuning.dGain,
                     config.pointToPointTuning.accel,
                     PIDTimer.seconds(),
-                    xyTolerance);
+                    config.pointToPointTuning.xyTolerance);
         }
         if(direction == Direction.h){
             double targetH = targetPosition.getHeading(AngleUnit.RADIANS);
@@ -834,7 +882,7 @@ public class DriveUtil2026b {
                     config.pointToPointTuning.yawDGain,
                     config.pointToPointTuning.yawAccel,
                     PIDTimer.seconds(),
-                    yawTolerance);
+                    config.pointToPointTuning.yawTolerance);
         }
         return 0;
     }

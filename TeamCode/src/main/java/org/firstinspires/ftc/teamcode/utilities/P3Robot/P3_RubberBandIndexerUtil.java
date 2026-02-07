@@ -17,7 +17,7 @@ public class P3_RubberBandIndexerUtil {
         }
 
         indexMotor = hardwareMap.get(DcMotor.class, MOTOR_NAME);
-        indexMotor.setDirection(DcMotor.Direction.FORWARD);
+        indexMotor.setDirection(DcMotor.Direction.REVERSE);
         indexMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 

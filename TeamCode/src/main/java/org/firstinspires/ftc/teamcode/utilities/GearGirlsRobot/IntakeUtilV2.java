@@ -36,6 +36,10 @@ public class IntakeUtilV2 {
     private static final DcMotor.Direction DEFAULT_MOTOR_DIRECTION = DcMotor.Direction.REVERSE;
     private static final DcMotor.ZeroPowerBehavior DEFAULT_ZERO_POWER_BEHAVIOR = DcMotor.ZeroPowerBehavior.FLOAT;
 
+    public void intakeOn() {
+        setIntakeMotorPower(1);
+    }
+
     /**
      * Preset power levels for common intake operations.
      * These values can be tuned based on your robot's performance needs.

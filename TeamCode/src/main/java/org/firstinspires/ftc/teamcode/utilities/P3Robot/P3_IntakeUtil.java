@@ -50,12 +50,16 @@ public class P3_IntakeUtil {
     }
 
     public void startIntake() {
-        intakeMotor.setPower(-1);
+        intakeMotor.setPower(1);
     }
     public void stopIntake() {
+
         intakeMotor.setPower(0);
     }
+    public void reversIntake() {
+        intakeMotor.setPower(-1);
 
+    }
 
     public void setIntakeMotor(double power) {
         intakeMotor.setPower(power);
@@ -95,5 +99,6 @@ public class P3_IntakeUtil {
     public DcMotor.RunMode getIntakeMode(){
         return intakeMotor.getMode();
     }
+
 
 }   //end program

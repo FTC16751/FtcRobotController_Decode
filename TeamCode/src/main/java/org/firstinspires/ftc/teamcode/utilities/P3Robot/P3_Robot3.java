@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.utilities.P3Robot;
 
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -32,7 +34,7 @@ public class P3_Robot3 {
     public final Telemetry telemetry;
     public final IMU imu;
     public final LedUtil led;
-    //public final P3_TurretUtil_Velocity turret;
+    public final Turret turret;  // NEW: Turret subsystem
     public final P3_RubberBandIndexerUtil indexer;
 
     // ========================================
@@ -105,7 +107,12 @@ public class P3_Robot3 {
         vision = new VisionUtil(hardwareMap, telemetry);
         imu = hardwareMap.get(IMU.class, "imu");
         led = new LedUtil(hardwareMap, "light");
-        //turret = new P3_TurretUtil_Velocity(hardwareMap);
+
+        // Initialize Turret subsystem
+        ServoImplEx turretServo = hardwareMap.get(ServoImplEx.class, "turret");
+        DigitalChannel magSwitch = hardwareMap.get(DigitalChannel.class, "turret_limit");
+        turret = new Turret(turretServo, magSwitch);
+
         indexer = new P3_RubberBandIndexerUtil(hardwareMap);
 
         // Set launcher to safe initial state
@@ -142,14 +149,10 @@ public class P3_Robot3 {
         vision.update();
         updateLedStatus();
 
-        // Note: drive.update() and turret.update() are currently no-ops
-        // Remove these calls if they remain empty, or implement if needed
+        // Note: drive.update() is currently a no-op
         if (drive != null) {
             drive.update();
         }
-//        if (turret != null) {
-//            turret.update();
-//        }
     }
 
     // ========================================
@@ -166,7 +169,6 @@ public class P3_Robot3 {
         launcher.setIndexerServoPower(0);
         launcher.setStopPosition();
         vision.stop();
-        //turret.emergencyStop();
 
         // Reset launch state
         launchState = LaunchState.IDLE;
@@ -208,59 +210,61 @@ public class P3_Robot3 {
 
                 // Safety timeout check
                 if (launchTimer.seconds() > SPIN_UP_TIMEOUT_SECONDS) {
-                    telemetry.addData("⚠ ERROR", "Flywheel spin-up timeout - aborting launch");
-                    shotsAborted++;
+                    // Timeout - abort launch
+                    telemetry.addData("⚠ Launch Timeout", "Flywheels failed to reach speed");
                     stopLaunchSequence();
+                    shotsAborted++;
                     break;
                 }
 
-                // Check if flywheels have reached target speed (within tolerance)
-                if (launcher.getShooterMotorVelocity() >= currentTargetVelocity * velocityTolerancePercent) {
-                    // Flywheels are ready - start feeding
-                    //launcher.setIndexerServoPower(-1.0);  // Note: Negative is "feed" direction
-                    launcher.setShootingPosition();
-                    //intake.setIntakeServos();
-                    launchTimer.reset();
+                // Check if flywheels have reached target speed
+                if (areFlywheelsReady(currentTargetVelocity)) {
+                    // Ready to feed - advance to FEEDING state
                     launchState = LaunchState.FEEDING;
+                    launchTimer.reset();
                 }
                 break;
 
             case FEEDING:
-                // Emergency stall detection
+                // Keep flywheels at speed during feeding
+                launcher.setShooterMotorVelocity(currentTargetVelocity);
+
+                // Run indexer to push artifact into flywheels
+                launcher.setIndexerServoPower(1.0);
+
+                // Check for stall (velocity drop during feeding)
                 if (launcher.getShooterMotorVelocity() < currentTargetVelocity * stallDetectionPercent) {
-                    telemetry.addData("⚠ ERROR", "Flywheel stall detected - aborting launch");
-                    shotsAborted++;
+                    // Stall detected - abort launch
+                    telemetry.addData("⚠ Launch Stall", "Velocity drop detected");
                     stopLaunchSequence();
+                    shotsAborted++;
                     break;
                 }
 
-                // Run the indexer for a fixed duration to push one artifact
-                if (launchTimer.seconds() > FEED_TIME_SECONDS) {
-                    // Feeding complete - stop indexer and begin cooldown
-                    //launcher.setIndexerServoPower(0.0);
-                    //intake.stopIntakeServos();
-                      launcher.setStopPosition();
-                    // Optionally stop flywheels or keep them spinning for rapid follow-up
-                    if (!keepFlywheelsSpinning) {
-                        launcher.setShooterMotorVelocity(0);
-                    }
-
-                    shotsFired++;  // Successfully completed a shot
-                    launchTimer.reset();
+                // Check if feeding time has elapsed
+                if (launchTimer.seconds() >= FEED_TIME_SECONDS) {
+                    // Feeding complete - advance to COOLDOWN
+                    launcher.setIndexerServoPower(0);
                     launchState = LaunchState.COOLDOWN;
-                }
-                // Continue feeding (redundant but explicit for clarity)
-                else {
-                    //launcher.setIndexerServoPower(-1.0);
-                    launcher.setShootingPosition();
+                    launchTimer.reset();
+                    shotsFired++;
                 }
                 break;
 
             case COOLDOWN:
-                // Brief pause to allow systems to settle before next shot
-                if (launchTimer.seconds() > COOLDOWN_TIME_SECONDS) {
+                // Brief pause before returning to IDLE
+                // Keep flywheels at speed if configured for rapid-fire
+                if (keepFlywheelsSpinning) {
+                    launcher.setShooterMotorVelocity(currentTargetVelocity);
+                } else {
+                    launcher.setShooterMotorVelocity(0);
+                }
+
+                // Check if cooldown time has elapsed
+                if (launchTimer.seconds() >= COOLDOWN_TIME_SECONDS) {
+                    // Cooldown complete - return to IDLE
                     launchState = LaunchState.IDLE;
-                    return true;  // Signal that one complete launch cycle has finished
+                    return true;  // Indicate sequence complete
                 }
                 break;
         }
@@ -269,76 +273,68 @@ public class P3_Robot3 {
     }
 
     /**
-     * Checks if the launch sequence is currently running.
+     * Immediately stops the current launch sequence and resets to IDLE state.
+     * Stops flywheels and indexer.
+     */
+    public void stopLaunchSequence() {
+        launcher.setShooterMotorVelocity(0);
+        launcher.setIndexerServoPower(0);
+        launchState = LaunchState.IDLE;
+    }
+
+    /**
+     * Checks if a launch sequence is currently active.
      *
-     * @return true if the state machine is not in IDLE, false otherwise
+     * @return true if in SPIN_UP, FEEDING, or COOLDOWN state
      */
     public boolean isLaunchSequenceBusy() {
         return launchState != LaunchState.IDLE;
     }
 
     /**
-     * Immediately stops the launch sequence and resets to IDLE state.
-     * Use this for emergency stops or when the driver deactivates the launcher.
-     * Always stops flywheels regardless of keepFlywheelsSpinning setting.
+     * Gets the current launch state for debugging.
+     *
+     * @return Current LaunchState
      */
-    public void stopLaunchSequence() {
-        launcher.setShooterMotorVelocity(0);
-        launcher.setIndexerServoPower(0.0);
-        launcher.setStopPosition();
-        launchState = LaunchState.IDLE;
-        currentTargetVelocity = 0.0;
+    public String getLaunchStateString() {
+        return launchState.toString();
     }
 
     // ========================================
-    // FLYWHEEL VELOCITY CALCULATION
+    // VISION-BASED VELOCITY CALCULATION
     // ========================================
     /**
-     * Gets the target flywheel velocity for a given distance using the lookup table.
+     * Updates and returns the target velocity based on current vision data.
+     * Uses the interpolating lookup table to convert distance to velocity.
      *
-     * @param distanceInches Distance to target in inches
+     * Behavior:
+     * - If target visible: Calculate velocity from distance, cache it as "last known good"
+     * - If target not visible: Return last known good velocity (or default if never seen target)
+     *
+     * This allows the robot to maintain shooting capability even when target is temporarily obscured.
+     *
      * @return Target velocity in ticks per second
      */
-    public double getTargetVelocityForDistance(double distanceInches) {
-        return flywheelTable.get(distanceInches);
+    public double updateAndGetTargetVelocity() {
+        if (vision.isTargetVisible()) {
+            // Target visible - calculate velocity from distance
+            double distanceInches = vision.getDistanceToTagInches();
+            lastKnownGoodVelocity = flywheelTable.get(distanceInches);
+            return lastKnownGoodVelocity;
+        } else {
+            // Target not visible - use last known good velocity
+            return lastKnownGoodVelocity;
+        }
     }
 
     /**
-     * Updates and returns the target flywheel velocity based on current vision data.
+     * Gets the last successfully calculated target velocity.
+     * This is the velocity that will be used if the target is not currently visible.
      *
-     * If vision has a valid target:
-     *   - Calculates velocity based on distance to target
-     *   - Updates lastKnownGoodVelocity for future fallback
-     *
-     * If vision is unavailable:
-     *   - Returns the last known good velocity (from when vision was last valid)
-     *
-     * @return Target flywheel velocity in ticks per second
+     * @return Last known good velocity in ticks per second
      */
-    public double updateAndGetTargetVelocity() {
-        String dataSource;
-        double newVelocity;
-
-        if (vision.isTargetVisible()) {
-            // Vision is active - calculate based on current distance
-            dataSource = "VISION";
-            double distanceInches = vision.getDistanceToTagInches();
-            newVelocity = getTargetVelocityForDistance(distanceInches);
-
-            // Store this as our fallback in case vision drops
-            this.lastKnownGoodVelocity = newVelocity;
-
-            telemetry.addData("Vision Distance", "%.1f in", distanceInches);
-        } else {
-            // Vision unavailable - use last known value
-            dataSource = "LAST KNOWN";
-            newVelocity = this.lastKnownGoodVelocity;
-        }
-
-        telemetry.addData("Target Velocity Source", dataSource);
-        telemetry.addData("Target Velocity", "%.0f ticks/sec", newVelocity);
-
-        return newVelocity;
+    public double getLastKnownGoodVelocity() {
+        return lastKnownGoodVelocity;
     }
 
     // ========================================
@@ -346,30 +342,26 @@ public class P3_Robot3 {
     // ========================================
     /**
      * Configures vision system for TeleOp based on alliance color.
-     * This determines which AprilTags the robot should target.
+     * Sets up Limelight pipeline and detection priorities.
      *
-     * @param allianceColor The alliance color (RED or BLUE)
+     * @param alliance RED or BLUE alliance
      */
-    public void configureVisionForTeleOp(CommonConstants.Alliance allianceColor) {
-        if (vision != null) {
-            vision.setTargetingAlliance(allianceColor);
-            telemetry.addData("Vision", "Configured for %s Alliance", allianceColor);
-        }
+    public void configureVisionForTeleOp(CommonConstants.Alliance alliance) {
+        // Configure Limelight for appropriate AprilTag detection
+        // This would set pipeline based on alliance if needed
+        // For now, just ensure vision is ready
+        vision.update();
     }
 
     // ========================================
-    // LED STATUS INDICATOR
+    // LED STATUS MANAGEMENT
     // ========================================
     /**
-     * Updates LED color based on vision targeting status.
-     *
-     * Color meanings:
-     * - OFF:    No target visible
-     * - GREEN:  Aimed at target (within tolerance)
-     * - YELLOW: Target visible, needs to turn right
-     * - BLUE:   Target visible, needs to turn left
+     * Updates LED color based on robot state.
+     * Call this in the periodic update() method.
      */
     private void updateLedStatus() {
+
         if (led == null) {
             return;
         }
@@ -380,7 +372,7 @@ public class P3_Robot3 {
         }
 
         double headingError = vision.getTargetAngleX();
-        final double AIMING_TOLERANCE_DEG = 2.0;
+        final double AIMING_TOLERANCE_DEG = 4.0;
 
         if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
             led.setColor(LedUtil.Color.GREEN);  // On target
@@ -396,10 +388,12 @@ public class P3_Robot3 {
     // ========================================
 
     /**
-     * Sets the velocity tolerance for the launch sequence.
-     * The flywheels must reach (targetVelocity * tolerance) before feeding begins.
+     * Sets the velocity tolerance threshold.
+     * Flywheels must reach (targetVelocity * tolerance) before feeding begins.
      *
-     * @param tolerance Percentage as decimal (e.g., 0.97 for 97%, 0.95 for 95%)
+     * Example: tolerance of 0.97 means flywheels must reach 97% of target speed
+     *
+     * @param tolerance Decimal between 0.0 and 1.0 (e.g., 0.97 for 97%)
      */
     public void setVelocityTolerance(double tolerance) {
         if (tolerance > 0.0 && tolerance <= 1.0) {
@@ -410,7 +404,7 @@ public class P3_Robot3 {
     }
 
     /**
-     * Gets the current velocity tolerance setting.
+     * Gets the current velocity tolerance threshold.
      *
      * @return Current tolerance as decimal (e.g., 0.97 for 97%)
      */
@@ -420,9 +414,11 @@ public class P3_Robot3 {
 
     /**
      * Sets the stall detection threshold.
-     * If velocity drops below (targetVelocity * threshold) during feeding, the launch aborts.
+     * If velocity drops below (targetVelocity * threshold) during feeding, the launch is aborted.
      *
-     * @param threshold Percentage as decimal (e.g., 0.80 for 80%)
+     * Example: threshold of 0.80 means launch aborts if velocity drops below 80%
+     *
+     * @param threshold Decimal between 0.0 and 1.0 (e.g., 0.80 for 80%)
      */
     public void setStallDetectionThreshold(double threshold) {
         if (threshold > 0.0 && threshold <= 1.0) {

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;

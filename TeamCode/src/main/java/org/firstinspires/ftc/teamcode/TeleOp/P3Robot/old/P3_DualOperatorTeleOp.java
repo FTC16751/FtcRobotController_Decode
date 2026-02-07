@@ -1,15 +1,9 @@
-package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
+package org.firstinspires.ftc.teamcode.TeleOp.P3Robot.old;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
-import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot3;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 /**
  * Dual-Operator P3 TeleOp - Driver + Operator Control Split
@@ -66,6 +60,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
  */
 
 @TeleOp(name="P3: Dual Operator TeleOp", group=" _P3opmodes")
+@Disabled
 public class P3_DualOperatorTeleOp extends OpMode {
 
 

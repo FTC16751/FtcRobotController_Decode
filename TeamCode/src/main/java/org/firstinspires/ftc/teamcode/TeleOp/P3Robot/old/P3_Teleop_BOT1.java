@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
+package org.firstinspires.ftc.teamcode.TeleOp.P3Robot.old;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -51,7 +51,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
  */
 
 @TeleOp(name="P3: BOT1 Teleop (Team Version)", group=" _P3opmodes")
-
+@Disabled
 public class P3_Teleop_BOT1 extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;

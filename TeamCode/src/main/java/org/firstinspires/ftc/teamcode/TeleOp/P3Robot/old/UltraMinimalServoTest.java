@@ -1,5 +1,6 @@
-package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
+package org.firstinspires.ftc.teamcode.TeleOp.P3Robot.old;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -16,6 +17,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
  *   - Stick Left → Servo position DECREASES (0.5 → 0.4 → 0.3)
  */
 @TeleOp(name = "ULTRA MINIMAL Servo Test", group = "Diagnostics")
+@Disabled
 public class UltraMinimalServoTest extends LinearOpMode {
 
     private ServoImplEx servo;

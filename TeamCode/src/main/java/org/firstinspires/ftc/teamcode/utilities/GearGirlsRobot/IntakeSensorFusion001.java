@@ -16,14 +16,19 @@ import java.util.List;
 /**
  * Manages an array of color/distance sensors in the intake to provide a complete
  * picture of all artifacts currently held by the robot. This class handles sensor fusion,
- * color averaging, and state management for each individual sensor slot.
+ * color averaging, and state management for each sensor slot.
+ *
+ * UPDATED VERSION 1.1: Now supports THREE slots:
+ * - LEFT slot: Dual sensors (sensor1 + sensor2) with fusion
+ * - CENTER slot: Single sensor
+ * - RIGHT slot: Dual sensors (sensor1 + sensor2) with fusion
  */
 
 public class IntakeSensorFusion001 {
 
     // Public enums for easy access from other classes like your OpMode.
     public enum ArtifactColor { PURPLE, GREEN, UNKNOWN }
-    public enum IntakeSlot {LEFT, RIGHT, CENTER }
+    public enum IntakeSlot { LEFT, CENTER, RIGHT }  // UPDATED: Added CENTER
 
     /**
      * A private inner class that manages the state and logic for a single physical color sensor.
@@ -53,8 +58,8 @@ public class IntakeSensorFusion001 {
         private static final double SAMPLING_DURATION_MSEC = 300; // How long to sample colors.
 
         /**
-         * Constructor for a single sensor slot.
-         * @param sensorName The name of the sensor in the robot configuration (e.g., "sensor_L1").
+         * Constructor for a single sensor.
+         * @param sensorName The name of the sensor in the robot configuration (e.g., "color_sensor_left1").
          */
         public ArtifactSensor(String sensorName, HardwareMap hardwareMap, Telemetry telemetry) {
             this.name = sensorName;
@@ -94,6 +99,8 @@ public class IntakeSensorFusion001 {
                 case SAMPLING:
                     if (!isOccupied) {
                         // Artifact was removed in the middle of sampling. Reset immediately.
+                        // FIX: Clear the color here too to prevent freeze!
+                        determinedColor = ArtifactColor.UNKNOWN;
                         currentState = DetectionState.WAITING;
                         break;
                     }
@@ -115,6 +122,8 @@ public class IntakeSensorFusion001 {
                 case DETERMINED:
                     if (!isOccupied) {
                         // The artifact has been removed. Reset the state machine for the next one.
+                        // FIX: Clear the color here to prevent freeze!
+                        determinedColor = ArtifactColor.UNKNOWN;
                         currentState = DetectionState.WAITING;
                     }
                     // Otherwise, do nothing. The color is determined and will remain locked
@@ -148,12 +157,111 @@ public class IntakeSensorFusion001 {
         }
 
         // Public "getter" methods for other classes to use.
-        public ArtifactColor getColor() { return isOccupied ? determinedColor : ArtifactColor.UNKNOWN; }
+        public ArtifactColor getColor() { return determinedColor; }
         public boolean isOccupied() { return isOccupied; }
+        public String getName() { return name; }
 
         // Telemetry for debugging this specific sensor.
         public void addTelemetry() {
-            telemetry.addData(name, "Occupied: %s, Color: %s", isOccupied(), getColor());
+            telemetry.addData(name, "Occ: %s, Color: %s, State: %s",
+                    isOccupied(), getColor(), currentState);
+        }
+    }
+
+    /**
+     * A private inner class that manages a PAIR of sensors for a single intake slot.
+     * This provides redundancy - if one sensor sees the hole in the artifact,
+     * the other sensor can still get a good reading.
+     */
+    private static class ArtifactSensorPair {
+        private final ArtifactSensor sensor1;
+        private final ArtifactSensor sensor2;
+        private final String slotName;
+        private final Telemetry telemetry;
+
+        /**
+         * Constructor for a sensor pair.
+         * @param slotName The name of this slot (e.g., "LEFT" or "RIGHT").
+         * @param sensor1Name The name of the first sensor in the robot configuration.
+         * @param sensor2Name The name of the second sensor in the robot configuration.
+         */
+        public ArtifactSensorPair(String slotName, String sensor1Name, String sensor2Name,
+                                  HardwareMap hardwareMap, Telemetry telemetry) {
+            this.slotName = slotName;
+            this.telemetry = telemetry;
+            this.sensor1 = new ArtifactSensor(sensor1Name, hardwareMap, telemetry);
+            this.sensor2 = new ArtifactSensor(sensor2Name, hardwareMap, telemetry);
+        }
+
+        /**
+         * Updates both sensors in the pair.
+         */
+        public void update() {
+            sensor1.update();
+            sensor2.update();
+        }
+
+        /**
+         * Determines if the slot is occupied based on EITHER sensor detecting an artifact.
+         * If either sensor sees something close, we consider the slot occupied.
+         * @return true if at least one sensor detects an artifact.
+         */
+        public boolean isOccupied() {
+            return sensor1.isOccupied() || sensor2.isOccupied();
+        }
+
+        /**
+         * Fuses the color readings from both sensors using intelligent logic:
+         * 1. If both sensors agree, use that color.
+         * 2. If they disagree:
+         *    - Prefer any non-UNKNOWN reading (one sensor might see the hole).
+         *    - If both have non-UNKNOWN but different colors, prefer sensor1 (or you can add more logic).
+         * 3. If both are UNKNOWN, return UNKNOWN.
+         * @return The fused ArtifactColor for this slot.
+         */
+        public ArtifactColor getFusedColor() {
+            ArtifactColor color1 = sensor1.getColor();
+            ArtifactColor color2 = sensor2.getColor();
+
+            // If both sensors agree, that's our answer!
+            if (color1 == color2) {
+                return color1;
+            }
+
+            // If they disagree, prioritize non-UNKNOWN readings
+            // (One sensor probably sees the hole in the artifact)
+            if (color1 != ArtifactColor.UNKNOWN && color2 == ArtifactColor.UNKNOWN) {
+                return color1;
+            }
+            if (color2 != ArtifactColor.UNKNOWN && color1 == ArtifactColor.UNKNOWN) {
+                return color2;
+            }
+
+            // If both sensors have different non-UNKNOWN readings (unusual but possible),
+            // we need a tiebreaker. Options:
+            // - Return sensor1's reading (simple default)
+            // - Return UNKNOWN (conservative approach)
+            // - Add more sophisticated logic based on confidence/sample counts
+            // For now, let's be conservative and return UNKNOWN in this edge case.
+            if (color1 != ArtifactColor.UNKNOWN && color2 != ArtifactColor.UNKNOWN) {
+                // Log this unusual situation
+                telemetry.addData(slotName + " CONFLICT", "%s vs %s - using UNKNOWN", color1, color2);
+                return ArtifactColor.UNKNOWN;
+            }
+
+            // Fallback (should never reach here, but just in case)
+            return ArtifactColor.UNKNOWN;
+        }
+
+        /**
+         * Adds detailed telemetry for both sensors in this pair.
+         */
+        public void addTelemetry() {
+            telemetry.addLine("--- " + slotName + " Slot ---");
+            sensor1.addTelemetry();
+            sensor2.addTelemetry();
+            telemetry.addData(slotName + " FUSED", "Occupied: %s, Color: %s",
+                    isOccupied(), getFusedColor());
         }
     }
 
@@ -163,11 +271,10 @@ public class IntakeSensorFusion001 {
     // This is the public-facing part of the utility.
     // =================================================================================
 
-    private final ArtifactSensor leftSlot;
-    private final ArtifactSensor rightSlot;
-//    private final ArtifactSensor rightSlot1;
-//    private final ArtifactSensor rightSlot2;
-    private final List<ArtifactSensor> allSensors = new ArrayList<>();
+    private final ArtifactSensorPair leftSlot;
+    private final ArtifactSensor centerSlot;  // UPDATED: Single sensor for center
+    private final ArtifactSensorPair rightSlot;
+    private final List<Object> allSlots = new ArrayList<>();  // Can hold both types
     private final Telemetry telemetry;
 
     /**
@@ -177,46 +284,64 @@ public class IntakeSensorFusion001 {
      */
     public IntakeSensorFusion001(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-        // Initialize one ArtifactSensor for each physical sensor on the robot.
-        // The names MUST match your robot configuration.
-        leftSlot = new ArtifactSensor("sensor_color", hardwareMap, telemetry);
-        rightSlot = new ArtifactSensor("sensor_color2", hardwareMap, telemetry);
 
-        allSensors.add(leftSlot);
-        allSensors.add(rightSlot);
+        // Initialize sensor pairs for LEFT and RIGHT slots.
+        // The names MUST match your robot configuration:
+        // - color_sensor_left1
+        // - color_sensor_left2
+        // - color_sensor_right1
+        // - color_sensor_right2
+        leftSlot = new ArtifactSensorPair("LEFT",
+                "color_sensor_left1", "color_sensor_left2", hardwareMap, telemetry);
+        rightSlot = new ArtifactSensorPair("RIGHT",
+                "color_sensor_right1", "color_sensor_right2", hardwareMap, telemetry);
+
+        // UPDATED: Initialize single sensor for CENTER slot
+        // The name MUST match your robot configuration: color_sensor_center
+        centerSlot = new ArtifactSensor("color_sensor_center", hardwareMap, telemetry);
+
+        allSlots.add(leftSlot);
+        allSlots.add(centerSlot);
+        allSlots.add(rightSlot);
     }
 
     /**
      * This method MUST be called in every loop of your OpMode.
-     * It updates the state of all four individual sensors.
+     * It updates the state of all sensors (5 physical sensors total: 2+1+2).
      */
     public void update() {
-        for (ArtifactSensor sensor : allSensors) {
-            sensor.update();
-        }
+        leftSlot.update();
+        centerSlot.update();  // UPDATED: Update center sensor
+        rightSlot.update();
     }
 
     /**
-     * Gets the determined color of the artifact in a specific slot.
-     * @param slot The IntakeSlot to check (e.g., IntakeSlot.LEFT_1).
+     * Gets the fused/determined color of the artifact in a specific slot.
+     * This uses intelligent sensor fusion for LEFT/RIGHT slots to handle cases where one sensor sees the hole.
+     * For CENTER slot, returns the single sensor's reading.
+     * @param slot The IntakeSlot to check (IntakeSlot.LEFT, IntakeSlot.CENTER, or IntakeSlot.RIGHT).
      * @return The ArtifactColor (PURPLE, GREEN, or UNKNOWN if empty/undetermined).
      */
     public ArtifactColor getColorOfSlot(IntakeSlot slot) {
         switch (slot) {
-            case LEFT: return leftSlot.getColor();
-            case RIGHT: return rightSlot.getColor();
+            case LEFT: return leftSlot.getFusedColor();
+            case CENTER: return centerSlot.getColor();  // UPDATED: Direct read from single sensor
+            case RIGHT: return rightSlot.getFusedColor();
             default: return ArtifactColor.UNKNOWN;
         }
     }
 
     /**
      * Checks if a specific slot is currently occupied by an artifact.
+     * For LEFT/RIGHT: A slot is considered occupied if EITHER of its sensors detects something.
+     * For CENTER: Direct reading from the single sensor.
      * @param slot The IntakeSlot to check.
      * @return true if an artifact is detected, false otherwise.
      */
     public boolean isSlotOccupied(IntakeSlot slot) {
         switch (slot) {
             case LEFT: return leftSlot.isOccupied();
+            case CENTER: return centerSlot.isOccupied();  // UPDATED: Direct read from single sensor
             case RIGHT: return rightSlot.isOccupied();
             default: return false;
         }
@@ -224,26 +349,65 @@ public class IntakeSensorFusion001 {
 
     /**
      * Provides a list of all currently held artifacts, useful for quick inventory checks.
-     * @return A List of ArtifactColor representing the current inventory.
+     * @return A List of ArtifactColor representing the current inventory from all 3 slots.
      */
     public List<ArtifactColor> getInventory() {
         List<ArtifactColor> inventory = new ArrayList<>();
-        for (ArtifactSensor sensor : allSensors) {
-            if (sensor.isOccupied()) {
-                inventory.add(sensor.getColor());
-            }
+
+        // Check LEFT slot
+        if (leftSlot.isOccupied()) {
+            inventory.add(leftSlot.getFusedColor());
         }
+
+        // UPDATED: Check CENTER slot
+        if (centerSlot.isOccupied()) {
+            inventory.add(centerSlot.getColor());
+        }
+
+        // Check RIGHT slot
+        if (rightSlot.isOccupied()) {
+            inventory.add(rightSlot.getFusedColor());
+        }
+
         return inventory;
     }
 
     /**
-     * Adds detailed telemetry for all four sensor slots to the Driver Station.
+     * Adds detailed telemetry for all sensor slots to the Driver Station.
+     * Shows individual sensor readings AND the fused result for each slot.
      */
     public void addTelemetry() {
-        telemetry.addLine("--- Intake Inventory ---");
+        telemetry.addLine("=== INTAKE INVENTORY ===");
         leftSlot.addTelemetry();
+        telemetry.addLine(); // Blank line for readability
+
+        // UPDATED: Add CENTER slot telemetry
+        telemetry.addLine("--- CENTER Slot ---");
+        centerSlot.addTelemetry();
+        telemetry.addLine();
+
         rightSlot.addTelemetry();
+        telemetry.addLine();
         telemetry.addData("Total Artifacts", getInventory().size());
+        telemetry.addData("Inventory", getInventory().toString());
+    }
+
+    /**
+     * Optional: Get detailed debug information about a specific slot.
+     * Useful for testing and calibration.
+     */
+    public void addDetailedTelemetryForSlot(IntakeSlot slot) {
+        switch (slot) {
+            case LEFT:
+                leftSlot.addTelemetry();
+                break;
+            case CENTER:  // UPDATED: Add CENTER case
+                telemetry.addLine("--- CENTER Slot ---");
+                centerSlot.addTelemetry();
+                break;
+            case RIGHT:
+                rightSlot.addTelemetry();
+                break;
+        }
     }
 }
-

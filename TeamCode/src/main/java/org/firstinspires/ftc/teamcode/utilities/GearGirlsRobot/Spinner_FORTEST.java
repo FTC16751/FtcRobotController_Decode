@@ -32,7 +32,7 @@ public class Spinner_FORTEST {
         HAS_SPUN    // Completed movement (optional state for feedback)
     }
     private SpinnerState spinnerState = SpinnerState.IDLE;
-
+    private boolean isRotated = false;
     // --- Position Constants ---
     private static final double LEFT_ROTATION = 0.2;   // TODO: Tune this value
     private static final double RIGHT_ROTATION = 0.63;  // TODO: Tune this value
@@ -42,7 +42,7 @@ public class Spinner_FORTEST {
     /**
      * Time to wait for the servo to complete its movement.
      */
-    private static final double SPIN_TIME_SECONDS = 0.3;  // TODO: Tune based on servo speed
+    private static final double SPIN_TIME_SECONDS = 0.75;  // TODO: Tune based on servo speed. George, I tuned this from 0.3 to 0.75. 0.3 was too fast.
 
     // --- Hardware Configuration ---
     private static final String SPINNER_NAME = "spinner";
@@ -77,20 +77,19 @@ public class Spinner_FORTEST {
         }
     }
 
-
     public void rotateLeft() {
         if (spinnerState == SpinnerState.IDLE) {
             spinnerState = SpinnerState.SPINNING;
             spinnerServo.setPosition(LEFT_ROTATION);
+            isRotated = true;
             spinnerTimer.reset();
         }
     }
-
-
     public void rotateRight() {
         if (spinnerState == SpinnerState.IDLE) {
             spinnerState = SpinnerState.SPINNING;
             spinnerServo.setPosition(RIGHT_ROTATION);
+            isRotated = false;
             spinnerTimer.reset();
         }
     }
@@ -105,6 +104,20 @@ public class Spinner_FORTEST {
         }
     }
 
+    // Public method to handle the toggling logic
+    public void toggleRotation() {
+        if (isRotated) {
+            rotateRight(); // Or whatever the "undo" rotation is
+        } else {
+            rotateLeft(); // Or the initial rotation
+        }
+        // Flip the state internally
+        isRotated = !isRotated;
+    }
+
+    public boolean isRotated() {
+        return isRotated;
+    }
     /**
      * Forces the spinner to a specific position immediately.
      * Use with caution - bypasses the state machine.

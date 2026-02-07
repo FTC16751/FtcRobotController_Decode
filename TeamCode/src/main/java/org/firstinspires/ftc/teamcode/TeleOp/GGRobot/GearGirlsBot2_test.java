@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -9,7 +10,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot2;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion001;
+import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion002;
 
 import java.util.List;
 
@@ -45,12 +46,12 @@ import java.util.List;
  * - DPAD DOWN: Manual velocity -25 ticks/sec (auto-switches to MANUAL mode)
  *
  * SPINNER/INDEXER:
- * - LEFT BUMPER: Rotate spinner LEFT
- * - RIGHT BUMPER: Rotate spinner RIGHT
+ * - LEFT TRIGGER: Rotate spinner LEFT
+ * - RIGHT TRIGGER: Rotate spinner RIGHT
  *
  * LAUNCH SYSTEM:
- * - LEFT TRIGGER: Fire left flipper (only when at speed)
- * - RIGHT TRIGGER: Fire right flipper (only when at speed)
+ * - LEFT BUMPER: Fire left flipper (only when at speed)
+ * - RIGHT BUMPER: Fire right flipper (only when at speed)
  *
  * ========================================
  * GAMEPAD 2 - COPILOT/COACH CONTROLS
@@ -67,8 +68,8 @@ import java.util.List;
  * @version 2.4 - Refactored to match Bot1 structure
  * @author GearGirls Team
  */
-@TeleOp(name = "Gear Girls Bot 2 (RUN ME)", group = " _GGopmodes")
-//@Disabled
+@TeleOp(name = "Gear Girls Bot 2 (test)", group = " _GGopmodes")
+@Disabled
 public class GearGirlsBot2_test extends OpMode {
 
     //Declare SubSystems
@@ -319,20 +320,20 @@ public class GearGirlsBot2_test extends OpMode {
      * them for launching. This allows the driver to select which game element to launch next.
      *
      * Controls:
-     * - Left Bumper: Rotate spinner to the left (counterclockwise)
-     * - Right Bumper: Rotate spinner to the right (clockwise)
+     * - Left Trigger: Rotate spinner to the left (counterclockwise)
+     * - Right Trigger: Rotate spinner to the right (clockwise)
      *
      * The spinner commands are sent directly to the robot subsystem, which handles
      * the timing and state management of the rotation sequence.
      */
     private void handleSpinnerControls() {
-        // Left bumper rotates spinner left
-        if (gamepad1.dpadLeftWasPressed()) {
+        // Left trigger rotates spinner left
+        if (gamepad1.left_trigger > 0.5) {
             robot.rotateSpinnerLeft();
         }
 
-        // Right bumper rotates spinner right
-        if (gamepad1.dpadRightWasPressed()) {
+        // Right trigger rotates spinner right
+        if (gamepad1.right_trigger > 0.5) {
             robot.rotateSpinnerRight();
         }
     }
@@ -363,12 +364,12 @@ public class GearGirlsBot2_test extends OpMode {
         // --- STEP 1: HANDLE DRIVER INPUTS TO CHANGE STATES AND VALUES ---
 
         // Press D-Pad Left to cycle between AUTO, PRESET, and MANUAL targeting modes
-        if (gamepad1.leftBumperWasPressed()) {
+        if (gamepad1.dpadLeftWasPressed()) {
             cycleTargetingMode();
         }
 
         // D-pad Right toggles between CLOSE and FAR, automatically switches to PRESET mode
-        if (gamepad1.rightBumperWasPressed()) {
+        if (gamepad1.dpadRightWasPressed()) {
             launcherDistance = (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) ?
                     GGRobotConstants.LauncherDistance.FAR : GGRobotConstants.LauncherDistance.CLOSE;
             targetingMode = GGRobotConstants.LauncherTargetingMode.PRESET;
@@ -424,25 +425,25 @@ public class GearGirlsBot2_test extends OpMode {
         boolean isSpeedSafe = (robot.launcher.getLeftMotorVelocity() > MINIMUM_SAFE_VELOCITY);
         boolean isLauncherReady = (launcherSystemState == GGRobotConstants.LauncherSystemState.ACTIVE) && isSpeedCorrect && isSpeedSafe;
 
-        // Emergency stop: Both triggers pressed fully together
-        if (gamepad1.left_trigger > 0.9 && gamepad1.right_trigger > 0.9) {
+        // shoot both Both bumpers pressed
+        if (gamepad1.leftBumperWasPressed() && gamepad1.rightBumperWasPressed()) {
             robot.triggerLeftFlipper();
             robot.triggerRightFlipper();
         }
-        // Only allow firing if launcher is ready and triggers not maxed out
+        // Only allow firing if launcher is ready
         else if (isLauncherReady) {
-            // Left trigger fires left flipper (threshold to avoid accidental presses)
-            if (gamepad1.left_trigger > 0.3 && gamepad1.left_trigger < 0.9) {
+            // Left bumper fires left flipper
+            if (gamepad1.leftBumperWasPressed()) {
                 robot.triggerLeftFlipper();
             }
 
-            // Right trigger fires right flipper
-            if (gamepad1.right_trigger > 0.3 && gamepad1.right_trigger < 0.9) {
+            // Right bumper fires right flipper
+            if (gamepad1.rightBumperWasPressed()) {
                 robot.triggerRightFlipper();
             }
         } else {
             // Visual feedback that launcher isn't ready
-            if (gamepad1.left_trigger > 0.3 || gamepad1.right_trigger > 0.3) {
+            if (gamepad1.leftBumperWasPressed() || gamepad1.rightBumperWasPressed()) {
                 telemetry.addLine("⚠ LAUNCHER NOT READY - Wait for speed");
             }
         }
@@ -541,16 +542,16 @@ public class GearGirlsBot2_test extends OpMode {
         // --- INTAKE SENSOR FUSION TELEMETRY ---
         telemetry.addLine("--- INTAKE INVENTORY (Sensor Fusion) ---");
         if (robot.intakeSensors != null) {
-            // Use the built-in telemetry method from IntakeSensorFusion001
+            // Use the built-in telemetry method from IntakeSensorFusion002
             robot.intakeSensors.addTelemetry();
 
             // Add high-level API test results
-            List<IntakeSensorFusion001.ArtifactColor> inventory = robot.getIntakeInventory();
+            List<IntakeSensorFusion002.ArtifactColor> inventory = robot.getIntakeInventory();
             telemetry.addData("Inventory API", inventory.toString());
 
             // Test individual slot queries
-            IntakeSensorFusion001.ArtifactColor leftColor = robot.getIntakeSlotColor(IntakeSensorFusion001.IntakeSlot.LEFT);
-            IntakeSensorFusion001.ArtifactColor rightColor = robot.getIntakeSlotColor(IntakeSensorFusion001.IntakeSlot.RIGHT);
+            IntakeSensorFusion002.ArtifactColor leftColor = robot.getIntakeSlotColor(IntakeSensorFusion002.IntakeSlot.LEFT);
+            IntakeSensorFusion002.ArtifactColor rightColor = robot.getIntakeSlotColor(IntakeSensorFusion002.IntakeSlot.RIGHT);
             telemetry.addData("Left Slot Query", leftColor);
             telemetry.addData("Right Slot Query", rightColor);
         } else {

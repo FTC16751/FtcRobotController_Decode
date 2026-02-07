@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.Auto.GearGirls;
+package org.firstinspires.ftc.teamcode.Auto.GearGirls.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 
 
 @Autonomous(name="GG AUTO: Just Parka", group="GGBot")
+@Disabled
 public class GGAutonomous_JustPark extends OpMode {
 
     // --- Subsystems ---

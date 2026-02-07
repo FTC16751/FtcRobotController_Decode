@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
-import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_X_COORDINATE_METERS;
-import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_Y_COORDINATE_METERS;
-
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -17,6 +14,9 @@ import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
+import org.firstinspires.ftc.teamcode.utilities.Common.prismled.GoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.utilities.Common.prismled.PrismI2c;
+import org.firstinspires.ftc.teamcode.utilities.Common.prismled.PrismLedSubsystem;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants.LauncherSystemState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants.LauncherTargetingMode;
 
@@ -40,10 +40,24 @@ public class GGRobot2 {
     public final LaunchFlippers flippers;     // Updated from LaunchIndexer
     public final IntakeUtilV2 intake;         // Updated from IntakeUtil
     public final Spinner_FORTEST spinner;             // Added
-    public final IntakeSensorFusion001 intakeSensors; // Added - Sensor fusion system
+    public final IntakeSensorFusion002 intakeSensors; // Added - Sensor fusion system
     public final Telemetry telemetry;
     public final VisionUtil vision;
     public final LedUtil led;
+    public final ShotSequenceController shotSequence;         // Added - 3-shot volley micro state machine
+    public final ShotSequenceControllerV2 shotSequenceV2;         // Added - 3-shot volley micro state machine
+
+
+    /**
+     * Manually clear a slot's sensor state after firing.
+     * Use this when you know a ball was just fired but sensors haven't updated yet.
+     */
+    public void clearIntakeSlot(IntakeSensorFusion002.IntakeSlot intakeSlot) {
+        if (intakeSensors != null) {
+                intakeSensors.forceSlotEmpty(intakeSlot);
+        }
+    }
+
 
     // PRIVATE STATE AND TIMERS FOR ROBOT-LEVEL ACTIONS
     private enum LaunchState {
@@ -89,25 +103,30 @@ public class GGRobot2 {
         flippers = new LaunchFlippers(hardwareMap);    // Updated
         intake = new IntakeUtilV2(hardwareMap);        // Updated
         spinner = new Spinner_FORTEST(hardwareMap);            // Added
-        intakeSensors = new IntakeSensorFusion001(hardwareMap, telemetry); // Added - Initialize sensor fusion
+        intakeSensors = new IntakeSensorFusion002(hardwareMap, telemetry); // Added - Initialize sensor fusion
         vision = new VisionUtil(hardwareMap, telemetry);
         led = new LedUtil(hardwareMap, "led_servo");
+        shotSequence = new ShotSequenceController(this);
+        shotSequenceV2 = new ShotSequenceControllerV2(this);
+
+
 
         // Flywheel lookup table
         // TODO: These values need to be re-tuned for the 72mm wheels!
         // Current values are from the 96mm wheel configuration
         // Expected: multiply all velocities by approximately 1.33x or more
         flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 960.0*1.1);
-        flywheelTable.add(40.0, 1010.0*1.05);
-        flywheelTable.add(50.0, 1070.0*1.05);
-        flywheelTable.add(60.0, 1130.0);
-        flywheelTable.add(70.0, 1200.0);
-        flywheelTable.add(80.0, 1280.0);
-        flywheelTable.add(100.0, 1390.0);
-        flywheelTable.add(120.0, 1420.0);
-        flywheelTable.add(130.0, 1470.0);
-        flywheelTable.add(140.0, 1500.0);
+        flywheelTable.add(30.0, 1560.0);  // 960*1.1 *1.48
+        flywheelTable.add(40.0, 1570.0);  // 1010*1.05*1.48
+        flywheelTable.add(50.0, 1660.0);  // 1070*1.05*1.48
+        flywheelTable.add(60.0, 1670.0);  // 1130     *1.48
+        flywheelTable.add(70.0, 1780.0);  // 1200     *1.48  (~1800 observed)
+        flywheelTable.add(80.0, 1890.0);  // 1280     *1.48
+        flywheelTable.add(100.0, 2060.0); // 1390     *1.48
+        flywheelTable.add(120.0, 2100.0); // 1420     *1.48
+        flywheelTable.add(130.0, 2180.0); // 1470     *1.48
+        flywheelTable.add(140.0, 2200.0); // 1500     *1.48  (~2200 observed)
+
 
         //drive.resetHeading();
         //stopAll();
@@ -127,6 +146,9 @@ public class GGRobot2 {
             vision.update();
             vision.updateRobotOrientation(drive.getHeading());
         }
+        if (shotSequence != null) shotSequence.update();         // Added - progresses volley state machine when active
+        if (shotSequenceV2 != null) shotSequenceV2.update();         // Added - progresses volley state machine when active
+
     }
 
     /**
@@ -149,7 +171,8 @@ public class GGRobot2 {
         telemetry.addData("Drive Busy", drive.isBusy());
         telemetry.addData("--- Launcher ---", "");
         telemetry.addData("Launch State", launchState);
-        telemetry.addData("Launcher Velocity RPM", launcher.getLeftMotorVelocityRPM());  // Updated to RPM
+        telemetry.addData("Launcher Velocity-Left", launcher.getLeftMotorVelocity());  // Updated to RPM
+        telemetry.addData("Launcher Velocity-Right", launcher.getRightMotorVelocity());  // Updated to RPM
         telemetry.addData("Flippers Busy", flippers.isBusy());                           // Updated from feeder
         telemetry.addData("Spinner State", spinner.getSpinnerState());                   // Added
         telemetry.addData("Pinpoint Positions (x, y, heading): ",
@@ -499,11 +522,11 @@ public class GGRobot2 {
      * @param slot The IntakeSlot to check (LEFT or RIGHT)
      * @return The ArtifactColor (PURPLE, GREEN, or UNKNOWN)
      */
-    public IntakeSensorFusion001.ArtifactColor getIntakeSlotColor(IntakeSensorFusion001.IntakeSlot slot) {
+    public IntakeSensorFusion002.ArtifactColor getIntakeSlotColor(IntakeSensorFusion002.IntakeSlot slot) {
         if (intakeSensors != null) {
             return intakeSensors.getColorOfSlot(slot);
         }
-        return IntakeSensorFusion001.ArtifactColor.UNKNOWN;
+        return IntakeSensorFusion002.ArtifactColor.UNKNOWN;
     }
 
     /**
@@ -511,7 +534,7 @@ public class GGRobot2 {
      * @param slot The IntakeSlot to check
      * @return true if an artifact is detected, false otherwise
      */
-    public boolean isIntakeSlotOccupied(IntakeSensorFusion001.IntakeSlot slot) {
+    public boolean isIntakeSlotOccupied(IntakeSensorFusion002.IntakeSlot slot) {
         if (intakeSensors != null) {
             return intakeSensors.isSlotOccupied(slot);
         }
@@ -522,7 +545,7 @@ public class GGRobot2 {
      * Gets a list of all currently held artifacts.
      * @return A List of ArtifactColor representing the current inventory
      */
-    public java.util.List<IntakeSensorFusion001.ArtifactColor> getIntakeInventory() {
+    public java.util.List<IntakeSensorFusion002.ArtifactColor> getIntakeInventory() {
         if (intakeSensors != null) {
             return intakeSensors.getInventory();
         }
@@ -538,5 +561,75 @@ public class GGRobot2 {
             return intakeSensors.getInventory().size();
         }
         return 0;
+    }
+
+    // ========== SHOT SEQUENCE PURGE METHODS ==========
+
+    /**
+     * Purges all remaining balls from the intake quickly.
+     * Uses the fastest firing pattern: fire both flippers, rotate, fire left.
+     *
+     * Use cases:
+     * - Before collecting more balls to avoid >3 ball penalty
+     * - End of autonomous to clear inventory before parking
+     * - Emergency clear when sensors fail
+     */
+    public void purgeAllBalls() {
+        if (shotSequence != null) {
+            shotSequence.purge();
+        }
+    }
+
+    /**
+     * Checks if it's safe to collect more balls without exceeding the 3-ball limit.
+     *
+     * @return true if inventory < 3 (safe to collect), false if at capacity
+     */
+    public boolean canSafelyCollectMoreBalls() {
+        return getIntakeInventoryCount() < 3;
+    }
+
+    /**
+     * Smart collection check: returns true if we need to purge before collecting.
+     * Use this before any collection action in autonomous.
+     *
+     * @param aboutToCollect How many balls you're about to collect
+     * @return true if purge is needed to avoid penalty, false if safe to collect
+     */
+    public boolean needsToPurgeBeforeCollecting(int aboutToCollect) {
+        int currentCount = getIntakeInventoryCount();
+        return (currentCount + aboutToCollect) > 3;
+    }
+
+    /**
+     * Auto-purge if needed, then signal when ready to collect.
+     * Call this repeatedly in a loop - it returns true when safe to proceed.
+     *
+     * Example usage in autonomous:
+     * case PREPARE_TO_COLLECT:
+     *     if (robot.prepareForCollection(2)) {  // About to collect 2 balls
+     *         state = COLLECT;
+     *     }
+     *     break;
+     *
+     * @param aboutToCollect How many balls you're about to collect
+     * @return true when safe to collect (either didn't need purge or purge complete)
+     */
+    public boolean prepareForCollection(int aboutToCollect) {
+        if (needsToPurgeBeforeCollecting(aboutToCollect)) {
+            // Need to purge first
+            if (!shotSequence.isBusy()) {
+                // Start the purge
+                shotSequence.purge();
+            }
+            // Still waiting for purge to complete
+            return false;
+        }
+
+        // Either didn't need purge, or purge is complete
+        if (shotSequence.isDone()) {
+            shotSequence.reset();  // Clean up for next use
+        }
+        return true;
     }
 }

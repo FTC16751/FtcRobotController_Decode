@@ -1,5 +1,6 @@
-package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
+package org.firstinspires.ftc.teamcode.TeleOp.P3Robot.old;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_TurretUtil;
  * - D-pad Left/Right: Fine adjustment (5 degrees at a time)
  */
 @TeleOp(name="Turret Control", group="TeleOp")
+@Disabled
 public class TurretTeleOp extends LinearOpMode {
 
     // Turret subsystem
