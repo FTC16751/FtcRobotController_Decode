@@ -191,10 +191,11 @@ public class GearGirlsBot2_improved extends OpMode {
     // SPINNER CONTROLS
     // ========================================
     private void handleSpinnerControls() {
-        if (gamepad1.left_trigger > 0.5) {
+
+        if (gamepad1.left_trigger > 0.2) {
             robot.rotateSpinnerLeft();
         }
-        if (gamepad1.right_trigger > 0.5) {
+        if (gamepad1.right_trigger > 0.2) {
             robot.rotateSpinnerRight();
         }
     }

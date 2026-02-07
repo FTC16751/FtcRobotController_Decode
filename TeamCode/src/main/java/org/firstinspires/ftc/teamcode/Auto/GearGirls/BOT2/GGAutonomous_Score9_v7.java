@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
  *
  * @version 7.1 - Added purge mode selection
  */
-@Autonomous(name="GG AUTO: Score 9 v7.1", group="GGBot", preselectTeleOp = "GearGirlsBot2_test")
+@Autonomous(name="GG AUTO: Bot 2 (RUN ME)", group="GGBot", preselectTeleOp = "Gear Girls Bot 2 (RUN ME)")
 public class GGAutonomous_Score9_v7 extends OpMode {
 
     private GGRobot2 robot;
@@ -175,11 +175,17 @@ public class GGAutonomous_Score9_v7 extends OpMode {
 
         robot.vision.setTargetingAlliance(alliance);
         setPathWaypoints(alliance, location);
+
         if (location == GGRobotConstants.Location.CLOSE) {
             launcherVelocity = GGRobotConstants.Launcher.CLOSE_TARGET_VELOCITY;
+            robot.shotSequenceV2.setLauncherReadyVelocity(GGRobotConstants.Launcher.CLOSE_MIN_VELOCITY);
+
         } else {
             launcherVelocity = GGRobotConstants.Launcher.FAR_TARGET_VELOCITY;
+            robot.shotSequenceV2.setLauncherReadyVelocity(GGRobotConstants.Launcher.FAR_MIN_VELOCITY);
+
         }
+
         robot.launcher.setMotorVelocity(launcherVelocity, launcherVelocity);
 
     }

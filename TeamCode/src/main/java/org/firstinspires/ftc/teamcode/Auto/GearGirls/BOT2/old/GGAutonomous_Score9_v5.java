@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Auto.GearGirls.BOT2.old;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -25,6 +26,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
  * @version 5.1 - Flat variables, no PathConfig class
  */
 @Autonomous(name="GG AUTO: Score 9 (Bot2)", group="GGBot", preselectTeleOp = "GearGirlsBot2_test")
+@Disabled
 public class GGAutonomous_Score9_v5 extends OpMode {
 
     // --- Subsystems ---

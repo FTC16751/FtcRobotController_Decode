@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
  */
 
 @Configurable
-@TeleOp(name="P3: Robot 3 TeleOp (Single Driver)", group="_P3opmodes")
+@TeleOp(name="P3: Robot 3 TeleOp (RUN ME)", group="_P3opmodes")
 public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
 
     // Vision snap-to-target tuning
@@ -247,7 +247,7 @@ public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
     // ========================================
 
     private void handleAllianceControls() {
-        if (gamepad1.left_bumper) {
+        if (gamepad1.leftBumperWasPressed()) {
             if (SharedState.alliance != CommonConstants.Alliance.BLUE) {
                 SharedState.alliance = CommonConstants.Alliance.BLUE;
                 alliance = CommonConstants.Alliance.BLUE;
@@ -255,7 +255,7 @@ public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
             }
         }
 
-        if (gamepad1.right_bumper) {
+        if (gamepad1.rightBumperWasPressed()) {
             if (SharedState.alliance != CommonConstants.Alliance.RED) {
                 SharedState.alliance = CommonConstants.Alliance.RED;
                 alliance = CommonConstants.Alliance.RED;

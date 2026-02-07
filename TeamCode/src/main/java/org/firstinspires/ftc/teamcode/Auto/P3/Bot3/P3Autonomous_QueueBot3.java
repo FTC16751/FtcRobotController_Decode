@@ -180,7 +180,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
                 spike3Align = P3RobotConstants.Bot3_Waypoints.RED_CLOSE_SPIKEMARK3_ALIGN;
                 spike3Collect = P3RobotConstants.Bot3_Waypoints.RED_CLOSE_SPIKEMARK3_COLLECT;
 
-                shootingVelocity = 1050;
+                shootingVelocity = 1150;
                 
                 // Set path-specific parameters
                 driveToShootSpeed = 0.70;
@@ -250,7 +250,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
 
                 parkPosition = P3RobotConstants.Bot3_Waypoints.BLUE_CLOSE_PARK;
 
-                shootingVelocity = 1050;
+                shootingVelocity = 1150;
 
                 // Set path-specific parameters
                 driveToShootSpeed = 0.75;
@@ -669,7 +669,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
             // --- END OF NEW STATE LOGIC ---
 
             case SHOOT_PRELOAD:
-                if (shootCycle(3)) {
+                if (shootCycle(1)) {
                     currentState = getNextState();
                 }
                 break;
@@ -777,7 +777,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
             case SHOOT_CYCLE_1:
             case SHOOT_CYCLE_2: // Can combine logic
             case SHOOT_CYCLE_3:
-                if (shootCycle(3)) {
+                if (shootCycle(1)) {
                     currentState = getNextState();
                 }
                 else if (stateTimer.seconds() > STATE_TIMEOUT_SHOOT) {

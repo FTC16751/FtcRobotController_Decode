@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -56,7 +57,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
  */
 
 @TeleOp(name="P3: Teleop (Team Version)", group=" _P3opmodes")
-
+@Disabled
 public class P3_Teleop extends OpMode
 {
     public static final double TX_ALIGN_KP = 0.02;

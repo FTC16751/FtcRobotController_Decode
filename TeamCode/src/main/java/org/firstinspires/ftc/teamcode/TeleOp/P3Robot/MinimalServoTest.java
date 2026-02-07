@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -25,6 +26,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
  * 3. Does position value in telemetry match what you command?
  */
 @TeleOp(name = "DEBUG: Minimal Servo Test", group = "Diagnostics")
+@Disabled
 public class MinimalServoTest extends LinearOpMode {
 
     private ServoImplEx servo;

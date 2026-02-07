@@ -116,16 +116,20 @@ public class GGRobot2 {
         // Current values are from the 96mm wheel configuration
         // Expected: multiply all velocities by approximately 1.33x or more
         flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 1560.0);  // 960*1.1 *1.48
-        flywheelTable.add(40.0, 1570.0);  // 1010*1.05*1.48
-        flywheelTable.add(50.0, 1660.0);  // 1070*1.05*1.48
-        flywheelTable.add(60.0, 1670.0);  // 1130     *1.48
-        flywheelTable.add(70.0, 1780.0);  // 1200     *1.48  (~1800 observed)
-        flywheelTable.add(80.0, 1890.0);  // 1280     *1.48
-        flywheelTable.add(100.0, 2060.0); // 1390     *1.48
-        flywheelTable.add(120.0, 2100.0); // 1420     *1.48
-        flywheelTable.add(130.0, 2180.0); // 1470     *1.48
-        flywheelTable.add(140.0, 2200.0); // 1500     *1.48  (~2200 observed)
+        flywheelTable.add(30.0, 1290.0);
+        flywheelTable.add(40.0, 1370.0);
+        flywheelTable.add(50.0, 1440.0);
+        flywheelTable.add(60.0, 1500.0);
+        flywheelTable.add(70.0, 1540.0);
+        flywheelTable.add(80.0, 1600.0);
+        flywheelTable.add(90.0, 1700.0);
+        flywheelTable.add(100.0, 1760.0);
+        flywheelTable.add(110.0, 1880.0);
+        flywheelTable.add(120.0, 1950.0);
+        flywheelTable.add(130.0, 2030.0);
+        flywheelTable.add(140.0, 2100.0);
+        flywheelTable.add(160.0, 2250.0);
+
 
 
         //drive.resetHeading();

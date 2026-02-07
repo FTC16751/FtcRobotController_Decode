@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.GearGirls.Bot1;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
  * @version 004
  */
 @Autonomous(name="GG AUTO: Score 9", group="GGBot", preselectTeleOp = "Gear Girls Telop (RUN ME)")
+@Disabled
 public class GGAutonomous_Score9 extends OpMode {
 
     // --- Subsystems ---

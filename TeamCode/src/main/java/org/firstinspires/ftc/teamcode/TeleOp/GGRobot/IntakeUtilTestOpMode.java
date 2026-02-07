@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeUtilV2;
  * Example OpMode demonstrating the usage of the IntakeUtil subsystem.
 */
 @TeleOp(name = "GG IntakeUtil Test", group = "Test")
+@Disabled
 public class IntakeUtilTestOpMode extends OpMode {
 
     private IntakeUtilV2 intake;

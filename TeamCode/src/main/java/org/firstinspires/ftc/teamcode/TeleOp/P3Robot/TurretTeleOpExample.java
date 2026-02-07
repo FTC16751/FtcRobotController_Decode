@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp.P3Robot;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.Turret;
  * - Left Stick X: Drive strafe (example - implement your drive here)
  */
 @TeleOp(name = "Turret TeleOp Example")
+@Disabled
 public class TurretTeleOpExample extends LinearOpMode {
 
     // Hardware

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchFlippers;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchFlippers;
  * - Gamepad1.RIGHT_BUMPER: Decrease servo travel time (when in adjustment mode)
  */
 @TeleOp(name = "LaunchFlippers Test", group = "Test")
+@Disabled
 public class LaunchFlippersTestOpMode extends OpMode {
 
     private LaunchFlippers flippers;

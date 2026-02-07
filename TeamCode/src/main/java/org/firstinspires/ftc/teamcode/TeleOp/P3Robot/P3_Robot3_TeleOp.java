@@ -8,6 +8,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -85,6 +86,7 @@ import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
 
 @Configurable
 @TeleOp(name="P3: Robot 3 TeleOp + Turret", group="_P3opmodes")
+@Disabled
 public class P3_Robot3_TeleOp extends OpMode {
 
     private static final RobotConfig ROBOT_CONFIG = RobotConfig.createP3Robot2Config();

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.TeleOp.GGRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -36,6 +37,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LauncherMotors;
  * - BACK/SELECT: Reset flipper hold time to default
  */
 @TeleOp(name = "GG Combined System Test", group = " _GGopmodes")
+@Disabled
 public class GGCombinedSystemTest extends OpMode {
 
     // --- Subsystems ---

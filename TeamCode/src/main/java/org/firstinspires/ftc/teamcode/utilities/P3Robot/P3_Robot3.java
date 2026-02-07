@@ -58,7 +58,7 @@ public class P3_Robot3 {
     private final ElapsedTime launchTimer = new ElapsedTime();
 
     // Launch sequence timing constants (in seconds)
-    private static final double FEED_TIME_SECONDS = 0.25;       // Duration to run indexer per shot (reduced for speed)
+    private static final double FEED_TIME_SECONDS = 1.5;       // Duration to run indexer per shot (reduced for speed)
     private static final double COOLDOWN_TIME_SECONDS = 0.05;   // Minimal pause between shots (reduced for rapid fire)
     private static final double SPIN_UP_TIMEOUT_SECONDS = 2.0;  // Safety timeout for flywheel acceleration
 
@@ -121,19 +121,19 @@ public class P3_Robot3 {
         // Initialize flywheel velocity lookup table (distance in inches -> velocity in ticks/sec)
         // These values are empirically tuned for the P3 robot
         flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 950.0);
-        flywheelTable.add(40.0, 960.0);
-        flywheelTable.add(50.0, 1080.0);
-        flywheelTable.add(60.0, 1120.0);
-        flywheelTable.add(70.0, 1080.0);   // 1180 - 100
-        flywheelTable.add(80.0, 1120.0);   // 1220 - 100
-        flywheelTable.add(90.0, 1220.0);   // 1320 - 100
-        flywheelTable.add(100.0, 1300.0);  // 1400 - 100
-        flywheelTable.add(110.0, 1340.0);  // 1440 - 100
-        flywheelTable.add(120.0, 1380.0);  // 1480 - 100
-        flywheelTable.add(130.0, 1420.0);  // 1520 - 100
-        flywheelTable.add(140.0, 1460.0);  // 1560 - 100
-        flywheelTable.add(150.0, 1500.0);  // 1600 - 100
+        flywheelTable.add(30.0, 950.0*1.10);
+        flywheelTable.add(40.0, 960.0*1.10);
+        flywheelTable.add(50.0, 1080.0*1.10);
+        flywheelTable.add(60.0, 1120.0*1.10);
+        flywheelTable.add(70.0, 1080.0*1.10);   // 1180 - 100
+        flywheelTable.add(80.0, 1120.0*1.10);   // 1220 - 100
+        flywheelTable.add(90.0, 1220.0*1.10);   // 1320 - 100
+        flywheelTable.add(100.0, 1300.0*1.10);  // 1400 - 100
+        flywheelTable.add(110.0, 1340.0*1.10);  // 1440 - 100
+        flywheelTable.add(120.0, 1380.0*1.10);  // 1480 - 100
+        flywheelTable.add(130.0, 1420.0*1.10);  // 1520 - 100
+        flywheelTable.add(140.0, 1460.0*1.10);  // 1560 - 100
+        flywheelTable.add(150.0, 1500.0*1.10);  // 1600 - 100
     }
 
     // ========================================
@@ -230,7 +230,8 @@ public class P3_Robot3 {
                 launcher.setShooterMotorVelocity(currentTargetVelocity);
 
                 // Run indexer to push artifact into flywheels
-                launcher.setIndexerServoPower(1.0);
+                //launcher.setIndexerServoPower(1.0);
+                indexer.start();
 
                 // Check for stall (velocity drop during feeding)
                 if (launcher.getShooterMotorVelocity() < currentTargetVelocity * stallDetectionPercent) {
@@ -245,6 +246,7 @@ public class P3_Robot3 {
                 if (launchTimer.seconds() >= FEED_TIME_SECONDS) {
                     // Feeding complete - advance to COOLDOWN
                     launcher.setIndexerServoPower(0);
+                    indexer.stop();
                     launchState = LaunchState.COOLDOWN;
                     launchTimer.reset();
                     shotsFired++;

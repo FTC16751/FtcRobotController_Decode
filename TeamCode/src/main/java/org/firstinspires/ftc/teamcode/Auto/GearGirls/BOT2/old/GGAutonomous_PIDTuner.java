@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Auto.GearGirls.BOT2.old;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot2;
 
 @Autonomous(name="GG AUTO: PID Tuner", group="GGBot")
+@Disabled
 public class GGAutonomous_PIDTuner extends OpMode {
 
     // --- Subsystems ---

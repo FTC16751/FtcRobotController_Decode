@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.P3.Bot2;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,6 +16,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 @Autonomous(name="P3 AUTO Bot2: Queue Version", group="P3Bot2", preselectTeleOp = "P3: Teleop (Team Version)")
+@Disabled
 public class P3Autonomous_Queue extends OpMode {
 
     // --- Subsystems ---
