@@ -65,15 +65,15 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
  * Driver Station via the doTelemetry() method for debugging and monitoring.
  *
  */
-@TeleOp(name = "Gear Girls Telop (RUN ME)", group = " _GGopmodes")
-@Disabled
+@TeleOp(name = "Gear Girls Bot 1 Telop (RUN ME)", group = " _GGopmodes")
+
 public class GearGirlsBot1 extends OpMode {
     //Declare SubSystems
     private GGRobot robot;
     private double manualLauncherVelocity;
     private GGRobotConstants.LauncherDistance launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
     private GGRobotConstants.LauncherSystemState launcherSystemState = GGRobotConstants.LauncherSystemState.IDLE;
-    private GGRobotConstants.LauncherTargetingMode targetingMode = GGRobotConstants.LauncherTargetingMode.AUTO;
+    private GGRobotConstants.LauncherTargetingMode targetingMode = GGRobotConstants.LauncherTargetingMode.PRESET;
     double finalTargetVelocity = 0;
     private static final double kP_TURN = 0.03;  // tune on field
 
@@ -256,11 +256,13 @@ public class GearGirlsBot1 extends OpMode {
 
         // =========================================================================
         //robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
-        robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 0.4);
         if (DRIVEMODE == DriveMode.ARCADE) {
-            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 0.4);
         } else if (DRIVEMODE == DriveMode.FIELD_CENTRIC) {
-            robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
+            //robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
+            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 0.4);
+
         }
     }
     private void toggleDriveMode() {
@@ -321,12 +323,14 @@ public class GearGirlsBot1 extends OpMode {
      */
     private void handleDiverterControls() {
         // Press D-pad Down to toggle between LEFT and RIGHT
-        if (gamepad1.dpadDownWasPressed()) {
-            diverterDirection = (diverterDirection == DiverterDirection.LEFT) ?
-                    DiverterDirection.RIGHT : DiverterDirection.LEFT;
+        if (gamepad1.dpadRightWasPressed()) {
+            diverterDirection = DiverterDirection.RIGHT;
+        }
+        if (gamepad1.dpadLeftWasPressed()) {
+            diverterDirection = DiverterDirection.LEFT;
         }
         // Press D-pad Right to center the diverter
-        if (gamepad1.dpadRightWasPressed()) {
+        if (gamepad1.dpadUpWasPressed()) {
             diverterDirection = DiverterDirection.CENTER;
         }
 
@@ -362,16 +366,18 @@ public class GearGirlsBot1 extends OpMode {
         // --- STEP 1: HANDLE DRIVER INPUTS TO CHANGE STATES AND VALUES ---
 
         // Press D-Pad Left to cycle between AUTO and PRESET targeting modes.
-        if (gamepad1.dpadLeftWasPressed()) {
-            targetingMode = (targetingMode == GGRobotConstants.LauncherTargetingMode.AUTO) ?
-                    GGRobotConstants.LauncherTargetingMode.PRESET : GGRobotConstants.LauncherTargetingMode.AUTO;
-        }
+        //if (gamepad1.dpadLeftWasPressed()) {
+//            targetingMode = (targetingMode == GGRobotConstants.LauncherTargetingMode.AUTO) ?
+//                    GGRobotConstants.LauncherTargetingMode.PRESET : GGRobotConstants.LauncherTargetingMode.AUTO;
+           // targetingMode = GGRobotConstants.LauncherTargetingMode.PRESET;
+        //}
 
         // Toggle between presets CLOSE or FAR
-        if (gamepad1.dpadUpWasPressed()) {
-            launcherDistance = (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) ?
-                    GGRobotConstants.LauncherDistance.FAR : GGRobotConstants.LauncherDistance.CLOSE;
-        }
+        //launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
+//        if (gamepad1.dpadUpWasPressed()) {
+//            launcherDistance = (launcherDistance == GGRobotConstants.LauncherDistance.CLOSE) ?
+//                    GGRobotConstants.LauncherDistance.FAR : GGRobotConstants.LauncherDistance.CLOSE;
+//        }
 
         // Press 'Y' to activate the launcher, 'B' to deactivate it.
         if (gamepad1.yWasPressed()) {
@@ -397,11 +403,11 @@ public class GearGirlsBot1 extends OpMode {
         // A launcher is only truly ready if the system is ACTIVE, the speed is within tolerance, AND the speed is above a safe minimum.
         boolean isLauncherReady = (launcherSystemState == GGRobotConstants.LauncherSystemState.ACTIVE) && isSpeedCorrect && isSpeedSafe;
 
-        if (gamepad1.left_trigger > 0.2) {
-            robot.feeder.setLeftFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
-        } else if (gamepad1.right_trigger > 0.2) {
-            robot.feeder.setRightFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
-        } else {
+//        if (gamepad1.left_trigger > 0.2) {
+//            robot.feeder.setLeftFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
+//        } else if (gamepad1.right_trigger > 0.2) {
+//            robot.feeder.setRightFeederPower(GGRobotConstants.Feeder.FULL_SPEED);
+//        } else {
             // A shot is only allowed if the system is active AND the motors are up to speed.
             if (isLauncherReady) {
                 if (gamepad1.leftBumperWasPressed()) {
@@ -411,7 +417,7 @@ public class GearGirlsBot1 extends OpMode {
                     robot.feeder.triggerRightFeeder();
                 }
             }
-        }
+        //}
 
     }
 

@@ -35,7 +35,6 @@ package org.firstinspires.ftc.teamcode.TeleOp.Other;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -60,8 +59,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "StarterBotTeleop", group = "Concept")
-public class StarterBotTeleop extends OpMode {
+@TeleOp(name = "DEBUG ONLY 0 StarterBotTeleop", group = "Concept")
+public class StarterBotTeleop_DEBUG extends OpMode {
     final double FEED_TIME_SECONDS = .200; //The feeder servos run this long when a shot is requested.
     final double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     final double FULL_SPEED = 1.0;
@@ -210,6 +209,32 @@ public class StarterBotTeleop extends OpMode {
          */
         arcadeDrive(gamepad1.left_stick_y*DRIVE_SPEED, gamepad1.right_stick_x*DRIVE_SPEED);
 
+        /*
+         * Here we give the user control of the speed of the launcher motor without automatically
+         * queuing a shot.
+         */
+        if (gamepad1.y) {
+            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+        } else if (gamepad1.b) { // stop flywheel
+            launcher.setVelocity(STOP_SPEED);
+        }
+
+        if (launchState == LaunchState.IDLE) {
+            if (gamepad1.dpad_left) {
+                leftFeeder.setPower(FULL_SPEED);
+                rightFeeder.setPower(FULL_SPEED);
+            } else if (gamepad1.dpad_right) {
+                leftFeeder.setPower(-FULL_SPEED);
+                rightFeeder.setPower(-FULL_SPEED);
+            } else {
+                leftFeeder.setPower(STOP_SPEED);
+                rightFeeder.setPower(STOP_SPEED);
+            }
+        }
+//        } else if (gamepad1.dpad_down){
+//            leftFeeder.setPower(STOP_SPEED);
+//            rightFeeder.setPower(STOP_SPEED);
+//        }
 
         /*
          * Now we call our "Launch" function.
@@ -256,10 +281,12 @@ public class StarterBotTeleop extends OpMode {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
-            case LAUNCH: leftFeeder.setPower(-FULL_SPEED);
+            case LAUNCH:
+                leftFeeder.setPower(-FULL_SPEED);
                 rightFeeder.setPower(-FULL_SPEED);
-                          feederTimer.reset();
-                           launchState = LaunchState.LAUNCHING;break;
+                feederTimer.reset();
+                launchState = LaunchState.LAUNCHING;
+                break;
             case LAUNCHING:
                 if (feederTimer.seconds() > FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;

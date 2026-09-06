@@ -154,7 +154,7 @@ public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
             turnInput = gamepad1.right_stick_x;
         }
 
-        robot.drive.arcadeDrive(strafeInput, -driveInput, turnInput, gamepad1.right_stick_y, 1.0);
+        robot.drive.arcadeDrive(strafeInput, -driveInput, turnInput, gamepad1.right_stick_y, 0.25);
     }
 
     // ========================================
@@ -194,7 +194,8 @@ public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
     private void handleLauncherControls() {
         // --- FEEDER / INDEXER ---
         if (gamepad1.right_trigger > 0.8) {
-            robot.indexer.start();
+           // robot.indexer.start();
+            robot.launchSequence(gamepad1.right_trigger > 0.8, requestedMotorVelocity);
         } else if (gamepad1.left_trigger > 0.8) {
             robot.indexer.setPower(-0.25);
         } else {

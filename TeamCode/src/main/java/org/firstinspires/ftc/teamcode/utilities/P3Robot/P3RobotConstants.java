@@ -293,11 +293,11 @@ public class P3RobotConstants {
 
         //FAR SIDE:
         public static final Pose2D BLUE_FAR_SPIKEMARK3_ALIGN = new Pose2D(DistanceUnit.INCH, 28, 14, AngleUnit.DEGREES, 90);
-        public static final Pose2D BLUE_FAR_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH, 28, 45, AngleUnit.DEGREES, 90);
-        public static final Pose2D BLUE_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH, 52, 14, AngleUnit.DEGREES, 90);
-        public static final Pose2D BLUE_FAR_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH, 52, 45, AngleUnit.DEGREES, 90);
-        public static final Pose2D BLUE_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH, 76, 14, AngleUnit.DEGREES, 90);
-        public static final Pose2D BLUE_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH, 76, 38, AngleUnit.DEGREES, 90);
+        public static final Pose2D BLUE_FAR_SPIKEMARK3_COLLECT = new Pose2D(DistanceUnit.INCH, 28, 47, AngleUnit.DEGREES, 90);
+        public static final Pose2D BLUE_FAR_SPIKEMARK2_ALIGN = new Pose2D(DistanceUnit.INCH, 53, 14, AngleUnit.DEGREES, 90);
+        public static final Pose2D BLUE_FAR_SPIKEMARK2_COLLECT = new Pose2D(DistanceUnit.INCH, 53, 45, AngleUnit.DEGREES, 90);
+        public static final Pose2D BLUE_FAR_SPIKEMARK1_ALIGN = new Pose2D(DistanceUnit.INCH, 75, 14, AngleUnit.DEGREES, 90);
+        public static final Pose2D BLUE_FAR_SPIKEMARK1_COLLECT = new Pose2D(DistanceUnit.INCH, 75, 40, AngleUnit.DEGREES, 90);
 
 
 

@@ -28,8 +28,8 @@ public class GGRobotConstants {
         public static final double RED_TAG24_Y_M  =  1.413; // 55.63 in inches
     }
     public static final class Launcher {
-        public static final double CLOSE_TARGET_VELOCITY = 1850; //in ticks/second for the close goal.
-        public static final double CLOSE_MIN_VELOCITY = 1750;//minimum required to start a shot for close goal.
+        public static final double CLOSE_TARGET_VELOCITY = 1200; //in ticks/second for the close goal.
+        public static final double CLOSE_MIN_VELOCITY = 1150;//minimum required to start a shot for close goal.
         public static final double FAR_TARGET_VELOCITY = 2000; //Target velocity for far goal
         public static final double FAR_MIN_VELOCITY = 1980;//minimum required to start a shot for far goal
         public static final double AUTO_TARGET_VELOCITY = 1850; //in ticks/second for the close goal.
