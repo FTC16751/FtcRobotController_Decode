@@ -9,7 +9,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.common.CommonConstants;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.common.Feeder;
+import org.firstinspires.ftc.teamcode.common.Flywheel;
 import org.firstinspires.ftc.teamcode.common.InterpolatingLookupTable;
+import org.firstinspires.ftc.teamcode.common.LaunchController;
 import org.firstinspires.ftc.teamcode.common.LedUtil;
 import org.firstinspires.ftc.teamcode.common.RobotConfig;
 import org.firstinspires.ftc.teamcode.common.VisionUtil;
@@ -28,10 +31,8 @@ public class Skyline_Robot {
     public final VisionUtil vision;
     public final LedUtil led;
 
-    // --- State Machine for the Launch Sequence ---
-    private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
-    private LaunchState launchState = LaunchState.IDLE;
-    private ElapsedTime feederTimer = new ElapsedTime();
+    // --- Launch sequence: shared common.LaunchController with Skyline's launcher and feeder plugged in ---
+    public final LaunchController launchController;
     private InterpolatingLookupTable flywheelTable;
     private double lastKnownGoodVelocity = 0.0;
     public Skyline_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -44,6 +45,26 @@ public class Skyline_Robot {
         feeder = new Skyline_FeederUtil(hardwareMap);
         vision = new VisionUtil(hardwareMap, telemetry, config.hardware.limelight);
         led = new LedUtil(hardwareMap, config.hardware.led);
+
+        // Shared launch sequence. Skyline's autos pass an absolute minimum velocity and a feed time
+        // per call, so readyFraction is unused and feedTimeSec is set on each call (see launchSequence).
+        // No cooldown and no stall check, matching how this robot shot before 2026-09-07. The 2 s
+        // spin-up timeout is new: the old code waited forever if the flywheel never reached speed.
+        Flywheel skylineFlywheel = new Flywheel() {
+            @Override public void setVelocity(double v) { launcher.setVelocity(v); }
+            @Override public double getVelocity()       { return launcher.getVelocity(); }
+        };
+        Feeder skylineFeeder = new Feeder() {
+            @Override public void start() { feeder.setPower(1.0); }
+            @Override public void stop()  { feeder.stop(); }
+        };
+        launchController = new LaunchController(skylineFlywheel, skylineFeeder,
+                new LaunchController.Settings()
+                        .cooldownSec(0)
+                        .spinUpTimeoutSec(2.0)
+                        .stallFraction(0)
+                        .keepSpinning(true),
+                telemetry);
 
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 1200.0*1.045);
@@ -79,50 +100,15 @@ public class Skyline_Robot {
      * @param shotRequested True if the driver has requested a shot on this loop cycle.
      */
     public boolean launchSequence(boolean shotRequested, double targetVelocity, double minVelocity, double feedTime) {
-        switch (launchState) {
-            case IDLE:
-                // If a shot is requested, start spinning up the launcher
-                if (shotRequested) {
-                    launcher.setVelocity(targetVelocity);
-                    launchState = LaunchState.SPIN_UP;
-                }
-                break;
-
-            case SPIN_UP:
-                // Continuously command the velocity to ensure it gets there
-                launcher.setVelocity(targetVelocity);
-                // If the flywheel is at speed, move to the launch state
-                if (launcher.getVelocity() > minVelocity) {
-                    launchState = LaunchState.LAUNCH;
-                }
-                break;
-
-            case LAUNCH:
-                // Start the feeders and a timer
-                feeder.setPower(1.0);
-                feederTimer.reset();
-                launchState = LaunchState.LAUNCHING;
-                break;
-
-            case LAUNCHING:
-                // If the feed time has elapsed, stop the feeders and reset
-                if (feederTimer.seconds() > feedTime) {
-                    feeder.stop();
-                    // Optionally, stop the launcher motor too, or let it coast
-                    // launcher.setVelocity(0);
-                    launchState = LaunchState.IDLE;
-                    return true;
-                }
-                break;
-        }
-        telemetry.addData("Launch State", launchState); // Add state to telemetry
-        return false;
+        launchController.settings.feedTimeSec = feedTime;
+        boolean done = launchController.update(shotRequested, targetVelocity, minVelocity);
+        telemetry.addData("Launch State", launchController.getState());
+        return done;
     }
 
     public void stopAll() {
         drive.stopRobot();
-        launcher.setVelocity(0);
-        feeder.stop();
+        launchController.stop();   // stops flywheel and feeder, resets the sequence to IDLE
         vision.stop();
     }
 

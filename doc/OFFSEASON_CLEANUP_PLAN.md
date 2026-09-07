@@ -308,7 +308,21 @@ These do not force teams to share subsystem hardware. Each takes a small interfa
 robot-specific step and keeps the rest shared. Keep them plain Java 8: abstract classes and small
 interfaces, no generics beyond what exists, no reflection.
 
-**R7. `common/LaunchController`.** Start from `P3_Robot3:194-275, 400-517` (the most robust copy).
+**R7. `common/LaunchController`.** *DONE 2026-09-07 for P3_Robot3 and Skyline_Robot, build verified.*
+`common/LaunchController` (state machine lifted from P3_Robot3: spin-up timeout, ready fraction or
+absolute minimum, stall abort, feed timer, cooldown, shot counters, `addTelemetry`), with two tiny
+interfaces each team implements as inner classes: `common/Flywheel` (setVelocity/getVelocity) and
+`common/Feeder` (start/stop). Settings are a fluent `LaunchController.Settings`. P3_Robot3 keeps every
+public method (launchSequence, stopLaunchSequence, isLaunchSequenceBusy, the tolerance/stall/keepSpinning
+setters and getters, shot counters, areFlywheelsReady) and delegates; its settings equal its old private
+constants. Skyline_Robot keeps its 4-arg launchSequence, sets feedTimeSec per call and passes the absolute
+minimum velocity; cooldown 0 and stall check off to match old behavior; the 2 s spin-up timeout is NEW
+for Skyline (old code waited forever). GearGirls NOT migrated: GGRobot2's LaunchState is dead (never
+assigned); its TeleOp fires flippers directly and its v7 auto uses ShotSequenceControllerV2, a
+different (volley) pattern. Older classes P3_Robot, P3_Robot_Bot1, GGRobot untouched (R3 scope).
+Follow-ups: move the P3 launch Settings numbers into P3RobotConstants; consider having
+ShotSequenceControllerV2's ready-velocity gate use LaunchController.
+Original recommendation follows. Start from `P3_Robot3:194-275, 400-517` (the most robust copy).
 State machine IDLE → SPIN_UP → FEEDING → COOLDOWN with spin-up timeout, tolerance %, stall abort,
 shot counters. Takes a `Feeder` interface (`start()`, `stop()`, `isDone()`) so GearGirls plugs in
 flippers + spinner, P3 an indexer, Skyline two feeder servos. Replaces six hand-written copies with

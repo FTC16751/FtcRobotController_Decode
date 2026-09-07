@@ -14,7 +14,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.common.CommonConstants;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
+import org.firstinspires.ftc.teamcode.common.Feeder;
+import org.firstinspires.ftc.teamcode.common.Flywheel;
 import org.firstinspires.ftc.teamcode.common.InterpolatingLookupTable;
+import org.firstinspires.ftc.teamcode.common.LaunchController;
 import org.firstinspires.ftc.teamcode.common.LedUtil;
 import org.firstinspires.ftc.teamcode.common.RobotConfig;
 import org.firstinspires.ftc.teamcode.common.VisionUtil;
@@ -43,34 +46,15 @@ public class P3_Robot3 {
     public final P3_RubberBandIndexerUtil indexer;
 
     // ========================================
-    // LAUNCH SEQUENCE STATE MACHINE
+    // LAUNCH SEQUENCE
     // ========================================
     /**
-     * States for the automated launch sequence.
-     * IDLE:      The sequence is not running. Ready to start a new launch.
-     * SPIN_UP:   Flywheels are accelerating to target speed.
-     * FEEDING:   Indexer is running to push artifact into flywheels.
-     * COOLDOWN:  A brief pause after a shot before returning to IDLE.
+     * The spin-up / ready / feed / cooldown sequence lives in common.LaunchController and is shared
+     * by every robot. This class only supplies the two P3-specific pieces: how to drive the
+     * flywheel (P3_LauncherUtil) and what "feed" means (the rubber-band indexer).
+     * Timings and thresholds are set in the constructor.
      */
-    private enum LaunchState {
-        IDLE,
-        SPIN_UP,
-        FEEDING,
-        COOLDOWN
-    }
-
-    private LaunchState launchState = LaunchState.IDLE;
-    private final ElapsedTime launchTimer = new ElapsedTime();
-
-    // Launch sequence timing constants (in seconds)
-    private static final double FEED_TIME_SECONDS = 1.5;       // Duration to run indexer per shot (reduced for speed)
-    private static final double COOLDOWN_TIME_SECONDS = 0.05;   // Minimal pause between shots (reduced for rapid fire)
-    private static final double SPIN_UP_TIMEOUT_SECONDS = 2.0;  // Safety timeout for flywheel acceleration
-
-    // Configurable launch parameters
-    private double velocityTolerancePercent = 0.97;  // Flywheels must reach 97% of target before feeding
-    private double stallDetectionPercent = 0.80;     // If velocity drops below 80% during feeding, abort
-    private boolean keepFlywheelsSpinning = true;    // Keep flywheels running between shots for faster follow-up
+    public final LaunchController launchController;
 
     // ========================================
     // FLYWHEEL VELOCITY MANAGEMENT
@@ -83,12 +67,6 @@ public class P3_Robot3 {
      * Initialized to a safe mid-range value rather than 0.
      */
     private double lastKnownGoodVelocity = 1000.0;  // Default to reasonable mid-range velocity
-    private double currentTargetVelocity = 0.0;     // Target velocity for current launch sequence
-
-    // Shot tracking
-    private int shotsFired = 0;
-    private int shotsAttempted = 0;
-    private int shotsAborted = 0;
 
     // ========================================
     // CONSTRUCTOR
@@ -119,6 +97,27 @@ public class P3_Robot3 {
         turret = new Turret(turretServo, magSwitch);
 
         indexer = new P3_RubberBandIndexerUtil(hardwareMap);
+
+        // Shared launch sequence with the two P3-specific adapters.
+        // Settings are the values this class used before 2026-09-07 (feed 1.5 s, cooldown 0.05 s,
+        // 2.0 s spin-up timeout, feed at 97% of target, abort below 80%, keep spinning between shots).
+        Flywheel p3Flywheel = new Flywheel() {
+            @Override public void setVelocity(double v) { launcher.setShooterMotorVelocity(v); }
+            @Override public double getVelocity()       { return launcher.getShooterMotorVelocity(); }
+        };
+        Feeder p3Feeder = new Feeder() {
+            @Override public void start() { indexer.start(); }
+            @Override public void stop()  { indexer.stop(); launcher.setIndexerServoPower(0); }
+        };
+        launchController = new LaunchController(p3Flywheel, p3Feeder,
+                new LaunchController.Settings()
+                        .feedTimeSec(1.5)
+                        .cooldownSec(0.05)
+                        .spinUpTimeoutSec(2.0)
+                        .readyFraction(0.97)
+                        .stallFraction(0.80)
+                        .keepSpinning(true),
+                telemetry);
 
         // Set launcher to safe initial state
         launcher.setStopPosition();
@@ -176,7 +175,7 @@ public class P3_Robot3 {
         vision.stop();
 
         // Reset launch state
-        launchState = LaunchState.IDLE;
+        launchController.stop();
     }
 
     // ========================================
@@ -189,7 +188,7 @@ public class P3_Robot3 {
      * The sequence progresses through these states:
      * 1. IDLE -> SPIN_UP: When shootCommand is true, start spinning flywheels
      * 2. SPIN_UP -> FEEDING: When flywheels reach target speed (within tolerance)
-     * 3. FEEDING -> COOLDOWN: After feeding for FEED_TIME_SECONDS
+     * 3. FEEDING -> COOLDOWN: After feeding for settings.feedTimeSec
      * 4. COOLDOWN -> IDLE: After brief cooldown period
      *
      * @param shootCommand Set to true to initiate a launch (only checked in IDLE state)
@@ -197,86 +196,7 @@ public class P3_Robot3 {
      * @return true when the sequence completes (one shot fired), false while busy
      */
     public boolean launchSequence(boolean shootCommand, double targetVelocity) {
-        switch (launchState) {
-            case IDLE:
-                if (shootCommand) {
-                    // Start a new launch sequence
-                    currentTargetVelocity = targetVelocity;
-                    launcher.setShooterMotorVelocity(targetVelocity);
-                    launchTimer.reset();
-                    launchState = LaunchState.SPIN_UP;
-                    shotsAttempted++;
-                }
-                break;
-
-            case SPIN_UP:
-                // Continuously command the velocity to ensure it reaches target
-                launcher.setShooterMotorVelocity(currentTargetVelocity);
-
-                // Safety timeout check
-                if (launchTimer.seconds() > SPIN_UP_TIMEOUT_SECONDS) {
-                    // Timeout - abort launch
-                    telemetry.addData("⚠ Launch Timeout", "Flywheels failed to reach speed");
-                    stopLaunchSequence();
-                    shotsAborted++;
-                    break;
-                }
-
-                // Check if flywheels have reached target speed
-                if (areFlywheelsReady(currentTargetVelocity)) {
-                    // Ready to feed - advance to FEEDING state
-                    launchState = LaunchState.FEEDING;
-                    launchTimer.reset();
-                }
-                break;
-
-            case FEEDING:
-                // Keep flywheels at speed during feeding
-                launcher.setShooterMotorVelocity(currentTargetVelocity);
-
-                // Run indexer to push artifact into flywheels
-                //launcher.setIndexerServoPower(1.0);
-                indexer.start();
-
-                // Check for stall (velocity drop during feeding)
-                if (launcher.getShooterMotorVelocity() < currentTargetVelocity * stallDetectionPercent) {
-                    // Stall detected - abort launch
-                    telemetry.addData("⚠ Launch Stall", "Velocity drop detected");
-                    stopLaunchSequence();
-                    shotsAborted++;
-                    break;
-                }
-
-                // Check if feeding time has elapsed
-                if (launchTimer.seconds() >= FEED_TIME_SECONDS) {
-                    // Feeding complete - advance to COOLDOWN
-                    launcher.setIndexerServoPower(0);
-                    indexer.stop();
-                    launchState = LaunchState.COOLDOWN;
-                    launchTimer.reset();
-                    shotsFired++;
-                }
-                break;
-
-            case COOLDOWN:
-                // Brief pause before returning to IDLE
-                // Keep flywheels at speed if configured for rapid-fire
-                if (keepFlywheelsSpinning) {
-                    launcher.setShooterMotorVelocity(currentTargetVelocity);
-                } else {
-                    launcher.setShooterMotorVelocity(0);
-                }
-
-                // Check if cooldown time has elapsed
-                if (launchTimer.seconds() >= COOLDOWN_TIME_SECONDS) {
-                    // Cooldown complete - return to IDLE
-                    launchState = LaunchState.IDLE;
-                    return true;  // Indicate sequence complete
-                }
-                break;
-        }
-
-        return false;  // Sequence still in progress
+        return launchController.update(shootCommand, targetVelocity);
     }
 
     /**
@@ -284,9 +204,7 @@ public class P3_Robot3 {
      * Stops flywheels and indexer.
      */
     public void stopLaunchSequence() {
-        launcher.setShooterMotorVelocity(0);
-        launcher.setIndexerServoPower(0);
-        launchState = LaunchState.IDLE;
+        launchController.stop();
     }
 
     /**
@@ -295,7 +213,7 @@ public class P3_Robot3 {
      * @return true if in SPIN_UP, FEEDING, or COOLDOWN state
      */
     public boolean isLaunchSequenceBusy() {
-        return launchState != LaunchState.IDLE;
+        return launchController.isBusy();
     }
 
     /**
@@ -304,7 +222,7 @@ public class P3_Robot3 {
      * @return Current LaunchState
      */
     public String getLaunchStateString() {
-        return launchState.toString();
+        return launchController.getState().toString();
     }
 
     // ========================================
@@ -404,7 +322,7 @@ public class P3_Robot3 {
      */
     public void setVelocityTolerance(double tolerance) {
         if (tolerance > 0.0 && tolerance <= 1.0) {
-            this.velocityTolerancePercent = tolerance;
+            launchController.settings.readyFraction = tolerance;
         } else {
             telemetry.addData("⚠ Warning", "Invalid velocity tolerance: %.2f (must be 0.0-1.0)", tolerance);
         }
@@ -416,7 +334,7 @@ public class P3_Robot3 {
      * @return Current tolerance as decimal (e.g., 0.97 for 97%)
      */
     public double getVelocityTolerance() {
-        return velocityTolerancePercent;
+        return launchController.settings.readyFraction;
     }
 
     /**
@@ -429,7 +347,7 @@ public class P3_Robot3 {
      */
     public void setStallDetectionThreshold(double threshold) {
         if (threshold > 0.0 && threshold <= 1.0) {
-            this.stallDetectionPercent = threshold;
+            launchController.settings.stallFraction = threshold;
         } else {
             telemetry.addData("⚠ Warning", "Invalid stall threshold: %.2f (must be 0.0-1.0)", threshold);
         }
@@ -441,7 +359,7 @@ public class P3_Robot3 {
      * @return Current threshold as decimal (e.g., 0.80 for 80%)
      */
     public double getStallDetectionThreshold() {
-        return stallDetectionPercent;
+        return launchController.settings.stallFraction;
     }
 
     /**
@@ -453,7 +371,7 @@ public class P3_Robot3 {
      * @param keepSpinning true to maintain flywheel speed, false to stop after each shot
      */
     public void setKeepFlywheelsSpinning(boolean keepSpinning) {
-        this.keepFlywheelsSpinning = keepSpinning;
+        launchController.settings.keepSpinning = keepSpinning;
     }
 
     /**
@@ -462,7 +380,7 @@ public class P3_Robot3 {
      * @return true if flywheels stay spinning between shots, false otherwise
      */
     public boolean isKeepFlywheelsSpinning() {
-        return keepFlywheelsSpinning;
+        return launchController.settings.keepSpinning;
     }
 
     // ========================================
@@ -476,7 +394,7 @@ public class P3_Robot3 {
      * @return Number of completed shots
      */
     public int getShotsFired() {
-        return shotsFired;
+        return launchController.getShotsFired();
     }
 
     /**
@@ -486,7 +404,7 @@ public class P3_Robot3 {
      * @return Number of launch attempts
      */
     public int getShotsAttempted() {
-        return shotsAttempted;
+        return launchController.getShotsAttempted();
     }
 
     /**
@@ -496,7 +414,7 @@ public class P3_Robot3 {
      * @return Number of aborted shots
      */
     public int getShotsAborted() {
-        return shotsAborted;
+        return launchController.getShotsAborted();
     }
 
     /**
@@ -505,10 +423,11 @@ public class P3_Robot3 {
      * @return Success rate as percentage (0.0 to 100.0), or 0.0 if no attempts
      */
     public double getLaunchSuccessRate() {
-        if (shotsAttempted == 0) {
+        int attempted = launchController.getShotsAttempted();
+        if (attempted == 0) {
             return 0.0;
         }
-        return (shotsFired * 100.0) / shotsAttempted;
+        return (launchController.getShotsFired() * 100.0) / attempted;
     }
 
     /**
@@ -516,9 +435,7 @@ public class P3_Robot3 {
      * Useful at the start of a new match.
      */
     public void resetShotCounters() {
-        shotsFired = 0;
-        shotsAttempted = 0;
-        shotsAborted = 0;
+        launchController.resetShotCounters();
     }
 
     // ========================================
@@ -553,7 +470,7 @@ public class P3_Robot3 {
      * @return true if current velocity >= target * velocityTolerance
      */
     public boolean areFlywheelsReady(double targetVelocity) {
-        return launcher.getShooterMotorVelocity() >= targetVelocity * velocityTolerancePercent;
+        return launchController.isFlywheelReady(targetVelocity);
     }
 
     /**
@@ -574,14 +491,14 @@ public class P3_Robot3 {
      */
     public void addTelemetry() {
         telemetry.addLine("=== P3 Robot Status ===");
-        telemetry.addData("Launch State", launchState);
+        telemetry.addData("Launch State", launchController.getState());
         telemetry.addData("Flywheel Velocity", "%.0f ticks/sec", launcher.getShooterMotorVelocity());
 
         // Shot statistics
         telemetry.addLine();
-        telemetry.addData("Shots Fired", "%d / %d attempted", shotsFired, shotsAttempted);
-        if (shotsAborted > 0) {
-            telemetry.addData("⚠ Shots Aborted", shotsAborted);
+        telemetry.addData("Shots Fired", "%d / %d attempted", launchController.getShotsFired(), launchController.getShotsAttempted());
+        if (launchController.getShotsAborted() > 0) {
+            telemetry.addData("⚠ Shots Aborted", launchController.getShotsAborted());
         }
         telemetry.addData("Success Rate", "%.1f%%", getLaunchSuccessRate());
 
@@ -597,14 +514,13 @@ public class P3_Robot3 {
      */
     public void addLaunchDebugTelemetry() {
         telemetry.addLine("--- Launch Debug ---");
-        telemetry.addData("State", launchState);
-        telemetry.addData("Timer", "%.2f sec", launchTimer.seconds());
-        telemetry.addData("Target Velocity", "%.0f", currentTargetVelocity);
+        telemetry.addData("State", launchController.getState());
+        telemetry.addData("Target Velocity", "%.0f", launchController.getTargetVelocity());
         telemetry.addData("Current Velocity", "%.0f", launcher.getShooterMotorVelocity());
 
         // Show velocity as percentage of target
-        if (currentTargetVelocity > 0) {
-            double percentOfTarget = (launcher.getShooterMotorVelocity() / currentTargetVelocity) * 100.0;
+        if (launchController.getTargetVelocity() > 0) {
+            double percentOfTarget = (launcher.getShooterMotorVelocity() / launchController.getTargetVelocity()) * 100.0;
             telemetry.addData("Velocity %", "%.1f%%", percentOfTarget);
         }
 
@@ -613,9 +529,9 @@ public class P3_Robot3 {
 
         // Configuration info
         telemetry.addLine();
-        telemetry.addData("Velocity Tolerance", "%.1f%%", velocityTolerancePercent * 100);
-        telemetry.addData("Stall Threshold", "%.1f%%", stallDetectionPercent * 100);
-        telemetry.addData("Keep Spinning", keepFlywheelsSpinning ? "YES" : "NO");
+        telemetry.addData("Velocity Tolerance", "%.1f%%", launchController.settings.readyFraction * 100);
+        telemetry.addData("Stall Threshold", "%.1f%%", launchController.settings.stallFraction * 100);
+        telemetry.addData("Keep Spinning", launchController.settings.keepSpinning ? "YES" : "NO");
     }
 
     /**
@@ -624,14 +540,14 @@ public class P3_Robot3 {
      */
     public void addMatchStatsTelemetry() {
         telemetry.addLine("=== Match Statistics ===");
-        telemetry.addData("Total Attempts", shotsAttempted);
-        telemetry.addData("Successful Shots", shotsFired);
-        telemetry.addData("Aborted Shots", shotsAborted);
+        telemetry.addData("Total Attempts", launchController.getShotsAttempted());
+        telemetry.addData("Successful Shots", launchController.getShotsFired());
+        telemetry.addData("Aborted Shots", launchController.getShotsAborted());
         telemetry.addData("Success Rate", "%.1f%%", getLaunchSuccessRate());
 
         // Calculate some derived stats
-        if (shotsAttempted > 0) {
-            telemetry.addData("Abort Rate", "%.1f%%", (shotsAborted * 100.0) / shotsAttempted);
+        if (launchController.getShotsAttempted() > 0) {
+            telemetry.addData("Abort Rate", "%.1f%%", (launchController.getShotsAborted() * 100.0) / launchController.getShotsAttempted());
         }
     }
 }
