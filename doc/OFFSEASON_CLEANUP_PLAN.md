@@ -2,7 +2,7 @@
 
 ## Status and how to resume (read this first)
 
-**Last updated 2026-09-07 (evening).** Repo: `/Users/georgemitchom/StudioProjects/FTC17651/FtcRobotController_Decode`
+**Last updated 2026-09-07 (late evening, after the Skyline robot session).** Repo: `/Users/georgemitchom/StudioProjects/FTC17651/FtcRobotController_Decode`
 (GitHub fork `FTC16751/FtcRobotController_Decode`, default branch `master`). Work is on branch
 `offseason/common-cleanup-2026`, open as [PR #1](https://github.com/FTC16751/FtcRobotController_Decode/pull/1).
 Tag `pre-r6-reorg` marks the tree before the folder move.
@@ -19,7 +19,8 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
 | R8 aiming helpers (FlywheelVelocityModel, AimLed, VisionAim) + tests | done | 6c5e053 |
 | R9 AutoSelector / AutoBase | **deferred**: build with the first new-season auto | |
 | R10 TeleOpBase / ButtonEdge | **closed**, will not be done; gamepad layouts stay as drivers learned them | |
-| R12 template: `teams/testteam2027` built as the template and test bed (see DriveUtil section) | done, untested on hardware | |
+| R12 template: `teams/testteam2027` built as the template and test bed | done; TeleOp, beginner auto, encoder check, tag approach all proven on the Skyline chassis 2026-09-07 | |
+| DriveUtil2026b focus: fixes, tiers (Beginner, Intermediate), pure-math tests, cleanup, TagApproach | done (see the completed-focus section); Advanced tier and the Pedro revisit remain | a107f3f..dd00eb0 |
 | R11 live defects (TeleOp-side items), R13-R15 | not started | |
 
 **Hard rules learned from the mentor, do not violate:**
@@ -67,7 +68,7 @@ file). BSD sed lacks `\s` and `\b`; use perl. OpMode names contain parentheses, 
 rewrite must be quote-aware. `gh pr` needs `--repo FTC16751/FtcRobotController_Decode` and a
 `FTC16751:` head prefix because the repo is a fork.
 
-## Where things stand (end of 2026-09-07 session)
+## Where things stand (end of 2026-09-07, two sessions)
 
 DriveUtil2026b is reorganized by tier (Beginner, Intermediate, then the advanced idioms), down
 from 1450 to 1186 lines, with 102 laptop unit tests covering its math and the tag approach.
@@ -88,7 +89,70 @@ the tag-approach sign check pass; the Pedro revisit from the commented blocks (h
 as a one-page table of the tiers. The detailed record of what was found and done is the section
 below.
 
-## Next focus (set 2026-09-07): analyze and improve `common/DriveUtil2026b`
+## Next focus (set 2026-09-07, for the next session): the other subsystem utility classes
+
+The DriveUtil work is done; the next session looks at everything else in `common/` and at the
+per-team subsystem classes, with the same yardstick (hard rule 5: a new programmer's first robot)
+and the same method (read, verify, fix mistakes, then tiers and tests). Start from these facts.
+
+**Inventory of `common/` (lines, files outside common/ that use it), 2026-09-07:**
+- `VisionUtil` 584 lines, 20 users. The Limelight wrapper; implements `AimTarget` and, since
+  today, `TagSighting`. Known: it treats the FIRST tag in the result as the primary target
+  (`tags.get(0)`), so with two tags in view the aiming numbers can flip between them; MegaTag2
+  field poses need `updateRobotOrientation(heading)` fed every loop (GearGirls and P3 do, Skyline
+  does not); pipeline switching is the caller's job (`setTargetingAlliance`, `selectPipelineForTag`);
+  the robot-space axis facts learned today are documented in the TagSighting section.
+- `LaunchController` 230 lines, 2 users (P3_Robot3, Skyline_Robot), 14 tests. `Flywheel` and
+  `Feeder` interfaces. GearGirls not migrated (uses its own `ShotSequenceControllerV2`).
+- `FlywheelVelocityModel` 60, `AimLed` 52, `VisionAim` 30, `InterpolatingLookupTable` 80: the R8
+  helpers, tested, 4 to 6 users each.
+- `LedUtil` 49 lines, 11 users. Servo-driven status LED. Small; check the color constants live in
+  one place.
+- `prismled/`: `GoBildaPrismDriver` 419, `PrismAnimations` 1047 (used only by the driver),
+  `PrismLedSubsystem` 66 (used only by GGRobot2), `PrismI2c`, `Color` (23 users), `Direction`
+  (29 users), `LedPattern` (0 users). 1,660 lines for one robot's light strip; the largest thing in
+  Common after DriveUtil. Decide whether it is Common or GearGirls.
+- `EncoderOdometry` 225 lines, 1 user (a disabled GearGirls test TeleOp). Dead-reckoning from wheel
+  encoders; overlaps the Pinpoint path. Candidate for the same treatment as simplified odometry:
+  check whether it ever worked, keep only if a Pinpoint-less robot needs it.
+- `RobotConfigorig` 221 lines, 0 users. The pre-R5 config with the per-robot factory methods.
+  Leftover; hard rule 1 says ask before deleting, so ask.
+- `CommonConstants` 58, `SharedState` 15, `RobotConfig` 260: the R4/R5 spine, fine.
+- New today, tested, 0 direct users by design: `TagApproach`, `TagSighting`, `MecanumMixer`,
+  `EncoderMoveMath`, `PinpointPIDLoop`.
+
+**Per-team subsystems (what the LIVE robot class constructs; everything else is a version):**
+- GearGirls Bot 2 (`GGRobot2`): `IntakeSensorFusion002`, `IntakeUtilV2`, `LaunchFlippers`,
+  `LauncherMotors`, `ShotSequenceController` AND `ShotSequenceControllerV2` (both constructed),
+  `Spinner_FORTEST` (the test variant is the live one), `PrismLedSubsystem`. Not constructed:
+  `IntakeSensorFusion` and `001`, `IntakeUtil`, `LaunchIndexer`, `ShotVolleyController`,
+  `Spinner`, `AutoAction`. 14 files, 4,200 lines, of which roughly half is superseded versions.
+- P3 Bot 3 (`P3_Robot3`): `P3_IntakeUtil`, `P3_LauncherUtil`, `P3_RubberBandIndexerUtil`,
+  `Turret`. Not constructed: `P3_TurretUtil` (543), `P3_TurretUtil_Velocity` (486),
+  `P3_IndexerUtil`, `P3_HoodServoUtil`. Three turret classes, 1,460 lines, one live.
+- Skyline: `Skyline_FeederUtil` 57, `Skyline_LauncherUtil` 59. Both live, both tiny.
+
+**Constraints, same as before:** hard rules 1 to 6 (R3 on hold: the superseded versions are NOT
+deleted without asking, even the obviously dead ones); demo season; do not change gamepad
+layouts; each team's subsystem hardware stays its own, only patterns move to Common; Java 8.
+
+**Testing angle:** the R7/R8 pattern (interface in front of hardware, fake in the test) applies
+to any state machine in these classes: the two GearGirls shot sequencers, the P3 turret aiming,
+intake sensor fusion. Anything promoted to Common arrives with a test.
+
+**Suggested order:** (1) VisionUtil, because every team's aiming runs through it and the
+first-tag choice is a live hazard with two tags in view; (2) decide prismled (Common or GearGirls)
+and `RobotConfigorig`, `EncoderOdometry` with the mentor; (3) the GearGirls shot-sequence pair
+and the P3 turret trio: identify the live one, see whether a Common `TurretAim` or a second
+`LaunchController` user falls out; (4) `LedUtil` and the color constants. The DriveUtil tier idea
+(Beginner / Intermediate / Advanced) applies to the launcher and intake vocabulary too: a first
+auto should be able to say `robot.launcher.fire()` as plainly as `robot.drive.driveForward(24)`.
+
+**Robot items still open from the DriveUtil work:** the Pinpoint push test and Drive Square with the
++120/-120 mm offsets; a re-run of the tag approach with the softened tuning; the 90-degree
+turning-circle refinement; A4 (alliance handoff) on Skyline, which needs an auto that runs.
+
+## Completed focus (2026-09-07): analyze and improve `common/DriveUtil2026b`
 
 The mentor's next session is a dedicated look at the shared drive utility. Start from these facts,
 gathered by the 2026-09-06 audit and the R1/R5 work, rather than re-discovering them.
