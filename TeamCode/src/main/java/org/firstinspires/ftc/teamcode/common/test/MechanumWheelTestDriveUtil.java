@@ -43,7 +43,7 @@ public class MechanumWheelTestDriveUtil extends OpMode {
      */
     @Override
     public void init() {
-        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        RobotConfig config = StandardBotConfig.create();
         // --- DRIVE ---
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 

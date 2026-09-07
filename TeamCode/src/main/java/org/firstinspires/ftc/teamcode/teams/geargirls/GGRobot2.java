@@ -108,7 +108,7 @@ public class GGRobot2 {
         this.telemetry = telemetry;
 
         // Get the robot configuration from the config file
-        RobotConfig ggConfig = RobotConfig.createDefaultGearGirlsConfig();
+        RobotConfig ggConfig = GGBot2Config.create();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, ggConfig);
@@ -117,8 +117,8 @@ public class GGRobot2 {
         intake = new IntakeUtilV2(hardwareMap);        // Updated
         spinner = new Spinner_FORTEST(hardwareMap);            // Added
         intakeSensors = new IntakeSensorFusion002(hardwareMap, telemetry); // Added - Initialize sensor fusion
-        vision = new VisionUtil(hardwareMap, telemetry);
-        led = new LedUtil(hardwareMap, "led_servo");
+        vision = new VisionUtil(hardwareMap, telemetry, ggConfig.hardware.limelight);
+        led = new LedUtil(hardwareMap, ggConfig.hardware.led);
         shotSequence = new ShotSequenceController(this);
         shotSequenceV2 = new ShotSequenceControllerV2(this);
 

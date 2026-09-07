@@ -37,7 +37,7 @@ public class GBPinpointDriveToPoint extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        RobotConfig config = StandardBotConfig.create();
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teams.p3.teleop;
 
+import org.firstinspires.ftc.teamcode.teams.p3.P3Bot3Config;
+
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -89,7 +91,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
 @Disabled
 public class P3_Robot3_TeleOp extends OpMode {
 
-    private static final RobotConfig ROBOT_CONFIG = RobotConfig.createP3Robot2Config();
+    private static final RobotConfig ROBOT_CONFIG = P3Bot3Config.create();
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -167,7 +169,7 @@ public class P3_Robot3_TeleOp extends OpMode {
         robot.configureVisionForTeleOp(alliance);
 
         telemetry.addData("Status", "Initialized - PEDRO PATH + TURRET MODE");
-        telemetry.addData("Robot Config", ROBOT_CONFIG == RobotConfig.createP3Robot2Config() ? "P3 Robot #2" : "Other");
+        telemetry.addData("Robot Config", ROBOT_CONFIG.robotName);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Drive Mode", "Field-Centric");
         telemetry.addLine();

@@ -32,7 +32,7 @@ public class SampleAuto_usingSimplifiedOdometry extends LinearOpMode
     @Override public void runOpMode()
     {
         // Initialize the robot hardware & Turn on telemetry
-        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        RobotConfig config = StandardBotConfig.create();
 
         // Initialize all subsystems
         robot = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context

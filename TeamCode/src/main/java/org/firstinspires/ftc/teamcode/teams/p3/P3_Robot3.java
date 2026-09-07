@@ -103,15 +103,15 @@ public class P3_Robot3 {
         this.telemetry = telemetry;
 
         // Initialize robot configuration
-        RobotConfig config = RobotConfig.createP3Robot2Config();
+        RobotConfig config = P3Bot3Config.create();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
-        vision = new VisionUtil(hardwareMap, telemetry);
+        vision = new VisionUtil(hardwareMap, telemetry, config.hardware.limelight);
         imu = hardwareMap.get(IMU.class, "imu");
-        led = new LedUtil(hardwareMap, "light");
+        led = new LedUtil(hardwareMap, config.hardware.led);
 
         // Initialize Turret subsystem
         ServoImplEx turretServo = hardwareMap.get(ServoImplEx.class, "turret");

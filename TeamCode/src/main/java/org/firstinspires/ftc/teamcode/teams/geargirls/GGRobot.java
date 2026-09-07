@@ -78,7 +78,7 @@ public class GGRobot {
         this.telemetry = telemetry;
 
         // Get the robot configuration from the config file
-        RobotConfig ggConfig = RobotConfig.createDefaultGearGirlsConfig();
+        RobotConfig ggConfig = GGBot2Config.create();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, ggConfig);
@@ -86,8 +86,8 @@ public class GGRobot {
         feeder = new LaunchIndexer(hardwareMap);
         intake = new IntakeUtil(hardwareMap);
         //intakeSensors = new IntakeSensorFusion(hardwareMap, telemetry);
-        vision = new VisionUtil(hardwareMap, telemetry);
-        led = new LedUtil(hardwareMap, "led_servo");
+        vision = new VisionUtil(hardwareMap, telemetry, ggConfig.hardware.limelight);
+        led = new LedUtil(hardwareMap, ggConfig.hardware.led);
 
         //this is our flywheel lookup table. there's probably a better place to put this, but it's what we have now
         flywheelTable = new InterpolatingLookupTable();

@@ -50,7 +50,7 @@ private DriveUtil2026b drive;
      */
     @Override
     public void init() {
-        RobotConfig config = RobotConfig.createDefaultStandardBotConfig();
+        RobotConfig config = StandardBotConfig.create();
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
 

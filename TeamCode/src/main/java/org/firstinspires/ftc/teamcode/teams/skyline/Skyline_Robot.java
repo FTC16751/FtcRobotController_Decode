@@ -36,14 +36,14 @@ public class Skyline_Robot {
     private double lastKnownGoodVelocity = 0.0;
     public Skyline_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-        RobotConfig config = RobotConfig.createDefaultSkyLineConfig();
+        RobotConfig config = SkylineBotConfig.create();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config); // Pass opMode context
         launcher = new Skyline_LauncherUtil(hardwareMap);
         feeder = new Skyline_FeederUtil(hardwareMap);
-        vision = new VisionUtil(hardwareMap, telemetry);
-        led = new LedUtil(hardwareMap, "led_servo");
+        vision = new VisionUtil(hardwareMap, telemetry, config.hardware.limelight);
+        led = new LedUtil(hardwareMap, config.hardware.led);
 
         flywheelTable = new InterpolatingLookupTable();
         flywheelTable.add(30.0, 1200.0*1.045);

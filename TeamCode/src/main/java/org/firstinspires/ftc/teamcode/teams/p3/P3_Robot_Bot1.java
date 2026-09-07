@@ -58,15 +58,15 @@ public class
      */
     public P3_Robot_Bot1(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-        RobotConfig config = RobotConfig.createDefaultP3Config();
+        RobotConfig config = P3Bot1Config.create();
 
         // Initialize all subsystems
         drive = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         intake = new P3_IntakeUtil(hardwareMap);
         launcher = new P3_LauncherUtil(hardwareMap);
-        vision = new VisionUtil(hardwareMap, telemetry);
+        vision = new VisionUtil(hardwareMap, telemetry, config.hardware.limelight);
         imu = hardwareMap.get(IMU.class, "imu");
-        led = new LedUtil(hardwareMap, "light");
+        led = new LedUtil(hardwareMap, config.hardware.led);
         turret = new P3_TurretUtil_Velocity(hardwareMap);
 
 
