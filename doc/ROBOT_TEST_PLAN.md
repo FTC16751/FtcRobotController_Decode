@@ -5,7 +5,7 @@ This is the list of what to check the next time a robot is available, in the ord
 most coverage per minute. Tick the box, write the date and robot next to it, and note anything
 that surprised you. Where a test needs a number, the expected value is given.
 
-Last updated 2026-09-07. Each entry names the commit that made the change.
+Last updated 2026-09-07 evening, after the first Skyline session. Each entry names the commit that made the change.
 
 ## Before you start
 
@@ -22,9 +22,9 @@ and one StarterBot.
 - [ ] **A1. Driver Station groups.** The OpMode list shows only that team's group plus `Demo`.
       Pushbot and StarterBot OpModes are under `Demo`. No OpMode named `L01_HelloWorld` or any
       other lesson file is visible. (b72f53d, 1d9f7a7)
-- [ ] **A2. Config name in telemetry.** Run the `(RUN ME)` TeleOp. The telemetry line
+- [x] **A2. Config name in telemetry.** Run the `(RUN ME)` TeleOp. The telemetry line
       `robot config` shows the right name for the chassis. (c7cb5ca, 3cc8ac1)
-- [ ] **A3. It drives.** Forward, strafe, turn all go the direction the driver expects. The gamepad
+- [x] **A3. It drives.** Forward, strafe, turn all go the direction the driver expects. The gamepad
       layout has not changed, so a driver from last season should notice nothing. (d4b2708 and later)
 - [ ] **A4. Alliance handoff.** Run any auto, select BLUE in init, start it, stop it. Start the
       TeleOp. It reports BLUE, the LED shows the blue alliance color, and the Limelight is targeting
@@ -39,7 +39,7 @@ Skyline is the best choice because its live autos use these moves.
       drives `drive_p3(24, 0, 0, 0.5)`). Time it by eye against last season. Expected: the same
       move, no pause at the end. The move now polls every 10 ms instead of spinning; if it looks
       hesitant at the end of the move, say so.
-- [ ] **B2. Distance is right.** Same run. Measure the travel. Expected about 24 in, within the
+- [x] **B2. Distance is right.** Same run. Measure the travel. Expected about 24 in, within the
       slip you saw last season. Record the number, it feeds section F.
 - [ ] **B3. Stalled wheel ends the step.** Robot on a stand. Start `SKYLINE: PARK FAR`. During the
       24 in move, hold one wheel. Expected: the step ends on its own after about 4 to 5 s
@@ -65,7 +65,7 @@ Skyline is the best choice because its live autos use these moves.
 Run on: P3 Bot 3 (`P3: Robot 3 TeleOp (RUN ME)`) and Skyline (`SKYLINE: Teleop (V2 RUN ME)`).
 The unit tests cover the state machine; this checks the wiring to real motors and servos.
 
-- [ ] **C1. Normal shot.** Spin up, fire. The flywheel reaches speed, the feeder runs for the
+- [x] **C1. Normal shot.** Spin up, fire. The flywheel reaches speed, the feeder runs for the
       configured time, the shot counter goes up by one, the flywheel behaves as it did before
       (keep spinning or stop, per the robot's old setting).
 - [ ] **C2. Repeat fire.** Fire three times in a row. Cooldown between shots feels the same as
@@ -81,17 +81,17 @@ The unit tests cover the state machine; this checks the wiring to real motors an
 
 Run on: GearGirls Bot 2, P3 Bot 3, Skyline, each with its `(RUN ME)` TeleOp.
 
-- [ ] **D1. Flywheel fallback before the goal is seen.** Cover the Limelight, start the TeleOp,
+- [x] **D1. Flywheel fallback before the goal is seen.** Cover the Limelight, start the TeleOp,
       read the target-velocity telemetry. Expected: GearGirls 1290, Skyline 1254, P3 its own close
       value. Last season GearGirls and Skyline showed 0 here. This was a deliberate change.
-- [ ] **D2. Table lookup.** Uncover the Limelight, stand the robot at a known distance from the
+- [x] **D2. Table lookup.** Uncover the Limelight, stand the robot at a known distance from the
       goal (say 60 in). The target velocity matches the row in the team's Constants table for that
       distance, interpolated if between rows.
 - [ ] **D3. Lose the goal.** Cover the Limelight again. The target velocity holds the last good
       value, it does not drop to the fallback.
-- [ ] **D4. Aim LED.** Point the robot left of the goal, right of it, and at it. The LED shows the
+- [x] **D4. Aim LED.** Point the robot left of the goal, right of it, and at it. The LED shows the
       team's three colors in the right places, with the same tolerance as last season.
-- [ ] **D5. Snap-to-target turns the right way.** Press the aim button with the goal off to the
+- [x] **D5. Snap-to-target turns the right way.** Press the aim button with the goal off to the
       right. The robot turns right, and stops turning when centered. Repeat from the left. A sign
       error here shows up immediately as turning away from the goal.
 
@@ -177,4 +177,12 @@ and the heading rises; a pod direction that goes the wrong way is fixed in the c
 
 | Test | Date | Robot | Pass? | Notes |
 |---|---|---|---|---|
-| | | | | |
+| A2, A3 | 2026-09-07 | Skyline | pass | `SKYLINE: Teleop (V2 RUN ME)` after the hub config was corrected and SkylineBotConfig updated (left side reversed, turn negation removed). Forward, strafes, turns as expected. |
+| B2 | 2026-09-07 | Skyline chassis, test2027bot config | pass | Encoder Move Check: with 140 mm wheels in the config, two commanded 24 in moves measured 48 in. With the 96 mm default it had driven 35 in. |
+| F ticks per inch | 2026-09-07 | Skyline | done | 31.05 (537.7 ticks/rev, 140 mm wheel), confirmed by the 48 in run. |
+| F strafe slip | 2026-09-07 | Skyline | done | commanded 24 went 28 at x1.1; scale now 0.94. |
+| F turning circle | 2026-09-07 | Skyline | done | commanded 360 turned about 135 at 27.5; now 73 in. Refine with a commanded 90. |
+| C1 | 2026-09-07 | Skyline | pass | launch on the left shoulder button works. |
+| D1, D2 | 2026-09-07 | Skyline | pass | flywheel velocity follows the distance table. |
+| D4, D5 | 2026-09-07 | Skyline | pass | aim LED and snap-to-target work, with the turn negation removed. |
+| Pinpoint | 2026-09-07 | Skyline | blocked | pods not making contact with the field (mechanical). Drive Square and the push test wait. |
