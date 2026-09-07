@@ -20,7 +20,7 @@ teams/testteam2027/
   teleop/Test2027Teleop.java  Drive with the sticks; hold RB to drive to the test tag.
   auto/Test2027BeginnerAuto.java      A first auto: eight lines of driveForward / turnLeft / ...
                               This is the file a new programmer copies first.
-  auto/Test2027DriveSquareAuto.java   Pinpoint waypoints: drives a 24 in square. The next step up.
+  auto/Test2027DriveSquareAuto.java   Pinpoint waypoints with startDriveTo / isBusy. The next step up.
   auto/Test2027TagApproachAuto.java   Non-blocking AprilTag approach test.
   test/Test2027EncoderMoveCheck.java  Encoder moves on buttons, for calibration measurements.
   README.md                   This file.
@@ -117,6 +117,27 @@ Each one finishes before the next line runs, gives up after a few seconds if a w
 and returns true if it got there. Add a second number for a different speed:
 `driveForward(24, 0.3)`. The default speeds are `Drive.AUTO_DRIVE_SPEED` and
 `Drive.AUTO_TURN_SPEED` in your constants. Distances are only as accurate as Step 4's calibration.
+
+## Step 6c. The second auto (the intermediate vocabulary)
+
+When the robot has a Pinpoint and the square in Step 5 comes back to its mark, the autos stop
+waiting and start telling: `auto/Test2027DriveSquareAuto.java` is the pattern. The robot knows
+where it is, and a move is started, then polled, while other things run in the same loop.
+
+| Command | What it does |
+|---|---|
+| `getX()`, `getY()`, `getHeadingDegrees()` | where the robot is: inches forward, inches left, degrees counter-clockwise |
+| `setPosition(x, y, heading)`, `resetPosition()` | tell the odometry where it is (the start tile) |
+| `move(forward, right, turnDegrees)` | one blocking encoder move with all three parts |
+| `startDriveTo(x, y, heading)` then `isBusy()` | drive to a field position without blocking |
+| `turnToHeading(degrees)` | face a field heading, non-blocking |
+| `startDriveToTag(robot.vision, tagId, inches)` then `isBusy()` | the tag approach, non-blocking |
+| `cancel()` | abandon whatever move is running |
+| `lastMoveSucceeded()` | did the last start* move arrive, or give up |
+| `resetFieldForward()` | for field-centric TeleOp: this way is forward |
+
+Power and hold time come from the defaults in your constants; add a power argument to
+`startDriveTo` for one move. Every start* move has a time limit that scales with the distance.
 
 ## Step 7. Add the game
 

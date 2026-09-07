@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.teams.testteam2027.Test2027Robot;
  *   Left bumper     hold for slow mode
  *   Right bumper    HOLD to drive to the test AprilTag (Test2027Constants.TagTest); release to cancel.
  *                   This is the interactive way to check TagApproach on a stand or the floor.
- *   Back            reset the Pinpoint position and heading to zero
+ *   Back            reset the position to (0, 0) facing 0, and set field-forward to this direction
  *
  * Stick signs: the SDK reports a pushed-forward stick as negative Y, so drive is -left_stick_y.
  * arcadeDrive's arguments are (strafe, drive, turn, unused, speed) in that order.
@@ -47,7 +47,8 @@ public class Test2027Teleop extends OpMode {
             handleDriving();
         }
         if (gamepad1.backWasPressed()) {
-            robot.drive.resetPosAndIMU();
+            robot.drive.resetPosition();       // here is (0, 0) facing 0
+            robot.drive.resetFieldForward();   // and this way is "forward" if field-centric is used
         }
 
         telemetry.addData("mode", tagApproachRunning ? "TAG APPROACH (release RB to cancel)" : "driver");
@@ -77,7 +78,7 @@ public class Test2027Teleop extends OpMode {
                 // stay in this branch (wheels stopped) until the driver releases the bumper
             }
         } else if (tagApproachRunning) {
-            robot.drive.cancelDriveToTag();
+            robot.drive.cancel();
             tagApproachRunning = false;
         }
     }

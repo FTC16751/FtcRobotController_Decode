@@ -33,12 +33,10 @@ public final class Test2027Constants {
         public static final double HOLD_SECONDS      = 0.5;
     }
 
-    /** Autonomous driving. */
+    /** Autonomous driving. Power for waypoint moves is Drive.AUTO_DRIVE_SPEED. */
     public static final class Auto {
-        public static final double DRIVE_POWER = 0.4;
-        public static final double HOLD_SEC    = 0.25;
-        /** Seconds a single driveTo step may take before the auto gives up on it and moves on. */
-        public static final double STEP_TIMEOUT_SEC = 6.0;
+        /** How long startDriveTo must sit inside tolerance before it counts as arrived. */
+        public static final double HOLD_SEC = 0.25;
     }
 
     /**

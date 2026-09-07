@@ -167,8 +167,11 @@ The README is the checklist. In short: config filled in (device names, motor dir
 pods), `Test2027: Teleop (RUN ME)` drives, `Test2027: Beginner Auto (START HERE)` runs its eight
 moves from a tape mark and ends about where it started facing the same way (forward 24, left 90,
 forward 12, right 12, wait, right 90, back 12), `Test2027: Encoder Move Check` measures section F,
-`Test2027: Drive Square (Pinpoint)` returns to its mark within an inch with zero timed-out
-steps, then section H. Note anything in the README that a first-time team would have tripped on.
+`Test2027: Drive Square (Pinpoint)` returns to its mark within an inch with "waypoints that gave
+up" reading 0 (it now uses the non-blocking `startDriveTo` / `isBusy` pair, so this also proves
+the Intermediate tier), then section H. In the TeleOp, Back zeroes the position: push the robot
+forward by hand and the telemetry X rises, push it left and Y rises, turn it counter-clockwise
+and the heading rises; a pod direction that goes the wrong way is fixed in the config. Note anything in the README that a first-time team would have tripped on.
 
 ## Results
 

@@ -2,21 +2,22 @@ package org.firstinspires.ftc.teamcode.teams.testteam2027.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.teams.testteam2027.Test2027Constants;
 import org.firstinspires.ftc.teamcode.teams.testteam2027.Test2027Robot;
 
 /**
- * Drives a 24 in square using Pinpoint waypoints and DriveUtil2026b.driveTo, then turns a quarter
- * turn. This is the waypoint idiom every GearGirls and P3 auto is built on, in its smallest form,
- * and the fastest way to prove a new robot's Pinpoint pod directions, offsets, and point-to-point
- * tuning are right: the robot should come back to its start mark within about an inch.
+ * Drives a 24 in square using Pinpoint waypoints, then turns a quarter turn. This is the
+ * INTERMEDIATE pattern: the robot knows where it is, and moves are started, not waited on.
  *
- * driveTo is non-blocking: call it every loop with the current position and it returns true once
- * the robot has held the target for holdTime. Each waypoint here also has a timeout so a bad
- * tuning cannot stall the auto forever.
+ * Each waypoint is one startDriveTo; the auto then polls isBusy() each loop. While it waits,
+ * anything else in loop() keeps running (a launcher spinning up, an intake, telemetry). Every
+ * start* move has its own time limit, so a bad tuning cannot stall the auto; lastMoveSucceeded()
+ * says whether the robot arrived or gave up.
+ *
+ * It is also the fastest way to prove a new robot's Pinpoint pod directions, offsets, and
+ * point-to-point tuning: the robot should come back to its start mark within about an inch.
  */
 @Autonomous(name = "Test2027: Drive Square (Pinpoint)", group = "TestTeam2027", preselectTeleOp = "Test2027: Teleop (RUN ME)")
 public class Test2027DriveSquareAuto extends OpMode {
@@ -28,10 +29,12 @@ public class Test2027DriveSquareAuto extends OpMode {
             Test2027Constants.Waypoints.FINISH,
     };
 
+    private enum State { NEXT_WAYPOINT, DRIVING, DONE }
+
     private Test2027Robot robot;
-    private int step = 0;
-    private final ElapsedTime stepTimer = new ElapsedTime();
-    private int timeouts = 0;
+    private State state = State.NEXT_WAYPOINT;
+    private int nextWaypoint = 0;
+    private int gaveUp = 0;
 
     @Override
     public void init() {
@@ -50,31 +53,43 @@ public class Test2027DriveSquareAuto extends OpMode {
 
     @Override
     public void start() {
-        robot.drive.pinpoint.setPosition(Test2027Constants.Waypoints.START);   // wherever we are is (0, 0, 0)
-        step = 0;
-        stepTimer.reset();
+        robot.drive.resetPosition();   // wherever we are is (0, 0) facing 0
+        nextWaypoint = 0;
+        gaveUp = 0;
+        state = State.NEXT_WAYPOINT;
     }
 
     @Override
     public void loop() {
-        robot.update();
+        robot.update();   // steps the Pinpoint and whatever move is running
 
-        if (step < PATH.length && robot.drive.hasPinpoint()) {
-            boolean arrived = robot.drive.driveTo(robot.drive.pinpoint.getPosition(), PATH[step],
-                    Test2027Constants.Auto.DRIVE_POWER, Test2027Constants.Auto.HOLD_SEC);
-            boolean tooLong = stepTimer.seconds() > Test2027Constants.Auto.STEP_TIMEOUT_SEC;
-            if (tooLong) timeouts++;
-            if (arrived || tooLong) {
-                step++;
-                stepTimer.reset();
-            }
-        } else {
-            robot.drive.stopRobot();
+        switch (state) {
+            case NEXT_WAYPOINT:
+                if (nextWaypoint < PATH.length) {
+                    robot.drive.startDriveTo(PATH[nextWaypoint]);
+                    nextWaypoint++;
+                    state = State.DRIVING;
+                } else {
+                    state = State.DONE;
+                }
+                break;
+
+            case DRIVING:
+                // A launcher or intake would run here too.
+                if (!robot.drive.isBusy()) {
+                    if (!robot.drive.lastMoveSucceeded()) gaveUp++;
+                    state = State.NEXT_WAYPOINT;
+                }
+                break;
+
+            case DONE:
+                robot.drive.stop();
+                break;
         }
 
-        telemetry.addData("waypoint", "%d of %d%s", Math.min(step + 1, PATH.length), PATH.length,
-                step >= PATH.length ? " (finished)" : "");
-        telemetry.addData("steps that timed out", timeouts);
+        telemetry.addData("state", "%s, waypoint %d of %d", state, Math.min(nextWaypoint, PATH.length), PATH.length);
+        telemetry.addData("position", "x %.1f  y %.1f  heading %.0f", robot.drive.getX(), robot.drive.getY(), robot.drive.getHeadingDegrees());
+        telemetry.addData("waypoints that gave up", gaveUp);
         robot.addTelemetry();
     }
 

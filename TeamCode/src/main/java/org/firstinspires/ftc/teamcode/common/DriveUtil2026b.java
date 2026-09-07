@@ -88,10 +88,23 @@ public class DriveUtil2026b {
     private final PinpointPIDLoop yPID = new PinpointPIDLoop();
     private final PinpointPIDLoop hPID = new PinpointPIDLoop();
 
-    // --- Default speeds for the beginner commands. Set once by the robot class from the team's
-    //     Constants (how the robot operates), see setDefaultSpeeds(). Safe values if never set.
-    private double defaultDriveSpeed = 0.4;
-    private double defaultTurnSpeed  = 0.3;
+    // --- Defaults for the beginner and intermediate commands. Set once by the robot class from
+    //     the team's Constants (how the robot operates), see setDefaultSpeeds() and
+    //     setDefaultHoldTime(). Safe values if never set.
+    private double defaultDriveSpeed  = 0.4;
+    private double defaultTurnSpeed   = 0.3;
+    private double defaultHoldTimeSec = 0.25;
+
+    // --- Async waypoint drive (startDriveTo), stepped by update() under DRIVING_TO_POINT_PINPOINT ---
+    private Pose2D asyncTarget;
+    private double asyncPower;
+    private double asyncHoldTimeSec;
+    private double asyncTimeoutSec;
+    private final ElapsedTime asyncTimer = new ElapsedTime();
+    private boolean lastMoveSucceeded = false;      // result of the most recent async move (waypoint or tag)
+
+    // --- Field-centric TeleOp: which way is "forward" for the driver (see resetFieldForward) ---
+    private double fieldForwardOffsetRad = 0.0;
 
     // --- General Members ---
     private Telemetry telemetry;
@@ -233,6 +246,10 @@ public class DriveUtil2026b {
     public double getDefaultDriveSpeed() { return defaultDriveSpeed; }
     public double getDefaultTurnSpeed()  { return defaultTurnSpeed; }
 
+    /** How long startDriveTo holds inside tolerance before it counts as arrived, when not given. */
+    public void setDefaultHoldTime(double seconds) { defaultHoldTimeSec = seconds; }
+    public double getDefaultHoldTime()             { return defaultHoldTimeSec; }
+
     /** Drive straight ahead this many inches at the default speed. */
     public boolean driveForward(double inches)                { return driveForward(inches, defaultDriveSpeed); }
     /** Drive straight ahead this many inches. Speed is motor power, 0 to 1. */
@@ -298,6 +315,147 @@ public class DriveUtil2026b {
             sleep(MOVE_POLL_MS);
         }
         return lastTagApproachSucceeded();
+    }
+
+    // =================================================================================
+    // INTERMEDIATE COMMANDS: the robot knows where it is
+    // =================================================================================
+    //
+    // Two new ideas over the beginner commands. First, a position on the field: the Pinpoint
+    // odometry computer tracks X (inches forward from where it was zeroed), Y (inches to the
+    // LEFT), and heading (degrees, counter-clockwise positive). Second, doing two things at once:
+    // the start* commands return immediately, the robot classes' update() moves the robot a little
+    // each loop, and the auto polls isBusy() while a launcher or intake runs in the same loop.
+    //
+    //   case DRIVE:  robot.drive.startDriveTo(24, 12, 90);  state = WAIT;  break;
+    //   case WAIT:   if (!robot.drive.isBusy()) { ... next step ... }     break;
+    //
+    // Power and hold time default from the team's Constants (setDefaultSpeeds, setDefaultHoldTime).
+    // Every start* move has a time limit; lastMoveSucceeded() says whether it arrived or gave up.
+    // A robot without a Pinpoint: the getters return 0 and start* moves finish at once, failed.
+
+    /** X position in inches, forward from where the position was last zeroed. 0 without a Pinpoint. */
+    public double getX() {
+        return pinpoint == null ? 0.0 : pinpoint.getPosition().getX(DistanceUnit.INCH);
+    }
+
+    /** Y position in inches, to the LEFT of where the position was last zeroed. 0 without a Pinpoint. */
+    public double getY() {
+        return pinpoint == null ? 0.0 : pinpoint.getPosition().getY(DistanceUnit.INCH);
+    }
+
+    /** Heading in degrees, counter-clockwise positive, 0 where the position was last zeroed. */
+    public double getHeadingDegrees() {
+        return pinpoint == null ? 0.0 : pinpoint.getPosition().getHeading(AngleUnit.DEGREES);
+    }
+
+    /** The current position as one object, for waypoint math and telemetry. Zero without a Pinpoint. */
+    public Pose2D getPose() {
+        if (pinpoint == null) return pose(0, 0, 0);
+        return pinpoint.getPosition();
+    }
+
+    /** Tell the odometry where the robot is, for example the start tile at the beginning of an auto. */
+    public void setPosition(double xInches, double yInches, double headingDegrees) {
+        if (pinpoint != null) pinpoint.setPosition(pose(xInches, yInches, headingDegrees));
+    }
+
+    /** Make here (0, 0) facing heading 0. Instant; the IMU is not recalibrated (see resetPosAndIMU). */
+    public void resetPosition() {
+        setPosition(0, 0, 0);
+    }
+
+    /** Build a field position: inches forward, inches left, degrees counter-clockwise. */
+    public static Pose2D pose(double xInches, double yInches, double headingDegrees) {
+        return new Pose2D(DistanceUnit.INCH, xInches, yInches, AngleUnit.DEGREES, headingDegrees);
+    }
+
+    /**
+     * One encoder move with all three components at once, blocking: forward inches (negative for
+     * back), right inches (negative for left), and degrees clockwise (negative for left). The
+     * readable name for drive_p3.
+     */
+    public boolean move(double forwardInches, double rightInches, double turnDegrees) {
+        return move(forwardInches, rightInches, turnDegrees, defaultDriveSpeed);
+    }
+    public boolean move(double forwardInches, double rightInches, double turnDegrees, double speed) {
+        return drive_p3(forwardInches, rightInches, turnDegrees, speed);
+    }
+
+    /**
+     * Start driving to a field position and return at once. Call update() every loop (the robot
+     * classes do) and poll isBusy(). Uses the Pinpoint point-to-point PID and the tuning in the
+     * robot's config. Power and hold time are the defaults; the time limit is generous and scales
+     * with the distance.
+     */
+    public void startDriveTo(double xInches, double yInches, double headingDegrees) {
+        startDriveTo(pose(xInches, yInches, headingDegrees));
+    }
+    public void startDriveTo(double xInches, double yInches, double headingDegrees, double power) {
+        startDriveTo(pose(xInches, yInches, headingDegrees), power);
+    }
+    public void startDriveTo(Pose2D target) {
+        startDriveTo(target, defaultDriveSpeed);
+    }
+    public void startDriveTo(Pose2D target, double power) {
+        startDriveTo(target, power, defaultHoldTimeSec, defaultDriveToTimeoutSec(target, power));
+    }
+    /** Full control: explicit power, hold time inside tolerance, and time limit. */
+    public void startDriveTo(Pose2D target, double power, double holdTimeSec, double timeoutSec) {
+        cancel();
+        if (pinpoint == null) {
+            lastMoveSucceeded = false;
+            return;                       // nothing to navigate with; isBusy() stays false
+        }
+        asyncTarget      = target;
+        asyncPower       = power;
+        asyncHoldTimeSec = holdTimeSec;
+        asyncTimeoutSec  = timeoutSec;
+        asyncTimer.reset();
+        xPID.pidReset(); yPID.pidReset(); hPID.pidReset();
+        GBholdTimer.reset();
+        driveState = DriveState.DRIVING_TO_POINT_PINPOINT;
+    }
+
+    /** Turn in place to face a field heading (degrees, counter-clockwise positive), non-blocking. */
+    public void turnToHeading(double headingDegrees) {
+        startDriveTo(getX(), getY(), headingDegrees, defaultTurnSpeed);
+    }
+
+    /** The non-blocking tag approach under its tier name. Same as driveToTagAsync with the default hold. */
+    public void startDriveToTag(TagSighting sighting, int tagId, double standoffInches) {
+        driveToTagAsync(sighting, tagId, standoffInches, defaultHoldTimeSec);
+    }
+
+    /** Abandon whatever async move is running (waypoint or tag) and stop the wheels. Safe when idle. */
+    public void cancel() {
+        if (driveState == DriveState.ALIGNING_TO_APRILTAG) tagApproach.stop();
+        if (driveState != DriveState.IDLE) {
+            stopRobot();
+            lastMoveSucceeded = false;
+            driveState = DriveState.IDLE;
+        }
+    }
+
+    /** True if the most recent async move (startDriveTo, turnToHeading, startDriveToTag) arrived rather than gave up. */
+    public boolean lastMoveSucceeded() {
+        return lastMoveSucceeded;
+    }
+
+    /**
+     * Field-centric TeleOp: make the direction the robot is facing right now "forward" for the
+     * driver. Only fieldCentricDrive uses this; waypoints and autos keep the Pinpoint's own frame.
+     */
+    public void resetFieldForward() {
+        fieldForwardOffsetRad = getPinpointHeading();
+    }
+
+    /** Time limit for a startDriveTo: three times the straight-line time at this power, plus 3 s, never under 3 s. */
+    private double defaultDriveToTimeoutSec(Pose2D target, double power) {
+        double p = Math.max(Math.abs(power), 0.05);
+        double inches = distanceTo(getPose(), target, DistanceUnit.INCH);
+        double idealSec = inches / (DRIVE_MAX_INCHES_PER_SEC * p);
+        return Math.max(MOVE_MIN_TIMEOUT_SEC, idealSec * 3.0 + 3.0);
     }
 
     // =================================================================================
@@ -544,7 +702,7 @@ public class DriveUtil2026b {
 //        } else {
             // Heading from the Pinpoint (radians, counter-clockwise positive). No Pinpoint: 0,
             // and this silently becomes robot-centric driving.
-            double botHeading = getPinpointHeading();
+            double botHeading = getPinpointHeading() - fieldForwardOffsetRad;
 
             // Rotate the stick command from the field frame into the robot frame. The stick's
             // strafe is right-positive; fieldToRobot takes field-left, hence the minus.
@@ -779,12 +937,22 @@ public class DriveUtil2026b {
         if (pinpoint != null) pinpoint.update();
         switch (driveState) {
             case DRIVING_TO_POINT_PINPOINT:
-                // updateDriveToPoint(); // Logic for non-blocking drive would go here
+                // Step the waypoint drive (startDriveTo). driveTo does one loop of PID and moves.
+                if (asyncTimer.seconds() > asyncTimeoutSec) {
+                    stopRobot();
+                    lastMoveSucceeded = false;
+                    driveState = DriveState.IDLE;
+                } else if (driveTo(pinpoint.getPosition(), asyncTarget, asyncPower, asyncHoldTimeSec)) {
+                    stopRobot();
+                    lastMoveSucceeded = true;
+                    driveState = DriveState.IDLE;
+                }
                 break;
             case ALIGNING_TO_APRILTAG:
                 // Step the tag approach; it reads the sighting and hands back three powers.
                 if (tagApproach.update(tagSighting)) {
                     stopRobot();
+                    lastMoveSucceeded = tagApproach.succeeded();
                     driveState = DriveState.IDLE;   // finished: DONE, LOST or TIMED_OUT (see lastTagApproachSucceeded)
                 } else {
                     moveRobot(tagApproach.getDrivePower(), tagApproach.getStrafePower(), tagApproach.getYawPower());
@@ -1101,20 +1269,15 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
      * @param holdTimeSec    how long to sit inside tolerance before reporting done
      */
     public void driveToTagAsync(TagSighting sighting, int tagId, double standoffInches, double holdTimeSec) {
-        if (driveState == DriveState.IDLE) {
-            this.tagSighting = sighting;
-            tagApproach.start(tagId, standoffInches, holdTimeSec);
-            this.driveState = DriveState.ALIGNING_TO_APRILTAG;
-        }
+        cancel();
+        this.tagSighting = sighting;
+        tagApproach.start(tagId, standoffInches, holdTimeSec);
+        this.driveState = DriveState.ALIGNING_TO_APRILTAG;
     }
 
-    /** Abandon a driveToTagAsync in progress and stop the wheels. Safe to call when idle. */
+    /** Abandon a driveToTagAsync in progress and stop the wheels. Same as cancel(). */
     public void cancelDriveToTag() {
-        if (driveState == DriveState.ALIGNING_TO_APRILTAG) {
-            tagApproach.stop();
-            stopRobot();
-            driveState = DriveState.IDLE;
-        }
+        cancel();
     }
 
     /** True if the most recent driveToTagAsync ended in DONE rather than LOST or TIMED_OUT. */

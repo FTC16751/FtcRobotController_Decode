@@ -33,6 +33,7 @@ public class Test2027Robot {
 
         // How the robot operates comes from Constants; the beginner commands read these defaults.
         drive.setDefaultSpeeds(Test2027Constants.Drive.AUTO_DRIVE_SPEED, Test2027Constants.Drive.AUTO_TURN_SPEED);
+        drive.setDefaultHoldTime(Test2027Constants.Auto.HOLD_SEC);
     }
 
     /** Call in every loop() and init_loop(). Steps the Pinpoint, any async drive, and the camera. */
@@ -42,8 +43,8 @@ public class Test2027Robot {
     }
 
     public void stopAll() {
-        drive.cancelDriveToTag();
-        drive.stopRobot();
+        drive.cancel();
+        drive.stop();
         vision.stop();
     }
 

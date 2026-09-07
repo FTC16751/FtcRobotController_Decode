@@ -270,9 +270,22 @@ vocabulary table (Step 6b). Encoder Move Check bumpers use `driveForward`/`drive
 - Mentor tier already exists: pedropathing/, roadrunner/, PID internals, VisionUtil sign constants.
 - One object `robot.drive`, file ordered by tier; R13 becomes a one-page table of the tiers.
 
-**Suggested order for the rest:** Intermediate getters and `startDriveTo`; the `getOdoPosition`
-telemetry; then the duplicates and dead private code; `startPath` and `relocalizeFromTag` after
-the Pinpoint square and the tag approach have been on a stand.
+**Intermediate tier DONE 2026-09-07.** New section in DriveUtil2026b after the beginner one:
+`getX/getY/getHeadingDegrees/getPose`, `setPosition/resetPosition`, static `pose(x, y, heading)`,
+`move(fwd, right, turn)` naming `drive_p3`, `startDriveTo(x, y, heading[, power])` (also `Pose2D`
+forms and a full form with hold and timeout), `turnToHeading`, `startDriveToTag`, one `cancel()`
+for either async move, `lastMoveSucceeded()`, `resetFieldForward()` (only `fieldCentricDrive`
+honors the offset; autos keep the Pinpoint frame). `startDriveTo` defaults power from
+`setDefaultSpeeds` and hold from `setDefaultHoldTime` (mentor decision), resets the three PID
+loops, and has a time limit scaling with distance; `update()` now handles
+`DRIVING_TO_POINT_PINPOINT` by calling the existing per-loop `driveTo`, so the 480 existing
+call sites are untouched. `driveToTagAsync` now replaces a running move instead of being ignored.
+`Test2027DriveSquareAuto` rewritten in this vocabulary; README Step 6c is the table. No Pinpoint:
+getters return 0 and start* moves finish at once, failed.
+
+**Suggested order for the rest:** the `getOdoPosition` telemetry; then the duplicates and dead
+private code; `startPath` and `relocalizeFromTag` (Advanced tier) after the Pinpoint square and
+the tag approach have been on a stand.
 
 ## Context
 
