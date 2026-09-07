@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.utilities.Common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 
 /**
  * Skyline_Robot is the central hub that orchestrates all of the Skyline robot's subsystems.
@@ -132,7 +131,7 @@ public class Skyline_Robot {
     }
 
     public double updateAndGetTargetVelocity() {
-        final double METERS_TO_INCHES = 39.3701;
+        final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
         String dataSource; // For telemetry
         double newVelocity; // A temporary variable for the new calculation
 

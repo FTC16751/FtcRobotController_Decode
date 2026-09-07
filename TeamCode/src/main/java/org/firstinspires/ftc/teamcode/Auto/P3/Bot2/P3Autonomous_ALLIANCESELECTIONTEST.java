@@ -9,8 +9,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
-//import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+//import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 @Autonomous(name="P3 AUTO: bot2 Alliance Selection Test", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
 @Disabled
@@ -21,7 +21,7 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
 
     // --- OpMode State and Configuration ---
     private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
-    private P3RobotConstants.Location location = P3RobotConstants.Location.CLOSE;
+    private CommonConstants.Location location = CommonConstants.Location.CLOSE;
 
 
     // --- Master State Machine ---
@@ -57,8 +57,8 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
         // --- Driver Selections ---
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
         if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
-        if (gamepad1.y) { location = P3RobotConstants.Location.CLOSE; }
-        if (gamepad1.a) { location = P3RobotConstants.Location.FAR; }
+        if (gamepad1.y) { location = CommonConstants.Location.CLOSE; }
+        if (gamepad1.a) { location = CommonConstants.Location.FAR; }
 
 
         // --- Telemetry Feedback ---
@@ -75,7 +75,7 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
     @Override
     public void start() {
         // Set the robot's starting position based on the final selections
-        if (location == P3RobotConstants.Location.CLOSE) {
+        if (location == CommonConstants.Location.CLOSE) {
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_CLOSE : P3RobotConstants.Waypoints.START_BLUE_CLOSE);
         } else { // FAR
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_FAR : P3RobotConstants.Waypoints.START_BLUE_FAR);
@@ -95,13 +95,13 @@ public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
         switch (autonomousState) {
             case RUNNING_PATH:
                 if (alliance == CommonConstants.Alliance.RED) {
-                    if (location == P3RobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runRedClosePath();
                     } else { // FAR
                         runRedFarPath();
                     }
                 } else { // BLUE
-                    if (location == P3RobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runBlueClosePath();
                     } else { // FAR
                         runBlueFarPath();

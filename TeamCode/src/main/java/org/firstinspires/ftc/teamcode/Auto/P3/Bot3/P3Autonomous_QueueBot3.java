@@ -23,7 +23,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
 
     // --- OpMode State and Configuration ---
     private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
-    private P3RobotConstants.Location location = P3RobotConstants.Location.CLOSE;
+    private CommonConstants.Location location = CommonConstants.Location.CLOSE;
 
     // --- Master State Machine ---
     private enum AutonomousState { PRE_START, RUNNING_PATH, COMPLETE }
@@ -123,8 +123,8 @@ public class P3Autonomous_QueueBot3 extends OpMode {
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
         else if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
 
-        if (gamepad1.y) { location = P3RobotConstants.Location.CLOSE; }
-        else if (gamepad1.a) { location = P3RobotConstants.Location.FAR; }
+        if (gamepad1.y) { location = CommonConstants.Location.CLOSE; }
+        else if (gamepad1.a) { location = CommonConstants.Location.FAR; }
 
        // Cycle selection
         if (gamepad1.dpadLeftWasPressed() && selectedCycles > 0) { selectedCycles--; }
@@ -162,7 +162,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
         // This block now defines the entire "plan" for the chosen path.
 
         if (alliance == CommonConstants.Alliance.RED) {
-            if (location == P3RobotConstants.Location.CLOSE) {
+            if (location == CommonConstants.Location.CLOSE) {
                 // Set the waypoints for this path
                 shootingPosition = P3RobotConstants.Bot3_Waypoints.RED_CLOSE_SHOOTING_POSITION;
 
@@ -233,7 +233,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
                 buildRedFarScript();
             }
         } else { // BLUE
-            if (location == P3RobotConstants.Location.CLOSE) {
+            if (location == CommonConstants.Location.CLOSE) {
                 shootingPosition = P3RobotConstants.Bot3_Waypoints.BLUE_CLOSE_SHOOTING_POSITION;
 
                 spike1Align = P3RobotConstants.Bot3_Waypoints.BLUE_CLOSE_SPIKEMARK1_ALIGN;
@@ -303,7 +303,7 @@ public class P3Autonomous_QueueBot3 extends OpMode {
         }
 
         // Set the robot's physical starting position on the field
-        if (location == P3RobotConstants.Location.CLOSE) {
+        if (location == CommonConstants.Location.CLOSE) {
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ?
                     P3RobotConstants.Bot3_Waypoints.START_RED_CLOSE : P3RobotConstants.Bot3_Waypoints.START_BLUE_CLOSE);
         } else { // FAR
@@ -635,9 +635,9 @@ public class P3Autonomous_QueueBot3 extends OpMode {
 
                     // Check if our aim is within the tolerance.
                     double allianceOffSet = 0;
-                    if (alliance == CommonConstants.Alliance.RED && location == P3RobotConstants.Location.FAR) {
+                    if (alliance == CommonConstants.Alliance.RED && location == CommonConstants.Location.FAR) {
                         allianceOffSet = RED_AIM_OFFSET_DEG;
-                    } else if (alliance == CommonConstants.Alliance.BLUE && location == P3RobotConstants.Location.FAR){
+                    } else if (alliance == CommonConstants.Alliance.BLUE && location == CommonConstants.Location.FAR){
                         allianceOffSet = BLUE_AIM_OFFSET_DEG;
                     } else {
                         allianceOffSet = 0.0;

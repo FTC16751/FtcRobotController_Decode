@@ -45,7 +45,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.Skyline.Skyline_Robot;
 
 /*

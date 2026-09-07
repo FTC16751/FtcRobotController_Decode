@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.EncoderOdometry;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 //added for camera tracking of game balls
 import android.graphics.Color;
 import android.util.Size;

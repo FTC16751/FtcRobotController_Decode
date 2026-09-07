@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot2;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion002;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 /**
  * GearGirls Autonomous - Sensor-Based Shot Sequencing
@@ -44,7 +44,7 @@ public class GGAutonomous_Score9_Bot2 extends OpMode {
 
     // --- OpMode State and Configuration ---
     private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
-    private GGRobotConstants.Location location = GGRobotConstants.Location.CLOSE;
+    private CommonConstants.Location location = CommonConstants.Location.CLOSE;
     private VisionUtil.MotifPattern detectedMotif = VisionUtil.MotifPattern.UNKNOWN;
     private int selectedCycles = 2; // Default: 1=Preload only, 2=Preload+Spike1, 3=Preload+Spike1+Spike2
 
@@ -143,8 +143,8 @@ public class GGAutonomous_Score9_Bot2 extends OpMode {
         // --- Driver Selections ---
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
         if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
-        if (gamepad1.y) { location = GGRobotConstants.Location.CLOSE; }
-        if (gamepad1.a) { location = GGRobotConstants.Location.FAR; }
+        if (gamepad1.y) { location = CommonConstants.Location.CLOSE; }
+        if (gamepad1.a) { location = CommonConstants.Location.FAR; }
 
         // --- Cycle Selection ---
         if (gamepad1.dpadLeftWasPressed() && selectedCycles > 1) { selectedCycles--; }
@@ -176,7 +176,7 @@ public class GGAutonomous_Score9_Bot2 extends OpMode {
     @Override
     public void start() {
         // Set the robot's starting position based on the final selections
-        if (location == GGRobotConstants.Location.CLOSE) {
+        if (location == CommonConstants.Location.CLOSE) {
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ?
                     GGRobotConstants.Waypoints.START_RED_CLOSE : GGRobotConstants.Waypoints.START_BLUE_CLOSE);
         } else { // FAR
@@ -209,13 +209,13 @@ public class GGAutonomous_Score9_Bot2 extends OpMode {
             case RUNNING_PATH:
                 robot.intake.intakeOn();
                 if (alliance == CommonConstants.Alliance.RED) {
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runRedClosePath();
                     } else { // FAR
                         runRedFarPath();
                     }
                 } else { // BLUE
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runBlueClosePath();
                     } else { // FAR
                         runBlueFarPath();

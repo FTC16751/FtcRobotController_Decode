@@ -6,6 +6,8 @@
 
 package org.firstinspires.ftc.teamcode.Auto.Skyline;
 
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -48,8 +50,7 @@ public class Skyline_Autonomous_Score3Preloads_FAR extends OpMode
     }
     private AutonomousState autonomousState;
 
-    private enum Alliance { RED, BLUE }
-    private Alliance alliance = Alliance.RED;
+    private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
 
     /*
      * Code to run ONCE when the driver hits INIT.
@@ -71,8 +72,8 @@ public class Skyline_Autonomous_Score3Preloads_FAR extends OpMode
     @Override
     public void init_loop() {
         // Allow the driver to select the alliance before the match starts
-        if (gamepad1.b) { alliance = Alliance.RED; }
-        if (gamepad1.x) { alliance = Alliance.BLUE; }
+        if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
+        if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
 
         telemetry.addData("Press X for BLUE, B for RED", "");
         telemetry.addData("Selected Alliance", alliance);
@@ -100,7 +101,7 @@ public class Skyline_Autonomous_Score3Preloads_FAR extends OpMode
                 // Note: The drive() and rotate() methods would ideally be moved into DriveUtil2026
                 // and be non-blocking. For this example, we assume they exist as before.
                 ;
-                double robotRotationAngle = (alliance == Alliance.RED) ? 17 : -15;
+                double robotRotationAngle = (alliance == CommonConstants.Alliance.RED) ? 17 : -15;
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
                     autonomousState = AutonomousState.REQUEST_SHOT;
                 }

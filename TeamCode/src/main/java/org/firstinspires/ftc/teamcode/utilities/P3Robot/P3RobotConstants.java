@@ -95,8 +95,6 @@ public class P3RobotConstants {
         PRESET   // Use the manually toggled CLOSE/FAR presets
     }
     // --- NEW: Public Enums for Autonomous Selection ---
-    public enum Alliance { RED, BLUE }
-    public enum Location { CLOSE, FAR }
 
     // --- ROBOT NUMBER 1 (DO NOT EDIT): Public Waypoints for Autonomous Paths ---
     public static final class Waypoints {

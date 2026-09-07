@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto.P3.Bot1;
 
+import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -9,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot_Bot1;
-//import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+//import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 @Autonomous(name="P3 AUTO: bot1 Score Preloads + 3", group="P3Bot1",preselectTeleOp = "P3: Teleop (Team Version)")
 @Disabled
@@ -19,8 +21,8 @@ public class P3Autonomous_ScoreMore extends OpMode {
     private P3_Robot_Bot1 robot;
 
     // --- OpMode State and Configuration ---
-    private P3RobotConstants.Alliance alliance = P3RobotConstants.Alliance.RED;
-    private P3RobotConstants.Location location = P3RobotConstants.Location.CLOSE;
+    private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
+    private CommonConstants.Location location = CommonConstants.Location.CLOSE;
 
 
     // --- Master State Machine ---
@@ -59,10 +61,10 @@ public class P3Autonomous_ScoreMore extends OpMode {
     public void init_loop() {
         robot.update();
         // --- Driver Selections ---
-        if (gamepad1.x) { alliance = P3RobotConstants.Alliance.BLUE; }
-        if (gamepad1.b) { alliance = P3RobotConstants.Alliance.RED; }
-        if (gamepad1.y) { location = P3RobotConstants.Location.CLOSE; }
-        if (gamepad1.a) { location = P3RobotConstants.Location.FAR; }
+        if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
+        if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
+        if (gamepad1.y) { location = CommonConstants.Location.CLOSE; }
+        if (gamepad1.a) { location = CommonConstants.Location.FAR; }
 
 
         // --- Telemetry Feedback ---
@@ -79,13 +81,13 @@ public class P3Autonomous_ScoreMore extends OpMode {
     @Override
     public void start() {
         // Set the robot's starting position based on the final selections
-        if (location == P3RobotConstants.Location.CLOSE) {
-            robot.drive.pinpoint.setPosition((alliance == P3RobotConstants.Alliance.RED) ?
+        if (location == CommonConstants.Location.CLOSE) {
+            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ?
                     P3RobotConstants.Waypoints.START_RED_CLOSE
                     :P3RobotConstants.Waypoints.START_BLUE_CLOSE);
 
         } else { // FAR
-            robot.drive.pinpoint.setPosition((alliance == P3RobotConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_FAR : P3RobotConstants.Waypoints.START_BLUE_FAR);
+            robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? P3RobotConstants.Waypoints.START_RED_FAR : P3RobotConstants.Waypoints.START_BLUE_FAR);
         }
 
         // Transition to the main execution state
@@ -101,14 +103,14 @@ public class P3Autonomous_ScoreMore extends OpMode {
         robot.update();
         switch (autonomousState) {
             case RUNNING_PATH:
-                if (alliance == P3RobotConstants.Alliance.RED) {
-                    if (location == P3RobotConstants.Location.CLOSE) {
+                if (alliance == CommonConstants.Alliance.RED) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runRedClosePath();
                     } else { // FAR
                         runRedFarPath();
                     }
                 } else { // BLUE
-                    if (location == P3RobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runBlueClosePath();
                     } else { // FAR
                         runBlueFarPath();

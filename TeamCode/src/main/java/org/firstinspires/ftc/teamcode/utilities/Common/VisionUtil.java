@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +38,7 @@ public class VisionUtil {
     private double robotDistanceToTagInTagSpace = -1.0;
     private double lastTx = 0.0; // Horizontal angle
     private LLResult lastValidResult = null;
-    private static final double METERS_TO_INCHES = 39.3701;
+    private static final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
 
     // --- Pose Data ---
     private Pose3D robotPoseInTagSpace;    // Robot's pose relative to the primary tag
@@ -59,17 +58,9 @@ public class VisionUtil {
     public enum MotifPattern {
         GPP21, PGP22, PPG23, UNKNOWN
     }
-    public static final double BLUE_GOAL_X_COORDINATE_METERS = -1.482;
-    public static final double BLUE_GOAL_Y_COORDINATE_METERS = -1.413;
 
-    public static final double RED_GOAL_X_COORDINATE_METERS = -1.482;
-    public static final double RED_GOAL_Y_COORDINATE_METERS =  1.413;
 
-    private static final int MOTIF_PIPELINE = 0;
-    private static final int RED_GOAL_PIPELINE = 1;
-    private static final int BLUE_GOAL_PIPELINE = 2;
 
-    public enum Alliance { RED, BLUE }
 
 
 
@@ -82,7 +73,7 @@ public class VisionUtil {
         this.telemetry = telemetry;
         try {
             limelight = hardwareMap.get(Limelight3A.class, "limelight");
-            limelight.pipelineSwitch(0);
+            limelight.pipelineSwitch(CommonConstants.Limelight.MOTIF_PIPELINE);
             limelight.start();
             telemetry.addData("Limelight", "Initialized Successfully");
         } catch (Exception e) {
@@ -315,10 +306,10 @@ public class VisionUtil {
 
     // Convenience wrappers
     public double calculateHeadingErrorToRedGoalDegrees() {
-        return calculateHeadingErrorToAFieldPoint(RED_GOAL_X_COORDINATE_METERS, RED_GOAL_Y_COORDINATE_METERS, AngleUnit.DEGREES);
+        return calculateHeadingErrorToAFieldPoint(CommonConstants.Field.RED_GOAL_X_M, CommonConstants.Field.RED_GOAL_Y_M, AngleUnit.DEGREES);
     }
     public double calculateHeadingErrorToBlueGoalDegrees() {
-        return calculateHeadingErrorToAFieldPoint(BLUE_GOAL_X_COORDINATE_METERS, BLUE_GOAL_Y_COORDINATE_METERS, AngleUnit.DEGREES);
+        return calculateHeadingErrorToAFieldPoint(CommonConstants.Field.BLUE_GOAL_X_M, CommonConstants.Field.BLUE_GOAL_Y_M, AngleUnit.DEGREES);
     }
 
     /**
@@ -351,9 +342,9 @@ public class VisionUtil {
      */
     public void setTargetingAlliance(CommonConstants.Alliance alliance) {
         if (alliance == CommonConstants.Alliance.RED) {
-            setPipeline(RED_GOAL_PIPELINE);
+            setPipeline(CommonConstants.Limelight.RED_GOAL_PIPELINE);
         } else {
-            setPipeline(BLUE_GOAL_PIPELINE);
+            setPipeline(CommonConstants.Limelight.BLUE_GOAL_PIPELINE);
         }
     }
 
@@ -362,7 +353,7 @@ public class VisionUtil {
      * This should be used during the autonomous init_loop.
      */
     public void setMotifDetectionMode() {
-        setPipeline(MOTIF_PIPELINE);
+        setPipeline(CommonConstants.Limelight.MOTIF_PIPELINE);
     }
 
     /**

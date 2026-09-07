@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot2;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.IntakeSensorFusion002;
 
 import java.util.List;

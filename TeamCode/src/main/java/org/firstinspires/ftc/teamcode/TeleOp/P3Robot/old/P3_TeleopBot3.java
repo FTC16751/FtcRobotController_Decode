@@ -38,7 +38,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.LedUtil;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot3;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".

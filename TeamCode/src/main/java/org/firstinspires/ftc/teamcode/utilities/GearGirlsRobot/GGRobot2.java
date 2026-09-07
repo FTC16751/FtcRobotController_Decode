@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -286,7 +288,7 @@ public class GGRobot2 {
      * @return The calculated target velocity in RPM
      */
     public double updateAndGetTargetVelocity() {
-        final double METERS_TO_INCHES = 39.3701;
+        final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
         String dataSource;
         double newVelocity;
 
@@ -364,13 +366,13 @@ public class GGRobot2 {
         Pose2D trgtPose;
         if (currentAlliance == CommonConstants.Alliance.RED) {
             trgtPose = new Pose2D(DistanceUnit.METER,
-                    GGRobotConstants.GoalLocation.RED_TAG24_X_M,
-                    GGRobotConstants.GoalLocation.RED_TAG24_Y_M,
+                    CommonConstants.Field.RED_GOAL_X_M,
+                    CommonConstants.Field.RED_GOAL_Y_M,
                     AngleUnit.DEGREES, 54);
         } else { // BLUE
             trgtPose = new Pose2D(DistanceUnit.METER,
-                    GGRobotConstants.GoalLocation.BLUE_TAG20_X_M,
-                    GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M,
+                    CommonConstants.Field.BLUE_GOAL_X_M,
+                    CommonConstants.Field.BLUE_GOAL_Y_M,
                     AngleUnit.DEGREES, 45);
         }
 
@@ -412,12 +414,12 @@ public class GGRobot2 {
         double goalY_m;
 
         if (currentAlliance == CommonConstants.Alliance.RED) {
-            goalX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
-            goalY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
+            goalX_m = CommonConstants.Field.RED_GOAL_X_M;
+            goalY_m = CommonConstants.Field.RED_GOAL_Y_M;
             telemetry.addData("Target", "RED Goal (Tag 24)");
         } else { // BLUE
-            goalX_m = GGRobotConstants.GoalLocation.BLUE_TAG20_X_M;
-            goalY_m = GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M;
+            goalX_m = CommonConstants.Field.BLUE_GOAL_X_M;
+            goalY_m = CommonConstants.Field.BLUE_GOAL_Y_M;
             telemetry.addData("Target", "BLUE Goal (Tag 20)");
         }
 

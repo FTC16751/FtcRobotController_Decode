@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.RobotConfig;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot3;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 /**
  * P3 Robot TeleOp with PedroPathing Field-Oriented Drive + Turret Control

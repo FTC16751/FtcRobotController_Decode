@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot;
 
-import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_X_COORDINATE_METERS;
-import static org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil.RED_GOAL_Y_COORDINATE_METERS;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
+
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
@@ -200,15 +200,15 @@ public class GGRobot {
             double targetY_m;
 
             if (currentAlliance == CommonConstants.Alliance.RED) {
-                targetX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
-                targetY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
+                targetX_m = CommonConstants.Field.RED_GOAL_X_M;
+                targetY_m = CommonConstants.Field.RED_GOAL_Y_M;
             } else { // BLUE alliance
-                targetX_m = GGRobotConstants.GoalLocation.BLUE_TAG20_X_M;
-                targetY_m = GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M;
+                targetX_m = CommonConstants.Field.BLUE_GOAL_X_M;
+                targetY_m = CommonConstants.Field.BLUE_GOAL_Y_M;
             }
 
-            double tagY = RED_GOAL_Y_COORDINATE_METERS;
-            double tagX = RED_GOAL_X_COORDINATE_METERS;
+            double tagY = CommonConstants.Field.RED_GOAL_Y_M;
+            double tagX = CommonConstants.Field.RED_GOAL_X_M;
 
             // This offset defines "forward" from the driver's perspective.
             // 90 degrees makes "away from the driver station" the new 0-degree heading.
@@ -348,7 +348,7 @@ public class GGRobot {
      * @return The calculated target velocity in ticks/sec.
      */
     public double updateAndGetTargetVelocity() {
-        final double METERS_TO_INCHES = 39.3701;
+        final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
         String dataSource; // For telemetry
         double newVelocity; // A temporary variable for the new calculation
 
@@ -435,9 +435,9 @@ public class GGRobot {
         // 3. Get the correct heading error from the vision system based on that alliance.
         Pose2D trgtPose = new Pose2D(DistanceUnit.INCH,0, 0, AngleUnit.DEGREES,45);;
         if (currentAlliance == CommonConstants.Alliance.RED) {
-               trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.RED_TAG24_X_M, GGRobotConstants.GoalLocation.RED_TAG24_Y_M, AngleUnit.DEGREES,54);
+               trgtPose = new Pose2D(DistanceUnit.METER,CommonConstants.Field.RED_GOAL_X_M, CommonConstants.Field.RED_GOAL_Y_M, AngleUnit.DEGREES,54);
         } else { // BLUE
-                trgtPose = new Pose2D(DistanceUnit.METER,GGRobotConstants.GoalLocation.BLUE_TAG20_X_M, GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M, AngleUnit.DEGREES,45);
+                trgtPose = new Pose2D(DistanceUnit.METER,CommonConstants.Field.BLUE_GOAL_X_M, CommonConstants.Field.BLUE_GOAL_Y_M, AngleUnit.DEGREES,45);
         }
         Pose2D currPose = drive.pinpoint.getPosition();
         return drive.distanceTo(currPose, trgtPose, DistanceUnit.INCH);
@@ -481,12 +481,12 @@ public class GGRobot {
         double goalY_m;
 
         if (currentAlliance == CommonConstants.Alliance.RED) {
-            goalX_m = GGRobotConstants.GoalLocation.RED_TAG24_X_M;
-            goalY_m = GGRobotConstants.GoalLocation.RED_TAG24_Y_M;
+            goalX_m = CommonConstants.Field.RED_GOAL_X_M;
+            goalY_m = CommonConstants.Field.RED_GOAL_Y_M;
             telemetry.addData("Target", "RED Goal (Tag 24)");
         } else { // BLUE
-            goalX_m = GGRobotConstants.GoalLocation.BLUE_TAG20_X_M;
-            goalY_m = GGRobotConstants.GoalLocation.BLUE_TAG20_Y_M;
+            goalX_m = CommonConstants.Field.BLUE_GOAL_X_M;
+            goalY_m = CommonConstants.Field.BLUE_GOAL_Y_M;
             telemetry.addData("Target", "BLUE Goal (Tag 20)");
         }
 

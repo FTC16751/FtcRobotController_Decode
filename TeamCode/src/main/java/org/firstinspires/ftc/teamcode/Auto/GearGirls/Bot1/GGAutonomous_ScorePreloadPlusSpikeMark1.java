@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.LaunchIndexer;
@@ -28,7 +28,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
 
     // --- OpMode State and Configuration ---
     private CommonConstants.Alliance alliance = CommonConstants.Alliance.RED;
-    private GGRobotConstants.Location location = GGRobotConstants.Location.CLOSE;
+    private CommonConstants.Location location = CommonConstants.Location.CLOSE;
     private VisionUtil.MotifPattern detectedMotif = VisionUtil.MotifPattern.UNKNOWN;
 
     // --- Master State Machine ---
@@ -69,8 +69,8 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
         // --- Driver Selections ---
         if (gamepad1.x) { alliance = CommonConstants.Alliance.BLUE; }
         if (gamepad1.b) { alliance = CommonConstants.Alliance.RED; }
-        if (gamepad1.y) { location = GGRobotConstants.Location.CLOSE; }
-        if (gamepad1.a) { location = GGRobotConstants.Location.FAR; }
+        if (gamepad1.y) { location = CommonConstants.Location.CLOSE; }
+        if (gamepad1.a) { location = CommonConstants.Location.FAR; }
 
         // --- Vision Detection ---
         detectedMotif = robot.vision.getMotifPattern();
@@ -87,7 +87,7 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
     @Override
     public void start() {
         // Set the robot's starting position based on the final selections
-        if (location == GGRobotConstants.Location.CLOSE) {
+        if (location == CommonConstants.Location.CLOSE) {
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? GGRobotConstants.Waypoints.START_RED_CLOSE : GGRobotConstants.Waypoints.START_BLUE_CLOSE);
         } else { // FAR
             robot.drive.pinpoint.setPosition((alliance == CommonConstants.Alliance.RED) ? GGRobotConstants.Waypoints.START_RED_FAR : GGRobotConstants.Waypoints.START_BLUE_FAR);
@@ -115,13 +115,13 @@ public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
             case RUNNING_PATH:
                 robot.intake.setIntakeMotorPower(1);
                 if (alliance == CommonConstants.Alliance.RED) {
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runRedClosePath();
                     } else { // FAR
                         runRedFarPath();
                     }
                 } else { // BLUE
-                    if (location == GGRobotConstants.Location.CLOSE) {
+                    if (location == CommonConstants.Location.CLOSE) {
                         runBlueClosePath();
                     } else { // FAR
                         runBlueFarPath();

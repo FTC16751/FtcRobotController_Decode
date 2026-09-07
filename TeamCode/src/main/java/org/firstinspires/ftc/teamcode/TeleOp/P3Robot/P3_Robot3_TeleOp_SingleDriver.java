@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.utilities.Common.CommonConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3RobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.P3Robot.P3_Robot3;
-import org.firstinspires.ftc.teamcode.utilities.P3Robot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 /**
  * P3 Robot Single-Driver TeleOp with Arcade Drive + Vision Auto-Aim

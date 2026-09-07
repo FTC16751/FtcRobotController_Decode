@@ -82,14 +82,7 @@ public class DriveUtil2026b {
 
     private final ElapsedTime GBholdTimer = new ElapsedTime();
     private final ElapsedTime PIDTimer = new ElapsedTime();
-    private static double xyTolerance = 15.5;
-    private static double yawTolerance = 0.0349066;
-    private static double pGain = 0.01905;
-    private static double dGain = 0.00111;
-    private static double accel = 8.0;
-    private static double yawPGain = 5.0;
-    private static double yawDGain = 0.0;
-    private static double yawAccel = 20.0;
+    // Point-to-point tuning (xy/yaw tolerance, P/I/D gains, accel) comes from config.pointToPointTuning.
 
     // === NEW CONSTANTS FOR ENCODER BASED AUTONOMOUS USING PID ===
     private static final double DRIVE_GAIN          = 0.085;    // Strength of axial position control
@@ -118,9 +111,9 @@ public class DriveUtil2026b {
 
     /* for dr phils simplified odometry pid control */
     // Establish a proportional controller for each axis to calculate the required power to achieve a setpoint.
-    public DriveUtilProportionalControldepricated driveController     = new DriveUtilProportionalControldepricated(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
-    public DriveUtilProportionalControldepricated strafeController    = new DriveUtilProportionalControldepricated(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
-    public DriveUtilProportionalControldepricated yawController       = new DriveUtilProportionalControldepricated(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
+    public ProportionalControl driveController     = new ProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
+    public ProportionalControl strafeController    = new ProportionalControl(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
+    public ProportionalControl yawController       = new ProportionalControl(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
 
     // --- General Members ---
     private Telemetry telemetry;

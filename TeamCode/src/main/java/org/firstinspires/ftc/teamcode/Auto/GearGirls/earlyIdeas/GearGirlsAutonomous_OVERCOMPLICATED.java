@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.AutoAction;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobot;
 import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.utilities.Common.VisionUtil;
-import org.firstinspires.ftc.teamcode.utilities.GearGirlsRobot.SharedState;
+import org.firstinspires.ftc.teamcode.utilities.Common.SharedState;
 
 import java.util.ArrayList;
 import java.util.List;
