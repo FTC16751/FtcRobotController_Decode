@@ -82,8 +82,6 @@ public class RobotConfig {
         public double gearReduction       = 1.0;
         /** Wheel diameter in centimeters. */
         public double wheelDiameterCm     = 9.6;
-        /** Ticks per wheel revolution used by the simplified-odometry moves (384.5 for a goBILDA 435 rpm). */
-        public double odometryTicksPerRev = 384.5;
         /** Robot turning-circle diameter in centimeters; used by rotateRobot(). */
         public double robotDiameterCm     = 60;
 
@@ -94,7 +92,6 @@ public class RobotConfig {
         public Calibration encoderTicksPerRev(double v)   { this.encoderTicksPerRev = v; return this; }
         public Calibration gearReduction(double v)        { this.gearReduction = v; return this; }
         public Calibration wheelDiameterCm(double v)      { this.wheelDiameterCm = v; return this; }
-        public Calibration odometryTicksPerRev(double v)  { this.odometryTicksPerRev = v; return this; }
         public Calibration robotDiameterCm(double v)      { this.robotDiameterCm = v; return this; }
     }
 

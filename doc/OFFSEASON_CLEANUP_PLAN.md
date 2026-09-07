@@ -145,11 +145,15 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   for strafe and positive-clockwise for yaw (the `drive_p3` mixing and Javadoc agree). Phil's
   feedback side is positive-left (`updateMotion`) and the IMU is positive-counter-clockwise, so
   `strafe` and `turnTo` push away from the setpoint and never exit. The Pinpoint path knows this
-  and flips signs in `driveTo`. Explains why it was never used. **TODO: delete** the block
-  (`simplifiedOdometryDrive`, `strafe`, `turnTo`, `readSensors`, `startMotion`, `updateMotion`,
-  the three `ProportionalControl` fields and their constants, the duplicate inner
-  `SimplifiedOdoDriveUtilProportionalControl`, `Calibration.odometryTicksPerRev`, and the
-  common/test sample that calls it). Keep `common/ProportionalControl` only if something else uses it.
+  and flips signs in `driveTo`. Explains why it was never used. **DELETED 2026-09-07**:
+  `simplifiedOdometryDrive`, `strafe`, `turnTo`, `readSensors`, `startMotion`, `updateMotion`, the
+  three `ProportionalControl` fields and their constants, the duplicate inner
+  `SimplifiedOdoDriveUtilProportionalControl`, `Calibration.odometryTicksPerRev`,
+  `common/ProportionalControl` (no other user), and `common/test/SampleAuto_usingSimplifiedOdometry`.
+  The disabled `GGAutonomous001` early auto now uses `drive_p3(-24, 0, 0, 0.5)` for its one call.
+  The public `heading` field stays: ten P3 autos (including the live QueueBot3) show it as
+  "imu heading" in telemetry, and since only `readSensors` ever wrote it, it has always read 0.
+  R11 follow-up: switch those lines to `getHeading()`.
 - `driveToTagAsync` sets a state `update()` never handles, so `isBusy()` stays true forever.
   **TODO:** implement the handler or delete the method and its six write-only fields.
 - Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
@@ -188,7 +192,7 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   `ticksFor(forward, strafe, turn, cal)` functions so the sign convention and the forward-inches
   fix get laptop tests with the existing harness.
 
-**Suggested order for the rest:** delete simplified odometry and the AprilTag stub; one
+**Suggested order for the rest:** the AprilTag stub; one
 turning-circle number; pure math seams plus tests; beginner turn commands; then the smaller items.
 
 ## Context

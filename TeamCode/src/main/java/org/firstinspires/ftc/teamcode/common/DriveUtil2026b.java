@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -39,8 +38,6 @@ public class DriveUtil2026b {
     private final double ENCODER_COUNTS_PER_INCH;   // drive-motor ticks per inch of travel
     private final double COUNTS_PER_GEAR_REV;       // drive-motor ticks per wheel revolution
     private final double WHEEL_CIRCUMFERENCE;       // cm
-    private final double AXIAL_INCHES_PER_COUNT;    // simplified-odometry conversions
-    private final double LATERAL_INCHES_PER_COUNT;
     private static final double DRIVE_SPEED = 1.0;  // Default drive speed multiplier
     // Encoder-move time limits (driveRobotToPosition). 5 rev/s is a little under a goBILDA 312 rpm
     // motor's free speed, so the estimate errs long; the limit is a safety net, not a stopwatch.
@@ -59,7 +56,6 @@ public class DriveUtil2026b {
     // --- IMU & Sensor Members ---
     public IMU imu;
     private DistanceSensor sensorDistance;
-    private double rawHeading = 0;
     private double headingOffset = 0;
 
     // --- GoBilda Pinpoint Odometry Members ---
@@ -80,36 +76,11 @@ public class DriveUtil2026b {
     private final ElapsedTime PIDTimer = new ElapsedTime();
     // Point-to-point tuning (xy/yaw tolerance, P/I/D gains, accel) comes from config.pointToPointTuning.
 
-    // === NEW CONSTANTS FOR ENCODER BASED AUTONOMOUS USING PID ===
-    private static final double DRIVE_GAIN          = 0.085;    // Strength of axial position control
-    private static final double DRIVE_ACCEL         = 2.0;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
-    private static final double DRIVE_TOLERANCE     = 1.0;     // Controller is is "inPosition" if position error is < +/- this amount
-    private static final double DRIVE_DEADBAND      = 0.2;     // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
-    private static final double DRIVE_MAX_AUTO      = 0.6;     // "default" Maximum Axial power limit during autonomous
-
-    private static final double STRAFE_GAIN         = 0.03;    // Strength of lateral position control
-    private static final double STRAFE_ACCEL        = 1.5;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
-    private static final double STRAFE_TOLERANCE    = 0.5;     // Controller is is "inPosition" if position error is < +/- this amount
-    private static final double STRAFE_DEADBAND     = 0.2;     // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
-    private static final double STRAFE_MAX_AUTO     = 0.6;     // "default" Maximum Lateral power limit during autonomous
-
-    private static final double YAW_GAIN            = 0.018;    // Strength of Yaw position control
-    private static final double YAW_ACCEL           = 3.0;     // Acceleration limit.  Percent Power change per second.  1.0 = 0-100% power in 1 sec.
-    private static final double YAW_TOLERANCE       = 1.0;     // Controller is is "inPosition" if position error is < +/- this amount
-    private static final double YAW_DEADBAND        = 0.25;    // Error less than this causes zero output.  Must be smaller than DRIVE_TOLERANCE
-    private static final double YAW_MAX_AUTO        = 0.6;     // "default" Maximum Yaw power limit during autonomous
-
     // --- PID & Autonomous Control Members ---
     /* for gobildas pid control */
     private final PinpointPIDLoop xPID = new PinpointPIDLoop();
     private final PinpointPIDLoop yPID = new PinpointPIDLoop();
     private final PinpointPIDLoop hPID = new PinpointPIDLoop();
-
-    /* for dr phils simplified odometry pid control */
-    // Establish a proportional controller for each axis to calculate the required power to achieve a setpoint.
-    public ProportionalControl driveController     = new ProportionalControl(DRIVE_GAIN, DRIVE_ACCEL, DRIVE_MAX_AUTO, DRIVE_TOLERANCE, DRIVE_DEADBAND, false);
-    public ProportionalControl strafeController    = new ProportionalControl(STRAFE_GAIN, STRAFE_ACCEL, STRAFE_MAX_AUTO, STRAFE_TOLERANCE, STRAFE_DEADBAND, false);
-    public ProportionalControl yawController       = new ProportionalControl(YAW_GAIN, YAW_ACCEL, YAW_MAX_AUTO, YAW_TOLERANCE,YAW_DEADBAND, true);
 
     // --- General Members ---
     private Telemetry telemetry;
@@ -124,27 +95,13 @@ public class DriveUtil2026b {
     private enum DriveState { IDLE, DRIVING_TO_POINT_PINPOINT, ALIGNING_TO_APRILTAG }
     private DriveState driveState = DriveState.IDLE;
 
-    // Hardware interface Objects
-    private int encoderLF;              // Encoder value for front left wheel
-    private int encoderRF;              // Encoder value for front right wheel
-    private int encoderLB;              // Encoder value for back left wheel
-    private int encoderRB;              // Encoder value for back right wheel
-    private int startLeftFront = 0;
-    private int startRightFront = 0;
-    private int startLeftBack = 0;
-    private int startRightBack = 0;
-    private int deltaLeftFront = 0;
-    private int deltaRightFront = 0;
-    private int deltaLeftBack = 0;
-    private int deltaRightBack = 0;
-
-    private double turnRate           = 0; // Latest Robot Turn Rate from IMU (deg / sec)
-    private boolean showTelemetry     = true;
     private ElapsedTime holdTimer = new ElapsedTime();  // User for any motion requiring a hold time or timeout.
-    // Public Members
-    public double driveDistance     = 0; // scaled axial distance (+ = forward)
-    public double strafeDistance    = 0; // scaled lateral distance (+ = left)
-    public double heading           = 0; // Latest Robot heading from IMU
+    /**
+     * Legacy field. Only the removed simplified-odometry loops ever wrote it, so it has always read 0.
+     * Ten P3 autos still put it in telemetry as "imu heading"; they should call getHeading() instead.
+     * Kept so they compile. Do not use in new code.
+     */
+    public double heading           = 0;
     // The Follower can be null if this robot doesn't use it.
     //public final Follower follower;
 
@@ -163,8 +120,6 @@ public class DriveUtil2026b {
         ENCODER_COUNTS_PER_INCH  = cal.encoderCountsPerInch;
         COUNTS_PER_GEAR_REV      = cal.encoderTicksPerRev * cal.gearReduction;
         WHEEL_CIRCUMFERENCE      = cal.wheelDiameterCm * Math.PI;
-        AXIAL_INCHES_PER_COUNT   = (Math.PI * (cal.wheelDiameterCm / 2.54)) / cal.odometryTicksPerRev;
-        LATERAL_INCHES_PER_COUNT = AXIAL_INCHES_PER_COUNT * 0.866;
 
         // Initialize all hardware components
         initializeIMU(hardwareMap);
@@ -362,54 +317,6 @@ public class DriveUtil2026b {
     }
     public void setPathComplete(boolean complete) {
         pathComplete = complete;
-    }
-
-    /**
-     * Read all input devices to determine the robot's motion
-     * always return true so this can be used in "while" loop conditions
-     * @return true
-     */
-    public boolean readSensors() {
-        // Read motor encoders for each wheel
-        encoderLF =         leftFrontMotor.getCurrentPosition();
-        encoderRF =         rightFrontMotor.getCurrentPosition();
-        encoderLB =         leftRearMotor.getCurrentPosition();
-        encoderRB =         rightRearMotor.getCurrentPosition();
-
-        updateMotion();  // determine how robot has moved from most recent startMotion() call;
-
-        // read the IMU data.
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-
-        rawHeading  = orientation.getYaw(AngleUnit.DEGREES);
-        heading     = rawHeading - headingOffset;
-        turnRate    = angularVelocity.zRotationRate;
-
-        if (showTelemetry) {
-            telemetry.addData("Dist Ax:Lat", "%5.2f %5.2f", driveDistance, strafeDistance);
-            telemetry.addData("Head Deg:Rate", "%5.2f %5.2f", heading, turnRate);
-        }
-        return true;  // do this so this function can be included in the condition for a while loop to keep values fresh.
-    }
-    // Initialize all the encoder starting values for the next motion
-    public void startMotion() {
-        readSensors();  // get the latest data
-        startLeftBack = encoderLB;  // Save the current values as the start values.
-        startLeftFront = encoderLF;
-        startRightBack = encoderRB;
-        startRightFront = encoderRF;
-        updateMotion();  // Update the derived motion data.
-    }
-
-    public void updateMotion() {
-        deltaLeftFront = encoderLF - startLeftFront;
-        deltaRightFront = encoderRF - startRightFront;
-        deltaLeftBack = encoderLB - startLeftBack;
-        deltaRightBack = encoderRB - startRightBack;
-
-        driveDistance  = ((deltaLeftFront + deltaRightFront + deltaLeftBack + deltaRightBack ) / 4) * AXIAL_INCHES_PER_COUNT;
-        strafeDistance = ((-deltaLeftFront + deltaRightFront + deltaLeftBack - deltaRightBack) / 4) * LATERAL_INCHES_PER_COUNT;
     }
 
     public void addTelemetry() {
@@ -1030,40 +937,6 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         public String toString()  { return String.format("(%.2f, %.2f)", x, y); }
     }
 
-    //  ########################  Mid level control functions.  #############################3#
-
-    /**
-     * Drive in the axial (forward/reverse) direction, maintain the current heading and don't drift sideways
-     * @param distanceInches  Distance to travel.  +ve = forward, -ve = reverse.
-     * @param power Maximum power to apply.  This number should always be positive.
-     * @param holdTime Minimum time (sec) required to hold the final position.  0 = no hold.
-     */
-    public void simplifiedOdometryDrive(double distanceInches, double power, double holdTime) {
-        startMotion();
-
-        driveController.reset(distanceInches, power);   // achieve desired drive distance
-        strafeController.reset(0);              // Maintain zero strafe drift
-        yawController.reset();                          // Maintain last turn heading
-        holdTimer.reset();
-
-        while (readSensors()){
-
-            // implement desired axis powers
-            moveRobot(driveController.getOutput(driveDistance), strafeController.getOutput(strafeDistance), yawController.getOutput(heading));
-
-            // Time to exit?
-            if (driveController.inPosition() && yawController.inPosition()) {
-                if (holdTimer.time() > holdTime) {
-                    break;   // Exit loop if we are in position, and have been there long enough.
-                }
-            } else {
-                holdTimer.reset();
-            }
-            sleep(10);
-
-        }
-        stopRobot();
-    }
     /**
      * Sleeps for the given amount of milliseconds, or until the thread is interrupted (which usually
      * indicates that the OpMode has been stopped).
@@ -1078,64 +951,6 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-    /**
-     * Strafe in the lateral (left/right) direction, maintain the current heading and don't drift fwd/bwd
-     * @param distanceInches  Distance to travel.  +ve = left, -ve = right.
-     * @param power Maximum power to apply.  This number should always be positive.
-     * @param holdTime Minimum time (sec) required to hold the final position.  0 = no hold.
-     */
-    public void strafe(double distanceInches, double power, double holdTime) {
-        startMotion();
-
-        driveController.reset(0.0);             //  Maintain zero drive drift
-        strafeController.reset(distanceInches, power);  // Achieve desired Strafe distance
-        yawController.reset();                          // Maintain last turn angle
-        holdTimer.reset();
-
-        while (readSensors()){
-
-            // implement desired axis powers
-            moveRobot(driveController.getOutput(driveDistance), strafeController.getOutput(strafeDistance), yawController.getOutput(heading));
-
-            // Time to exit?
-            if (strafeController.inPosition() && yawController.inPosition()) {
-                if (holdTimer.time() > holdTime) {
-                    break;   // Exit loop if we are in position, and have been there long enough.
-                }
-            } else {
-                holdTimer.reset();
-            }
-            sleep(10);
-        }
-        stopRobot();
-    }
-
-    /**
-     * Rotate to an absolute heading/direction
-     * @param headingDeg  Heading to obtain.  +ve = CCW, -ve = CW.
-     * @param power Maximum power to apply.  This number should always be positive.
-     * @param holdTime Minimum time (sec) required to hold the final position.  0 = no hold.
-     */
-    public void turnTo(double headingDeg, double power, double holdTime) {
-
-        yawController.reset(headingDeg, power);
-        while (readSensors()) {
-
-            // implement desired axis powers
-            moveRobot(0, 0, yawController.getOutput(heading));
-
-            // Time to exit?
-            if (yawController.inPosition()) {
-                if (holdTimer.time() > holdTime) {
-                    break;   // Exit loop if we are in position, and have been there long enough.
-                }
-            } else {
-                holdTimer.reset();
-            }
-            sleep(10);
-        }
-        stopRobot();
     }
 
     /************ GRAND EXPERIMENTS ******
@@ -1333,116 +1148,5 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
             integralSum = 0.0;
             filteredD = 0.0;
         }
-    }
-    public class SimplifiedOdoDriveUtilProportionalControl {
-        double lastOutput;
-        double gain;
-        double accelLimit;
-        double defaultOutputLimit;
-        double liveOutputLimit;
-        double setPoint;
-        double tolerance;
-        double deadband;
-        boolean circular;
-        boolean inPosition;
-        ElapsedTime cycleTime = new ElapsedTime();
-
-        /**
-         * @param gain
-         * @param accelLimit
-         * @param outputLimit Clip output to +/- this value
-         * @param tolerance   Absolute error less than this value is considered "inPosition"
-         * @param deadband    Absolute error less than this value causes zero output
-         * @param circular    set True if working with circular heading that wraps at 0/360
-         */
-        public SimplifiedOdoDriveUtilProportionalControl(double gain, double accelLimit, double outputLimit, double tolerance, double deadband, boolean circular) {
-            this.gain = gain;
-            this.accelLimit = accelLimit;
-            this.defaultOutputLimit = outputLimit;
-            this.liveOutputLimit = outputLimit;
-            this.tolerance = tolerance;
-            this.deadband = deadband;
-            this.circular = circular;
-            reset(0.0);
-        }
-
-        /**
-         * Determines power required to obtain the desired setpoint value based on new input value.
-         * Uses proportional gain, and limits rate of change of output, as well as max output.
-         *
-         * @param input Current live control input value (from sensors)
-         * @return desired output power.
-         */
-        public double getOutput(double input) {
-            double error = setPoint - input;
-            double dV = cycleTime.seconds() * accelLimit;
-            double output;
-
-            // normalize to +/- 180 if we are controlling heading
-            if (circular) {
-                while (error > 180) error -= 360;
-                while (error <= -180) error += 360;
-            }
-
-            inPosition = (Math.abs(error) < tolerance);
-
-            // Prevent any very slow motor output accumulation
-            if (Math.abs(error) <= deadband) {
-                output = 0;
-            } else {
-                // calculate output power using gain and clip it to the limits
-                output = (error * gain);
-                output = Range.clip(output, -liveOutputLimit, liveOutputLimit);
-
-                // Now limit rate of change of output (acceleration)
-                if ((output - lastOutput) > dV) {
-                    output = lastOutput + dV;
-                } else if ((output - lastOutput) < -dV) {
-                    output = lastOutput - dV;
-                }
-            }
-
-            lastOutput = output;
-            cycleTime.reset();
-            return output;
-        }
-
-        public boolean inPosition() {
-            return inPosition;
-        }
-
-        /**
-         * Saves a new setpoint and resets the output power history.
-         * This call allows a temporary power limit to be set to override the default.
-         *
-         * @param setPoint
-         * @param powerLimit
-         */
-        public void reset(double setPoint, double powerLimit) {
-            liveOutputLimit = Math.abs(powerLimit);
-            this.setPoint = setPoint;
-            reset();
-        }
-
-        /**
-         * Saves a new setpoint and resets the output power history.
-         *
-         * @param setPoint
-         */
-        public void reset(double setPoint) {
-            liveOutputLimit = defaultOutputLimit;
-            this.setPoint = setPoint;
-            reset();
-        }
-
-        /**
-         * Leave everything else the same, Just restart the acceleration timer and set output to 0
-         */
-        public void reset() {
-            cycleTime.reset();
-            inPosition = false;
-            lastOutput = 0.0;
-        }
-
     }
 }

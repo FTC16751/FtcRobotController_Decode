@@ -237,8 +237,9 @@ public class GGAutonomous001 extends OpMode
          */
         switch (autonomousState) {
             case START_INITIAL_DRIVE:
-                robot.drive.simplifiedOdometryDrive(-24, 0.5, 0.25);
-                //drive.drive_p3(-48,0,0,.5);
+                // Was simplifiedOdometryDrive(-24, 0.5, 0.25); that block was removed from DriveUtil2026b
+                // on 2026-09-07 (its strafe and yaw feedback were sign-inverted). Same move via encoders:
+                robot.drive.drive_p3(-24, 0, 0, 0.5);
                 autonomousState = AutonomousState.LAUNCH;
                 break;
             case START_ALIGNING_TO_TAG:
