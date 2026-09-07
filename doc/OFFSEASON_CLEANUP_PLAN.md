@@ -152,6 +152,48 @@ auto should be able to say `robot.launcher.fire()` as plainly as `robot.drive.dr
 +120/-120 mm offsets; a re-run of the tag approach with the softened tuning; the 90-degree
 turning-circle refinement; A4 (alliance handoff) on Skyline, which needs an auto that runs.
 
+## Next focus, drive side (set 2026-09-07): was last season's point-to-point + waypoint strategy reusable?
+
+A separate session, in parallel with the subsystem one. The question: GearGirls and P3 built
+every auto last season on `driveTo` (Pinpoint point-to-point PID) called each loop against a
+waypoint from the team's Constants. Is that a strategy worth keeping as the Advanced tier's
+`startPath`, or a pattern that only worked because two teams tuned around it? Start from:
+
+**Where the evidence is.** `driveTo(current, target, power, holdTime)` has 491 call sites: GearGirls
+347, P3 135. Waypoints live in `GGRobotConstants.Waypoints`, `P3RobotConstants.Waypoints` and
+`Bot2_Waypoints` as `Pose2D` constants in inches and degrees, chosen per alliance with a ternary
+at each call. Two auto shapes: GearGirls v7 (`auto/bot2/GGAutonomous_Score9_v7`, live) builds its
+path once in `setPathWaypoints(alliance, location)` and steps through it; P3 Queue
+(`auto/bot3/P3Autonomous_QueueBot3`, live) is a `Queue<Step>` sequencer with per-step and global
+timeouts and a PARK fallback. Both were named in R9 as the models. Per-robot tuning is
+`RobotConfig.pointToPointTuning` (xy tolerance in mm, yaw tolerance in rad, P/I/D, accel); all
+three configs still carry the StandardBot defaults, so nobody tuned per chassis.
+
+**What the code does today (verified this session, tests in `PinpointPIDLoopTest`,
+`MecanumMixerTest`):** per axis P + capped I + filtered D with an asymmetric accel limit;
+in-tolerance axes reset their PID; done when all three axes hold inside tolerance for holdTime;
+the field-to-robot rotation is shared with field-centric TeleOp. New this session and untested on
+a robot: `startDriveTo` (fire-and-poll form, own timeout, PID reset per move), `turnToHeading`,
+`lastMoveSucceeded()`.
+
+**Questions to answer, in order:** (1) how many distinct waypoints per team, and how many are the
+same field spot under different names; (2) what hold times, powers and step timeouts the autos
+actually used, and whether the autos ever skipped a step on timeout in a match (git history and
+comments); (3) whether any auto relocalized from a tag mid-run (GGRobot2 has
+`resetOdometryToVision`; grep for its callers); (4) what went wrong: search the autos for
+comments about oscillation, overshoot, drift, "tuned", "hack"; (5) what a first-week programmer
+would have to understand to add one waypoint to one of these autos today.
+
+**What "reusable" would look like** (decide there, not here): `startPath(List<Pose2D>)` inside
+DriveUtil2026b with per-step timeouts and `currentWaypoint()`; waypoint tables per team as today,
+but with `forAlliance(alliance, location)` returning the list, not a ternary per call;
+`relocalizeFromTag(vision)` promoted from GGRobot2; per-chassis `pointToPointTuning` measured with
+the test robot's Drive Square. The alternative worth stating honestly: adopt Pedro Pathing for
+paths (hard rule 6, the mentor is revisiting it) and keep `driveTo` only for the last foot.
+
+**Robot prerequisites** before any of this can be tuned: the Pinpoint push test and Drive Square on
+the Skyline chassis with the +120/-120 mm offsets (test plan section I).
+
 ## Completed focus (2026-09-07): analyze and improve `common/DriveUtil2026b`
 
 The mentor's next session is a dedicated look at the shared drive utility. Start from these facts,
