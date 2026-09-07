@@ -136,6 +136,24 @@ Listed so a tester does not report them as regressions. They are R11 in the clea
   the TeleOp after auto.
 - `driveToTagAsync` (only reachable from a disabled GearGirls auto) marks the drive busy forever.
 
+## H. Tag approach (not on the robot yet; here so it is not forgotten)
+
+`common/TagApproach` is built and unit-tested but not wired to the Limelight or to
+`DriveUtil2026b` yet. When it is, the first robot session needs, in this order:
+
+- [ ] **H1. Sign check, robot on a stand, tag held in front of the camera.** Telemetry from
+      `TagApproach.addTelemetry` shows the three errors. Move the tag closer: forward error goes
+      down. Move it to the robot's right: right error goes positive. Rotate the tag so the robot
+      would have to turn left to face it squarely: yaw error goes positive. Any sign that goes the
+      other way is fixed in VisionUtil's conversion, never in TagApproach.
+- [ ] **H2. Power directions, still on the stand.** With the tag too far away the wheels spin
+      forward; tag to the right, the wheels spin in the strafe-right pattern (front-left and
+      rear-right forward); tag needing a left turn, the right side spins forward.
+- [ ] **H3. First live approach, tag taped to a wall, robot 3 ft away.** Low max power (0.25).
+      Expected: the robot ends the standoff distance from the wall, centered on the tag, square,
+      and telemetry says DONE. Then cover the camera mid-approach: the robot coasts briefly and
+      stops with LOST within about 1.5 s.
+
 ## Results
 
 | Test | Date | Robot | Pass? | Notes |

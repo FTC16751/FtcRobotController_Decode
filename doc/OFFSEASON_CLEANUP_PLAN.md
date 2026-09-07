@@ -156,7 +156,21 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   Mentor decision 2026-09-07: leave those autos alone. No action planned; the same screens already
   show the Pinpoint heading via `getOdoPosition()`.
 - `driveToTagAsync` sets a state `update()` never handles, so `isBusy()` stays true forever.
-  **TODO:** implement the handler or delete the method and its six write-only fields.
+  Mentor 2026-09-07: this is wanted, not dead. The idea is non-blocking "drive to X inches in
+  front of tag N" so other subsystems keep running, and FTC adds tags every season.
+  **Step 1 DONE 2026-09-07:** `common/TagApproach` (pure math and state, 23 tests) plus the
+  `common/TagSighting` interface (robot-frame view of one tag: forward inches, right inches,
+  square-up degrees; signs match `moveRobot`). P per axis, clamp, optional min power, tolerance,
+  hold time, coast on last powers when the tag drops out, lost timeout, hard max time; states
+  IDLE/APPROACHING/HOLDING/DONE/LOST/TIMED_OUT.
+  **Step 2 TODO:** VisionUtil implements `TagSighting` by converting the Limelight tag-space
+  pose (or target-pose-in-robot-space) into those three numbers; that conversion's signs are the
+  one thing needing a stand check. **Step 3 TODO:** `DriveUtil2026b.driveToTagAsync` starts a
+  `TagApproach`, `update()` steps it under `ALIGNING_TO_APRILTAG` and calls `moveRobot` with its
+  three powers, `isBusy()` reflects it; delete the six write-only fields. Gains go in
+  `RobotConfig` (a `TagApproach.Settings` per chassis) since they depend on the robot's mass and
+  wheel friction. The relocalize-then-`driveTo` alternative already exists on GearGirls
+  (`GGRobot2.resetOdometryToVision`) and needs no new code.
 - Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
   uses `turnCircumferenceIn` 27.5. Factor 2.7 apart. Skyline's live autos use the 27.5, so that one
   has been on a robot. **TODO:** one field in `Calibration`, both commands derived from it.
@@ -193,7 +207,7 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   `ticksFor(forward, strafe, turn, cal)` functions so the sign convention and the forward-inches
   fix get laptop tests with the existing harness.
 
-**Suggested order for the rest:** the AprilTag stub; one
+**Suggested order for the rest:** TagApproach steps 2 and 3; one
 turning-circle number; pure math seams plus tests; beginner turn commands; then the smaller items.
 
 ## Context
