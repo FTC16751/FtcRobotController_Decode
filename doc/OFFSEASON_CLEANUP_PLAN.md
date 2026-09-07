@@ -188,9 +188,19 @@ item asked for: copy and rename, fill in the config in six numbered steps, drive
 the Pinpoint, prove the tag approach, add the game. Driver Station groups `TestTeam2027` and
 `TestTeam2027 Test`. This folder IS the template; `teams/_template/` is not needed as a separate
 thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the actual chassis.
-- Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
-  uses `turnCircumferenceIn` 27.5. Factor 2.7 apart. Skyline's live autos use the 27.5, so that one
-  has been on a robot. **TODO:** one field in `Calibration`, both commands derived from it.
+- Two turning circles: `rotateRobot` used `robotDiameterCm` 60 (74 in circumference), `drive_p3`
+  uses `turnCircumferenceIn` 27.5. Factor 2.7 apart. Skyline's live Score3Preloads autos turn 30
+  degrees through the 27.5, so that number was tuned against that auto; physically it implies a
+  robot under 9 in across, so it is almost certainly a compensated value (a 14 x 14 in layout works
+  out near 88). **DONE 2026-09-07:** one field, `turnCircumferenceIn`; `rotateRobot` delegates to
+  `drive_p3`; `robotDiameterCm` gone. Default left at 27.5 by mentor decision so Skyline's live
+  auto does not change; each chassis measures its own (test plan F). In the same pass the
+  `driveRobotDistance*` family now converts through `encoderCountsPerInch` like `drive_p3`, and
+  `encoderTicksPerRev`, `gearReduction`, `wheelDiameterCm` left the config. That does NOT assume
+  every robot has the same encoders: each config carries its own counts-per-inch, and
+  `Calibration.countsPerInch(ticksPerRev, gearReduction, wheelDiameterMm)` gives a starting value
+  from any motor and wheel spec. No live behavior change: `rotateRobot` had no callers and the
+  distance family's old arithmetic agreed with the new within a quarter percent.
 - Small: `turnTo` never reset `holdTimer` before its loop (moot if deleted); `PinpointPIDLoop`
   returns 0 on the first call after every reset and `calculatePID` resets an axis whenever it is
   inside tolerance, so an axis that drifts back out loses one loop.
@@ -224,8 +234,8 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
   `ticksFor(forward, strafe, turn, cal)` functions so the sign convention and the forward-inches
   fix get laptop tests with the existing harness.
 
-**Suggested order for the rest:** TagApproach steps 2 and 3; one
-turning-circle number; pure math seams plus tests; beginner turn commands; then the smaller items.
+**Suggested order for the rest:** pure math seams plus tests; beginner turn commands; then the
+smaller items.
 
 ## Context
 

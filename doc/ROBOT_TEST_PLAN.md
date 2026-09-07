@@ -117,12 +117,12 @@ Each takes about two minutes with `drive_p3` from a tape line.
 |---|---|---|
 | Ticks per inch | `drive_p3(48, 0, 0, 0.4)`, measure actual travel. New value = 45.33 x 48 / measured | `encoderCountsPerInch` |
 | Strafe slip | `drive_p3(0, 24, 0, 0.4)`, measure actual sideways travel. New scale = 1.1 x 24 / measured | `strafeScale` |
-| Turning circle | `drive_p3(0, 0, 360, 0.4)`, note the actual rotation. New value = 27.5 x 360 / actual degrees | `turnCircumferenceIn` (then retire `robotDiameterCm`) |
+| Turning circle | `drive_p3(0, 0, 360, 0.4)`, note the actual rotation. New value = 27.5 x 360 / actual degrees. Expect the robot to turn well short of 360; the default is known to be small | `turnCircumferenceIn` |
 | Right-rear correction | Drive straight at 0.5 for 8 ft with `rightRearPowerScale` set to 1.0 in the config; note the drift | Whether 1.15 belongs on this chassis at all |
 
 The team's Encoder Move Check TeleOp has all of these on buttons: Y is forward 24 (use it twice
-for 48), B is strafe right 24, D-pad up is the 360 turn, and D-pad down is the `rotateRobot` 90 so
-the two turning-circle numbers can be compared in one session. After each move the telemetry shows
+for 48), B is strafe right 24, D-pad up is the 360 turn (D-pad down is a 180 if space is tight;
+scale the arithmetic). After each move the telemetry shows
 the wheel ticks and what those ticks mean under the calibration in use, so the arithmetic above is
 a tape measure and one division.
 

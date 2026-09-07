@@ -33,15 +33,13 @@ public class DriveUtil2026b {
 
     // --- Robot Physical Constants ---
     // All come from RobotConfig.calibration (see the robot's config file in its team folder).
-    // Assigned once in the constructor.
-    private final double ROBOT_SIZE_DIAMETER;       // cm, turning-circle diameter for rotateRobot()
+    // Every encoder move converts through this one number; turns add calibration.turnCircumferenceIn.
     private final double ENCODER_COUNTS_PER_INCH;   // drive-motor ticks per inch of travel
-    private final double COUNTS_PER_GEAR_REV;       // drive-motor ticks per wheel revolution
-    private final double WHEEL_CIRCUMFERENCE;       // cm
     private static final double DRIVE_SPEED = 1.0;  // Default drive speed multiplier
-    // Encoder-move time limits (driveRobotToPosition). 5 rev/s is a little under a goBILDA 312 rpm
-    // motor's free speed, so the estimate errs long; the limit is a safety net, not a stopwatch.
-    private static final double DRIVE_MOTOR_MAX_REV_PER_SEC = 5.0;
+    // Encoder-move time limits (driveRobotToPosition). 60 in/s is a little under what a goBILDA
+    // 312 rpm motor on a 96 mm wheel free-runs, so the estimate errs long; the limit is a safety
+    // net, not a stopwatch.
+    private static final double DRIVE_MAX_INCHES_PER_SEC = 60.0;
     private static final double MOVE_MIN_TIMEOUT_SEC = 3.0;
     private static final long   MOVE_POLL_MS = 10;
 
@@ -107,12 +105,8 @@ public class DriveUtil2026b {
         this.config = config;
         this.tagApproach = new TagApproach(config.tagApproach);
 
-        // Physical constants from the robot's config (defaults match the pre-R5 hardcoded values)
-        RobotConfig.Calibration cal = config.calibration;
-        ROBOT_SIZE_DIAMETER      = cal.robotDiameterCm;
-        ENCODER_COUNTS_PER_INCH  = cal.encoderCountsPerInch;
-        COUNTS_PER_GEAR_REV      = cal.encoderTicksPerRev * cal.gearReduction;
-        WHEEL_CIRCUMFERENCE      = cal.wheelDiameterCm * Math.PI;
+        // Physical constants from the robot's config
+        ENCODER_COUNTS_PER_INCH  = config.calibration.encoderCountsPerInch;
 
         // Initialize all hardware components
         initializeIMU(hardwareMap);
@@ -549,7 +543,8 @@ public class DriveUtil2026b {
         int maxTicks = 0;
         for (int t : targetPositions) maxTicks = Math.max(maxTicks, Math.abs(t));
         double power = Math.max(Math.abs(targetSpeed), 0.05);
-        double idealSec = maxTicks / (COUNTS_PER_GEAR_REV * DRIVE_MOTOR_MAX_REV_PER_SEC * power);
+        double maxInches = maxTicks / ENCODER_COUNTS_PER_INCH;
+        double idealSec = maxInches / (DRIVE_MAX_INCHES_PER_SEC * power);
         return Math.max(MOVE_MIN_TIMEOUT_SEC, idealSec * 3.0 + 2.0);
     }
 
@@ -620,12 +615,22 @@ public class DriveUtil2026b {
 
         return driveRobotToPosition(targetPositions, speed);
     }
+    /**
+     * The driveRobotDistance* family: the simplest commands, one direction each, distance in cm
+     * or inches. All of them convert through calibration.encoderCountsPerInch, the same number
+     * drive_p3 uses, so "12 inches" means the same thing everywhere.
+     */
     public boolean driveRobotDistanceForward(double distanceInCM, double targetSpeed) {
-        // Same tick math as driveRobotDistanceBackward. (An earlier version passed the tick count,
-        // divided by 25.4, into drive_p3 as if it were inches, which drove about 1.8x too far.)
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceInCM);
+        // (An earlier version passed a tick count, divided by 25.4, into drive_p3 as if it were
+        // inches, which drove about 1.8x too far.)
+        int targetCount = ticksForCm(distanceInCM, 1.0);
         int[] targetPositions = {targetCount, targetCount, targetCount, targetCount};
         return driveRobotToPosition(targetPositions, targetSpeed);
+    }
+
+    /** Ticks for a distance in cm, times a scale (1.0, or calibration.strafeScale for strafes). */
+    private int ticksForCm(double distanceInCM, double scale) {
+        return (int) Math.round((distanceInCM / 2.54) * ENCODER_COUNTS_PER_INCH * scale);
     }
 
     public boolean driveRobotDistanceForwardInches(double distanceInInches, double targetSpeed) {
@@ -634,7 +639,7 @@ public class DriveUtil2026b {
     }
 
     public boolean driveRobotDistanceBackward(double distanceInCM, double targetSpeed) {
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceInCM);
+        int targetCount = ticksForCm(distanceInCM, 1.0);
         int[] targetPositions = {-targetCount, -targetCount, -targetCount, -targetCount};
         return driveRobotToPosition(targetPositions, targetSpeed);
     }
@@ -645,7 +650,7 @@ public class DriveUtil2026b {
     }
 
     public boolean driveRobotDistanceStrafeRight(double distanceInCM, double targetSpeed) {
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
+        int targetCount = ticksForCm(distanceInCM, config.calibration.strafeScale);
         int[] targetPositions = {targetCount, -targetCount, -targetCount, targetCount};
         return driveRobotToPosition(targetPositions, targetSpeed);
     }
@@ -656,7 +661,7 @@ public class DriveUtil2026b {
     }
 
     public boolean driveRobotDistanceStrafeLeft(double distanceInCM, double targetSpeed) {
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
+        int targetCount = ticksForCm(distanceInCM, config.calibration.strafeScale);
         int[] targetPositions = {-targetCount, targetCount, targetCount, -targetCount};
         return driveRobotToPosition(targetPositions, targetSpeed);
     }
@@ -666,21 +671,14 @@ public class DriveUtil2026b {
         return driveRobotDistanceStrafeLeft(distanceInCM, targetSpeed);
     }
 
+    /**
+     * Spin in place. Positive is clockwise, the same as drive_p3's turn argument, and it uses the
+     * same calibration number (turnCircumferenceIn), so "turn 90" means the same thing here as in
+     * drive_p3(0, 0, 90, speed). (Until 2026-09-07 this used a separate turning-circle diameter
+     * that disagreed with drive_p3's by a factor of 2.7.)
+     */
     public boolean rotateRobot(double angleInDegrees, double targetSpeed) {
-        //rotate(90, 0.5);
-        // Calculate the target count based on the angle and robot diameter
-        double circumference = Math.PI * ROBOT_SIZE_DIAMETER;
-        double distanceToTravel = (Math.abs(angleInDegrees) / 360.0) * circumference;
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceToTravel);
-
-        // Determine the direction of rotation (clockwise or counterclockwise)
-        int direction = angleInDegrees > 0 ? 1 : -1;
-
-        // Set target positions for each motor
-        int[] targetPositions = {direction * targetCount, -direction * targetCount, direction * targetCount, -direction * targetCount};
-
-        // Call the helper method to execute the turn
-        return driveRobotToPosition(targetPositions, targetSpeed);
+        return drive_p3(0, 0, angleInDegrees, targetSpeed);
     }
 
 

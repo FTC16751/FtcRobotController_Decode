@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
  *   X / B            strafe left / right 24 in           (drive_p3)
  *   D-pad left/right turn 90 deg CCW / CW                (drive_p3, uses turnCircumferenceIn)
  *   D-pad up         turn 360 deg CW                     (drive_p3, measures the turning circle)
- *   D-pad down       turn 90 deg CW                      (rotateRobot, uses robotDiameterCm)
+ *   D-pad down       turn 180 deg CW                     (drive_p3, for when there is no room for a 360)
  *   Left/right bumper  forward / backward 12 in          (driveRobotDistance*Inches, the fixed path)
  *   Left/right trigger speed down / up by 0.1
  *
@@ -77,7 +77,7 @@ public abstract class EncoderMoveCheck extends LinearOpMode {
             if (gamepad1.dpadLeftWasPressed())  run("turn 90 CCW (drive_p3)",          () -> drive.drive_p3(0, 0, -90, speed));
             if (gamepad1.dpadRightWasPressed()) run("turn 90 CW (drive_p3)",           () -> drive.drive_p3(0, 0,  90, speed));
             if (gamepad1.dpadUpWasPressed())    run("turn 360 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 360, speed));
-            if (gamepad1.dpadDownWasPressed())  run("turn 90 CW (rotateRobot)",        () -> drive.rotateRobot(90, speed));
+            if (gamepad1.dpadDownWasPressed())  run("turn 180 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 180, speed));
             if (gamepad1.leftBumperWasPressed())  run("forward 12 in (driveRobotDistanceForwardInches)",   () -> drive.driveRobotDistanceForwardInches(SHORT_IN, speed));
             if (gamepad1.rightBumperWasPressed()) run("backward 12 in (driveRobotDistanceBackwardInches)", () -> drive.driveRobotDistanceBackwardInches(SHORT_IN, speed));
 
@@ -125,10 +125,10 @@ public abstract class EncoderMoveCheck extends LinearOpMode {
         telemetry.addData("ticks LF RF LR RR", "%d %d %d %d", ticksLF, ticksRF, ticksLR, ticksRR);
         telemetry.addData("wheel travel per calibration", "%.1f in", avgTicks / cal.encoderCountsPerInch);
         telemetry.addLine();
-        telemetry.addData("calibration in use", "ticks/in %.2f  strafe x%.2f  turnCirc %.1f in  robotDia %.0f cm",
-                cal.encoderCountsPerInch, cal.strafeScale, cal.turnCircumferenceIn, cal.robotDiameterCm);
+        telemetry.addData("calibration in use", "ticks/in %.2f  strafe x%.2f  turnCirc %.1f in",
+                cal.encoderCountsPerInch, cal.strafeScale, cal.turnCircumferenceIn);
         telemetry.addLine();
-        telemetry.addLine("Y/A fwd/back 24   X/B strafe L/R 24   dpad L/R turn 90   dpad up 360   dpad down rotateRobot 90");
+        telemetry.addLine("Y/A fwd/back 24   X/B strafe L/R 24   dpad L/R turn 90   dpad up 360   dpad down 180");
         telemetry.addLine("LB/RB fwd/back 12 in via driveRobotDistance*Inches   LT/RT speed");
         telemetry.update();
     }

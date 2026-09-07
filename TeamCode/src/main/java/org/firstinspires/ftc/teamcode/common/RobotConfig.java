@@ -72,27 +72,41 @@ public class RobotConfig {
         public double rightRearPowerScale = 1.15;
         /** Multiplier on strafe distance for encoder moves, because mecanum strafing slips. 1.0 = none. */
         public double strafeScale         = 1.1;
-        /** Circumference (inches) of the circle the robot sweeps in a spin turn; used by drive_p3 turns. */
+        /**
+         * Wheel travel, in inches, for one full 360-degree spin turn. Every encoder turn uses it
+         * (drive_p3 turns and rotateRobot). Measure it: command a 360 with the Encoder Move Check
+         * and set new = old x 360 / degrees actually turned. The 27.5 default is the number
+         * Skyline's autos were tuned against and is almost certainly small for a real chassis
+         * (a 14 x 14 in wheel layout works out near 88), so each chassis must measure its own.
+         */
         public double turnCircumferenceIn = 27.5;
-        /** Drive-motor encoder ticks per inch of robot travel. */
+        /**
+         * Drive-motor encoder ticks per inch of robot travel. The one number every encoder move
+         * converts through, so it does not matter which motors, gearing, or wheels a chassis has:
+         * they all fold into this. Starting value from the spec: countsPerInch(ticksPerRev,
+         * gearReduction, wheelDiameterMm); then measure with the Encoder Move Check. The default is
+         * a goBILDA 312 rpm motor (537.7 ticks/rev) direct-driving a 96 mm wheel.
+         */
         public double encoderCountsPerInch = 45.33;
-        /** Drive-motor encoder ticks per motor output revolution (537 for a goBILDA 312 rpm). */
-        public double encoderTicksPerRev  = 537;
-        /** External gear reduction between motor and wheel. 1.0 if direct drive. */
-        public double gearReduction       = 1.0;
-        /** Wheel diameter in centimeters. */
-        public double wheelDiameterCm     = 9.6;
-        /** Robot turning-circle diameter in centimeters; used by rotateRobot(). */
-        public double robotDiameterCm     = 60;
 
         public Calibration rightRearPowerScale(double v)  { this.rightRearPowerScale = v; return this; }
         public Calibration strafeScale(double v)          { this.strafeScale = v; return this; }
         public Calibration turnCircumferenceIn(double v)  { this.turnCircumferenceIn = v; return this; }
         public Calibration encoderCountsPerInch(double v) { this.encoderCountsPerInch = v; return this; }
-        public Calibration encoderTicksPerRev(double v)   { this.encoderTicksPerRev = v; return this; }
-        public Calibration gearReduction(double v)        { this.gearReduction = v; return this; }
-        public Calibration wheelDiameterCm(double v)      { this.wheelDiameterCm = v; return this; }
-        public Calibration robotDiameterCm(double v)      { this.robotDiameterCm = v; return this; }
+
+        /**
+         * A starting encoderCountsPerInch from the motor and wheel spec, for a chassis whose
+         * encoders or wheels differ from the default. goBILDA ticks per output revolution:
+         * 435 rpm = 384.5, 312 rpm = 537.7, 223 rpm = 751.8. Measure afterward; slip and wheel
+         * wear move the real number.
+         * @param ticksPerRev     encoder ticks per motor output-shaft revolution
+         * @param gearReduction   external reduction between motor and wheel; 1.0 if direct drive
+         * @param wheelDiameterMm wheel diameter in millimeters (goBILDA mecanum: 96 or 104)
+         */
+        public static double countsPerInch(double ticksPerRev, double gearReduction, double wheelDiameterMm) {
+            double wheelCircumferenceIn = Math.PI * wheelDiameterMm / 25.4;
+            return ticksPerRev * gearReduction / wheelCircumferenceIn;
+        }
     }
 
     /** Which way each drive motor spins so that positive power drives the robot forward. */
