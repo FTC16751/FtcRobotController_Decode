@@ -213,7 +213,9 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
 
 **Optimizations:**
 - `getOdoPosition` writes five telemetry lines per call; P3's queue auto calls it 18 times per
-  file. Move the lines into `addTelemetry`.
+  file. Move the lines into `addTelemetry`. **DONE 2026-09-07:** it now returns `getPose()` and
+  writes nothing; the three position lines were already in `addTelemetry`, which every robot
+  class calls once per loop; the two pod-direction lines are gone (config, not match, data).
 - `rightRearPowerScale` 1.15 is applied before normalization, so at full stick the other three
   wheels cap at 87%. Fine if a relative correction is the intent; every config carries it.
 - `driveTo(target, power, holdTime)` overload that reads its own pose: 491 live calls pass
@@ -283,9 +285,9 @@ call sites are untouched. `driveToTagAsync` now replaces a running move instead 
 `Test2027DriveSquareAuto` rewritten in this vocabulary; README Step 6c is the table. No Pinpoint:
 getters return 0 and start* moves finish at once, failed.
 
-**Suggested order for the rest:** the `getOdoPosition` telemetry; then the duplicates and dead
-private code; `startPath` and `relocalizeFromTag` (Advanced tier) after the Pinpoint square and
-the tag approach have been on a stand.
+**Suggested order for the rest:** the duplicates and dead private code; `startPath` and
+`relocalizeFromTag` (Advanced tier) after the Pinpoint square and the tag approach have been on
+a stand.
 
 ## Context
 

@@ -558,15 +558,14 @@ public class DriveUtil2026b {
         if (pinpoint == null) return 0.0;
         return pinpoint.getHeading(RADIANS);
     }
+    /**
+     * The robot's position from the Pinpoint. Same as getPose(), which is the current name; this
+     * one stays for the P3 autos. Until 2026-09-07 it also wrote five telemetry lines on every
+     * call, so a getter used a dozen times per loop flooded the Driver Station. The position lines
+     * now come from addTelemetry(), once per loop.
+     */
     public Pose2D getOdoPosition() {
-        if (pinpoint == null) return new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
-        Pose2D currentPos  = pinpoint.getPosition();
-        telemetry.addData("current X coordinate", currentPos.getX(DistanceUnit.INCH));
-        telemetry.addData("current Y coordinate", currentPos.getY(DistanceUnit.INCH));
-        telemetry.addData("current Heading angle", currentPos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("pinpoin x direction: ", config.odometry.pinpointXPodDirection);
-        telemetry.addData("pinpoin y direction: ", config.odometry.pinpointYPodDirection);
-        return currentPos;
+        return getPose();
     }
 
     public boolean isBusy() {
