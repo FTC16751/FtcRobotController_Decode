@@ -219,6 +219,8 @@ public class RobotConfig {
     public String robotName = "unnamed";
     public HardwareNames hardware = new HardwareNames();
     public Calibration calibration = new Calibration();
+    /** Gains and limits for DriveUtil2026b.driveToTagAsync (TagApproach). Defaults are gentle; tune per chassis. */
+    public TagApproach.Settings tagApproach = new TagApproach.Settings();
 
     public final DrivetrainConfig drivetrain;
     public final OdometryConfig odometry;
@@ -240,4 +242,5 @@ public class RobotConfig {
     public RobotConfig named(String robotName)                { this.robotName = robotName; return this; }
     public RobotConfig withHardware(HardwareNames hardware)   { this.hardware = hardware; return this; }
     public RobotConfig withCalibration(Calibration calibration) { this.calibration = calibration; return this; }
+    public RobotConfig withTagApproach(TagApproach.Settings s) { this.tagApproach = s; return this; }
 }

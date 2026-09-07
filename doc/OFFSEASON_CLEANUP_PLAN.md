@@ -19,7 +19,8 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
 | R8 aiming helpers (FlywheelVelocityModel, AimLed, VisionAim) + tests | done | 6c5e053 |
 | R9 AutoSelector / AutoBase | **deferred**: build with the first new-season auto | |
 | R10 TeleOpBase / ButtonEdge | **closed**, will not be done; gamepad layouts stay as drivers learned them | |
-| R11 live defects (TeleOp-side items), R12 template, R13-R15 | not started | |
+| R12 template: `teams/testteam2027` built as the template and test bed (see DriveUtil section) | done, untested on hardware | |
+| R11 live defects (TeleOp-side items), R13-R15 | not started | |
 
 **Hard rules learned from the mentor, do not violate:**
 0. Demo-safe TeleOp defaults: launcher targeting starts in MANUAL/PRESET at the CLOSE setpoint, never
@@ -163,14 +164,30 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   square-up degrees; signs match `moveRobot`). P per axis, clamp, optional min power, tolerance,
   hold time, coast on last powers when the tag drops out, lost timeout, hard max time; states
   IDLE/APPROACHING/HOLDING/DONE/LOST/TIMED_OUT.
-  **Step 2 TODO:** VisionUtil implements `TagSighting` by converting the Limelight tag-space
-  pose (or target-pose-in-robot-space) into those three numbers; that conversion's signs are the
-  one thing needing a stand check. **Step 3 TODO:** `DriveUtil2026b.driveToTagAsync` starts a
-  `TagApproach`, `update()` steps it under `ALIGNING_TO_APRILTAG` and calls `moveRobot` with its
-  three powers, `isBusy()` reflects it; delete the six write-only fields. Gains go in
-  `RobotConfig` (a `TagApproach.Settings` per chassis) since they depend on the robot's mass and
-  wheel friction. The relocalize-then-`driveTo` alternative already exists on GearGirls
-  (`GGRobot2.resetOdometryToVision`) and needs no new code.
+  **Steps 2 and 3 DONE 2026-09-07:** `VisionUtil implements TagSighting` from the Limelight's
+  target-pose-in-robot-space; the four axis-sign constants at the top of that section are the one
+  thing needing a stand check (test plan H1) and the only place to fix a sign.
+  `DriveUtil2026b.driveToTagAsync(sighting, tagId, standoffIn, holdSec)` starts a `TagApproach`,
+  `update()` steps it under `ALIGNING_TO_APRILTAG` and feeds `moveRobot`; `isBusy()` reflects it;
+  `cancelDriveToTag()`, `lastTagApproachSucceeded()`, `getTagApproach()` added; the six write-only
+  fields and `holdTimer` deleted. Gains are `RobotConfig.tagApproach` (a `TagApproach.Settings`
+  per chassis, default gentle). The old `driveToTagAsync(VisionUtil, ...)` call in the disabled
+  GGAutonomous001 compiles unchanged because VisionUtil is a TagSighting. The
+  relocalize-then-`driveTo` alternative already exists on GearGirls (`GGRobot2.resetOdometryToVision`).
+  **Not yet on a robot.** First user: `teams/testteam2027` (below).
+
+**R12 trial run, 2026-09-07: `teams/testteam2027` (robot `test2027bot`).** Built as the new-team
+template and as the test bed for the day's Common work, without touching `common/` to make it fit.
+`Test2027BotConfig` (numbered fill-in comments), `Test2027Constants`, `Test2027Robot` (drive +
+vision, `update()`, `stopAll()`, `addTelemetry()`), `teleop/Test2027Teleop` (sticks, slow mode,
+hold RB to run the tag approach interactively, Back resets Pinpoint), `auto/Test2027DriveSquareAuto`
+(the `driveTo` waypoint idiom in its smallest form, with per-step timeouts),
+`auto/Test2027TagApproachAuto` (start async approach, wait on `isBusy()`), and
+`test/Test2027EncoderMoveCheck`. `teams/testteam2027/README.md` is the HOWTO-new-team the R12
+item asked for: copy and rename, fill in the config in six numbered steps, drive, measure, prove
+the Pinpoint, prove the tag approach, add the game. Driver Station groups `TestTeam2027` and
+`TestTeam2027 Test`. This folder IS the template; `teams/_template/` is not needed as a separate
+thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the actual chassis.
 - Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
   uses `turnCircumferenceIn` 27.5. Factor 2.7 apart. Skyline's live autos use the 27.5, so that one
   has been on a robot. **TODO:** one field in `Calibration`, both commands derived from it.

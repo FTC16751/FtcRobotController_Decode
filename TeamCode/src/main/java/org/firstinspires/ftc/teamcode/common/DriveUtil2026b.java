@@ -61,15 +61,9 @@ public class DriveUtil2026b {
     // --- GoBilda Pinpoint Odometry Members ---
     public GoBildaPinpointDriver pinpoint;
 
-    // --- AprilTag Alignment Members ---
-    private VisionUtil vision;
-    private int targetTagId;
-    private double desiredTagDistanceInches;
-    private final ElapsedTime targetLostTimer = new ElapsedTime();
-    private static final double TARGET_LOST_TIMEOUT_SEC = 1.5;
-    private double lastGoodDrivePower = 0;
-    private double lastGoodStrafePower = 0;
-    private double lastGoodTurnPower = 0;
+    // --- AprilTag approach (driveToTagAsync) ---
+    private TagApproach tagApproach;          // the math; built from config.tagApproach in the constructor
+    private TagSighting tagSighting;          // usually the robot's VisionUtil, handed in per call
 
 
     private final ElapsedTime GBholdTimer = new ElapsedTime();
@@ -95,7 +89,6 @@ public class DriveUtil2026b {
     private enum DriveState { IDLE, DRIVING_TO_POINT_PINPOINT, ALIGNING_TO_APRILTAG }
     private DriveState driveState = DriveState.IDLE;
 
-    private ElapsedTime holdTimer = new ElapsedTime();  // User for any motion requiring a hold time or timeout.
     /**
      * Legacy field. Only the removed simplified-odometry loops ever wrote it, so it has always read 0.
      * Ten P3 autos still put it in telemetry as "imu heading"; they should call getHeading() instead.
@@ -105,7 +98,6 @@ public class DriveUtil2026b {
     // The Follower can be null if this robot doesn't use it.
     //public final Follower follower;
 
-    private double holdTime;
     // =================================================================================
     // SECTION 2: CONSTRUCTOR & INITIALIZATION
     // =================================================================================
@@ -113,6 +105,7 @@ public class DriveUtil2026b {
     public DriveUtil2026b(HardwareMap hardwareMap, Telemetry telemetry, OpMode opMode, RobotConfig config) {
         this.telemetry = telemetry;
         this.config = config;
+        this.tagApproach = new TagApproach(config.tagApproach);
 
         // Physical constants from the robot's config (defaults match the pre-R5 hardcoded values)
         RobotConfig.Calibration cal = config.calibration;
@@ -702,7 +695,13 @@ public class DriveUtil2026b {
                 // updateDriveToPoint(); // Logic for non-blocking drive would go here
                 break;
             case ALIGNING_TO_APRILTAG:
-                // updateAlignToTag(); // Logic for non-blocking alignment would go here
+                // Step the tag approach; it reads the sighting and hands back three powers.
+                if (tagApproach.update(tagSighting)) {
+                    stopRobot();
+                    driveState = DriveState.IDLE;   // finished: DONE, LOST or TIMED_OUT (see lastTagApproachSucceeded)
+                } else {
+                    moveRobot(tagApproach.getDrivePower(), tagApproach.getStrafePower(), tagApproach.getYawPower());
+                }
                 break;
             case IDLE:
             default:
@@ -1002,22 +1001,45 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         }
         return atTarget;
     }
-    public void driveToTagAsync(VisionUtil visionUtil, int tagId, double distanceInches, double holdTimeSec) {
+    /**
+     * Start driving to a spot in front of an AprilTag without blocking. Call once; then call
+     * update() every loop (the robot classes already do) and poll isBusy(). When isBusy() goes
+     * false, lastTagApproachSucceeded() says whether the robot got there or gave up (tag lost,
+     * or the time limit). Other subsystems keep running in the same loop.
+     *
+     * The math is common/TagApproach; the gains are config.tagApproach. The sighting is normally
+     * the robot's VisionUtil, which implements TagSighting.
+     *
+     * @param sighting       where the tag is, in the robot's frame (VisionUtil)
+     * @param tagId          AprilTag id to approach
+     * @param standoffInches how far in front of the tag's face to stop
+     * @param holdTimeSec    how long to sit inside tolerance before reporting done
+     */
+    public void driveToTagAsync(TagSighting sighting, int tagId, double standoffInches, double holdTimeSec) {
         if (driveState == DriveState.IDLE) {
-            this.vision = visionUtil;
-            this.targetTagId = tagId;
-            this.desiredTagDistanceInches = distanceInches;
-            this.holdTime = holdTimeSec;
+            this.tagSighting = sighting;
+            tagApproach.start(tagId, standoffInches, holdTimeSec);
             this.driveState = DriveState.ALIGNING_TO_APRILTAG;
-            holdTimer.reset(); // Reset hold timer for stability check
-            // --- ADD THIS INITIALIZATION LOGIC ---
-            // Reset timers and last known powers for a clean start on every new call.
-            holdTimer.reset();
-            targetLostTimer.reset();
-            lastGoodDrivePower = 0;
-            lastGoodStrafePower = 0;
-            lastGoodTurnPower = 0;
         }
+    }
+
+    /** Abandon a driveToTagAsync in progress and stop the wheels. Safe to call when idle. */
+    public void cancelDriveToTag() {
+        if (driveState == DriveState.ALIGNING_TO_APRILTAG) {
+            tagApproach.stop();
+            stopRobot();
+            driveState = DriveState.IDLE;
+        }
+    }
+
+    /** True if the most recent driveToTagAsync ended in DONE rather than LOST or TIMED_OUT. */
+    public boolean lastTagApproachSucceeded() {
+        return tagApproach.succeeded();
+    }
+
+    /** The approach controller, for telemetry (state, errors, powers). */
+    public TagApproach getTagApproach() {
+        return tagApproach;
     }
     /**
      * Calculates the turn power required to automatically aim the robot at a target.

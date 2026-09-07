@@ -27,7 +27,7 @@ import java.util.List;
  * 4. At the end of your OpMode, call the {@link #stop()} method to release resources.
  * </p>
  */
-public class VisionUtil implements AimTarget {
+public class VisionUtil implements AimTarget, TagSighting {
 
     private Limelight3A limelight;
     private final Telemetry telemetry;
@@ -335,6 +335,58 @@ public class VisionUtil implements AimTarget {
      */
     public boolean isTargetVisible() {
         return isTargetVisible;
+    }
+
+    // =================================================================================
+    // TagSighting: one tag in the robot's frame, for TagApproach
+    // =================================================================================
+    //
+    // Built from the Limelight's "target pose in robot space" for the requested tag id. The four
+    // constants below are the ONLY place the Limelight's axis conventions meet ours, and they are
+    // the thing to check on a stand (doc/ROBOT_TEST_PLAN.md, test H1). If a number in the
+    // TagApproach telemetry moves the wrong way, flip the matching constant here. Never change
+    // TagApproach for a sign problem.
+    //
+    // Assumed Limelight robot space: X+ forward, Y+ to the robot's RIGHT, Z+ up, yaw about Z with
+    // the tag's yaw reading TAG_SQUARE_YAW_OFFSET_DEG when the robot faces it squarely.
+
+    private static final double TAG_FORWARD_SIGN          = 1.0;   // flip if forward error rises as the tag gets closer
+    private static final double TAG_RIGHT_SIGN            = 1.0;   // flip if a tag to the robot's right reads negative
+    private static final double TAG_SQUARE_SIGN           = 1.0;   // flip if "needs left turn" reads negative
+    private static final double TAG_SQUARE_YAW_OFFSET_DEG = 0.0;   // set to 180 if the yaw reads 180 when square
+
+    private LLResultTypes.FiducialResult sightedTag = null;   // the tag canSee() last found, this loop
+
+    /** Call this first each loop; the three getters below describe the tag it found. */
+    @Override
+    public boolean canSee(int tagId) {
+        sightedTag = getFiducialById(tagId);
+        if (sightedTag != null && sightedTag.getTargetPoseRobotSpace() == null) {
+            sightedTag = null;
+        }
+        return sightedTag != null;
+    }
+
+    @Override
+    public double forwardInches() {
+        if (sightedTag == null) return 0.0;
+        return TAG_FORWARD_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().x * METERS_TO_INCHES;
+    }
+
+    @Override
+    public double rightInches() {
+        if (sightedTag == null) return 0.0;
+        return TAG_RIGHT_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().y * METERS_TO_INCHES;
+    }
+
+    @Override
+    public double squareUpDegrees() {
+        if (sightedTag == null) return 0.0;
+        double yawDeg = sightedTag.getTargetPoseRobotSpace().getOrientation().getYaw(AngleUnit.DEGREES);
+        double error = yawDeg - TAG_SQUARE_YAW_OFFSET_DEG;
+        while (error > 180)  error -= 360;
+        while (error < -180) error += 360;
+        return TAG_SQUARE_SIGN * error;
     }
 
     public boolean hasFieldPose() {

@@ -136,23 +136,37 @@ Listed so a tester does not report them as regressions. They are R11 in the clea
   the TeleOp after auto.
 - `driveToTagAsync` (only reachable from a disabled GearGirls auto) marks the drive busy forever.
 
-## H. Tag approach (not on the robot yet; here so it is not forgotten)
+## H. Tag approach (wired 2026-09-07, never run on a robot)
 
-`common/TagApproach` is built and unit-tested but not wired to the Limelight or to
-`DriveUtil2026b` yet. When it is, the first robot session needs, in this order:
+Run on test2027bot with `Test2027: Teleop (RUN ME)` for H1 and H2 (hold the right bumper to run
+the approach; release to cancel) and `Test2027: Tag Approach Test` for H3. Set
+`Test2027Constants.TagTest.TAG_ID` to the tag on the wall first. Any other robot on this branch
+works the same way once it has a TagApproach call in a TeleOp.
 
-- [ ] **H1. Sign check, robot on a stand, tag held in front of the camera.** Telemetry from
-      `TagApproach.addTelemetry` shows the three errors. Move the tag closer: forward error goes
+- [ ] **H1. Sign check, robot on a stand, tag held in front of the camera.** Hold RB. The
+      `TagApproach` telemetry lines show the three errors. Move the tag closer: forward error goes
       down. Move it to the robot's right: right error goes positive. Rotate the tag so the robot
-      would have to turn left to face it squarely: yaw error goes positive. Any sign that goes the
-      other way is fixed in VisionUtil's conversion, never in TagApproach.
-- [ ] **H2. Power directions, still on the stand.** With the tag too far away the wheels spin
-      forward; tag to the right, the wheels spin in the strafe-right pattern (front-left and
+      would have to turn left to face it squarely: yaw error goes positive. A sign that goes the
+      other way is fixed by flipping the matching `TAG_*_SIGN` constant at the top of the
+      TagSighting section of `common/VisionUtil.java` (or setting `TAG_SQUARE_YAW_OFFSET_DEG` to
+      180 if the yaw reads 180 when square). Never change TagApproach for a sign problem.
+- [ ] **H2. Power directions, still on the stand.** Hold RB. With the tag too far away the wheels
+      spin forward; tag to the right, the wheels spin in the strafe-right pattern (front-left and
       rear-right forward); tag needing a left turn, the right side spins forward.
-- [ ] **H3. First live approach, tag taped to a wall, robot 3 ft away.** Low max power (0.25).
-      Expected: the robot ends the standoff distance from the wall, centered on the tag, square,
-      and telemetry says DONE. Then cover the camera mid-approach: the robot coasts briefly and
-      stops with LOST within about 1.5 s.
+- [ ] **H3. First live approach, tag taped to a wall, robot 3 ft away.** `maxPower` is 0.3 in
+      `Test2027BotConfig`. Expected: the robot ends the standoff distance (12 in) from the wall,
+      centered on the tag, square, and telemetry says DONE with the time it took. Then run it
+      again and cover the camera mid-approach: the robot coasts briefly and stops, telemetry says
+      GAVE UP: LOST, within about 1.5 s.
+- [ ] **H4. Tune.** If it oscillates, lower the `kp*` gains in `Test2027BotConfig`; if it stalls
+      short, raise `minPower` a little. Record the final numbers in the config.
+
+## I. test2027bot bring-up (the new-team template, `teams/testteam2027/README.md`)
+
+The README is the checklist. In short: config filled in (device names, motor directions, IMU,
+pods), `Test2027: Teleop (RUN ME)` drives, `Test2027: Encoder Move Check` measures section F,
+`Test2027: Drive Square (Pinpoint)` returns to its mark within an inch with zero timed-out
+steps, then section H. Note anything in the README that a first-time team would have tripped on.
 
 ## Results
 
