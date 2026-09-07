@@ -40,6 +40,12 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
    does the beginner's auto get simpler or stay simple? Direction in the name, inches, one speed,
    blocking with a time limit, a reached flag. The advanced idioms (`driveTo` waypoints, `drive_p3`,
    the tag approach) stay, but nobody should need them to write "drive forward 24, turn left 90."
+6. **Keep the `OpMode` constructor parameter and `myOpMode` field in DriveUtil2026b, and keep the
+   commented-out Pedro Pathing blocks and their imports.** (Mentor, 2026-09-07.) The OpMode hook is
+   deliberately reserved; every robot passes null today and that is fine. Pedro did not work last
+   season and will be revisited this season, possibly immediately; the commented blocks in the
+   constructor, `arcadeDrive`, `fieldCentricDrive`, and `update()` are the starting point for that.
+   Neither is "dead code" for cleanup purposes.
 
 **Open items from R5 for the mentor:** GGRobot (Bot 1) shares GGBot2Config; P3_Robot (Bot 2) shares
 P3Bot3Config; every chassis still has the shared default Calibration (1.15 right-rear scale etc.) and
