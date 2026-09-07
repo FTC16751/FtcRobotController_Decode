@@ -19,7 +19,7 @@ Last updated 2026-09-07 evening, after the first Skyline session. Each entry nam
 Run on: every competition robot (GearGirls Bot 1 and Bot 2, P3 Bot 3, Skyline), plus one pushbot
 and one StarterBot.
 
-- [ ] **A1. Driver Station groups.** The OpMode list shows only that team's group plus `Demo`.
+- [x] **A1. Driver Station groups.** The OpMode list shows only that team's group plus `Demo`.
       Pushbot and StarterBot OpModes are under `Demo`. No OpMode named `L01_HelloWorld` or any
       other lesson file is visible. (b72f53d, 1d9f7a7)
 - [x] **A2. Config name in telemetry.** Run the `(RUN ME)` TeleOp. The telemetry line
@@ -177,6 +177,7 @@ and the heading rises; a pod direction that goes the wrong way is fixed in the c
 
 | Test | Date | Robot | Pass? | Notes |
 |---|---|---|---|---|
+| A1 | 2026-09-07 | Skyline | pass | Driver Station groups looked fine: Skyline, Skyline Test, TestTeam2027, TestTeam2027 Test, Demo, no stray lesson OpModes. |
 | A2, A3 | 2026-09-07 | Skyline | pass | `SKYLINE: Teleop (V2 RUN ME)` after the hub config was corrected and SkylineBotConfig updated (left side reversed, turn negation removed). Forward, strafes, turns as expected. |
 | B2 | 2026-09-07 | Skyline chassis, test2027bot config | pass | Encoder Move Check: with 140 mm wheels in the config, two commanded 24 in moves measured 48 in. With the 96 mm default it had driven 35 in. |
 | F ticks per inch | 2026-09-07 | Skyline | done | 31.05 (537.7 ticks/rev, 140 mm wheel), confirmed by the 48 in run. |
