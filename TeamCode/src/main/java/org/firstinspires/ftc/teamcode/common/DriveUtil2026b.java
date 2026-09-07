@@ -42,6 +42,11 @@ public class DriveUtil2026b {
     private final double AXIAL_INCHES_PER_COUNT;    // simplified-odometry conversions
     private final double LATERAL_INCHES_PER_COUNT;
     private static final double DRIVE_SPEED = 1.0;  // Default drive speed multiplier
+    // Encoder-move time limits (driveRobotToPosition). 5 rev/s is a little under a goBILDA 312 rpm
+    // motor's free speed, so the estimate errs long; the limit is a safety net, not a stopwatch.
+    private static final double DRIVE_MOTOR_MAX_REV_PER_SEC = 5.0;
+    private static final double MOVE_MIN_TIMEOUT_SEC = 3.0;
+    private static final long   MOVE_POLL_MS = 10;
 
     // --- Drivetrain Motor Members ---
     public DcMotorEx leftFrontMotor;
@@ -590,8 +595,22 @@ public class DriveUtil2026b {
      *                        The order should be: [Front Left, Front Right, Rear Left, Rear Right].
      * @param targetSpeed     The desired motor power (from 0.0 to 1.0) to be applied during the movement.
      *                        This value is applied to all motors equally.
+     * @return true if every motor reached its target; false if the move timed out or the OpMode
+     *         was stopped. Callers that do not care can ignore the result.
      */
-    public void driveRobotToPosition(int[] targetPositions, double targetSpeed) {
+    public boolean driveRobotToPosition(int[] targetPositions, double targetSpeed) {
+        return driveRobotToPosition(targetPositions, targetSpeed, defaultMoveTimeoutSec(targetPositions, targetSpeed));
+    }
+
+    /**
+     * Same as {@link #driveRobotToPosition(int[], double)} but with an explicit time limit.
+     * The move ends early, and the motors stop, if the limit passes or the OpMode is stopped.
+     * Without this, a stalled wheel would keep the loop running after the Driver Station's Stop,
+     * and the SDK's stuck-OpMode watchdog would restart the Robot Controller app.
+     *
+     * @param timeoutSec Maximum seconds to wait for the motors to reach their targets.
+     */
+    public boolean driveRobotToPosition(int[] targetPositions, double targetSpeed, double timeoutSec) {
 
         for (int i = 0; i < motors.size(); i++) {
             DcMotorEx motor = motors.get(i);
@@ -603,15 +622,35 @@ public class DriveUtil2026b {
             }
         }
 
-        // Wait for all motors to finish
+        // Wait for all motors to finish, or for the time limit, or for the OpMode to be stopped
+        // (the SDK interrupts the OpMode thread on Stop).
+        ElapsedTime moveTimer = new ElapsedTime();
+        boolean reachedTarget = true;
         while (areMotorsBusy()) {
-            // Optional: Add telemetry here to monitor motor positions.
-            // Loop remains active while motors are running to their targets.
+            if (Thread.currentThread().isInterrupted() || moveTimer.seconds() > timeoutSec) {
+                reachedTarget = false;
+                break;
+            }
+            sleep(MOVE_POLL_MS);   // give the hub's I2C and the DS a turn; no need to spin
         }
 
         // Stop the robot and reset run mode
         stopRobot();
         setMotorRunMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        return reachedTarget;
+    }
+
+    /**
+     * A generous time limit for an encoder move: three times the ideal travel time at the requested
+     * power, plus a margin, never less than MOVE_MIN_TIMEOUT_SEC. Meant to end a stalled step, not to
+     * be tight. Pass an explicit timeout to the three-argument overload for something tighter.
+     */
+    private double defaultMoveTimeoutSec(int[] targetPositions, double targetSpeed) {
+        int maxTicks = 0;
+        for (int t : targetPositions) maxTicks = Math.max(maxTicks, Math.abs(t));
+        double power = Math.max(Math.abs(targetSpeed), 0.05);
+        double idealSec = maxTicks / (COUNTS_PER_GEAR_REV * DRIVE_MOTOR_MAX_REV_PER_SEC * power);
+        return Math.max(MOVE_MIN_TIMEOUT_SEC, idealSec * 3.0 + 2.0);
     }
 
 
@@ -680,11 +719,11 @@ public class DriveUtil2026b {
         driveRobotToPosition(targetPositions, speed);
     }
     public void driveRobotDistanceForward(double distanceInCM, double targetSpeed) {
-        // ... (logging and unit conversion)
+        // Same tick math as driveRobotDistanceBackward. (An earlier version passed the tick count,
+        // divided by 25.4, into drive_p3 as if it were inches, which drove about 1.8x too far.)
         int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceInCM);
-        //int[] targetPositions = {targetCount, targetCount, targetCount, targetCount};
-        //driveRobotToPosition(targetPositions, targetSpeed);
-        drive_p3(targetCount/25.4, 0, 0, targetSpeed);
+        int[] targetPositions = {targetCount, targetCount, targetCount, targetCount};
+        driveRobotToPosition(targetPositions, targetSpeed);
     }
 
     public void driveRobotDistanceForwardInches(double distanceInInches, double targetSpeed) {

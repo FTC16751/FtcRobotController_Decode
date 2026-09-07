@@ -107,6 +107,85 @@ exist; `driveTo` can be tested with a fake pose source. Tests first, then restru
 `MecanumMixer` (TeleOp math), `EncoderMoves` (RUN_TO_POSITION), `PointToPointDrive` (Pinpoint PID),
 with `DriveUtil2026b` kept as a thin facade so the 480+ call sites do not change.
 
+### 2026-09-07 session: analysis results and the first two fixes
+
+**Framing correction (mentor).** "Zero callers in the repo" does not mean dead. The repo holds about
+one season of OpModes plus a few older ones; the utility is meant to serve past and future OpModes
+with simple commands (drive forward N inches, turn, strafe) so new programmers come up to speed.
+Cleanup means coding mistakes, optimizations, and improvements to that simple-command surface.
+Remove code only when it is broken and unused (the Phil Malone simplified-odometry block) or a
+plain duplicate. The facade split above is no longer the goal; drop it unless the file stays
+unwieldy after the removals.
+
+**What is live today (not `@Disabled`, not in `old/` or `earlyideas/`):** TeleOp mixing on all
+three teams (GearGirls Bot1 TeleOp uses `fieldCentricDrive`, so that one needs Pinpoint heading);
+Pinpoint `driveTo` in GearGirls and P3 autos (every call passes `drive.pinpoint.getPosition()`);
+`drive_p3` in Skyline's four autos. Nothing live calls `turnTo`/`strafe`/`simplifiedOdometryDrive`
+(the P3 `turnTo` lines are commented out; the one GearGirls early auto swapped its `strafe` call for
+an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
+
+**Coding mistakes found:**
+- `driveRobotDistanceForward` passed a tick count divided by 25.4 into `drive_p3` as inches, so
+  "drive forward 12 inches" drove about 21. Backward and the two strafes were fine. **FIXED
+  2026-09-07**: builds the tick array like its siblings.
+- `driveRobotToPosition` spun in `while (areMotorsBusy())` with no interrupt check, no timeout, no
+  sleep. The SDK interrupts the OpMode thread on Stop; the loop ignored it, so the stuck-OpMode
+  watchdog would restart the app. Every simple encoder command and Skyline's autos go through it.
+  **FIXED 2026-09-07**: checks `Thread.currentThread().isInterrupted()`, sleeps 10 ms per poll, and
+  has a time limit (three times the ideal travel time at the requested power plus 2 s, never under
+  3 s; a three-argument overload takes an explicit limit). Returns true if the targets were reached.
+  Needs a robot on a stand: run one `drive_p3` move and confirm nothing got slower, then hold a
+  wheel and confirm the step ends on its own.
+- Simplified odometry has inverted feedback on two of three axes. `moveRobot` is positive-right
+  for strafe and positive-clockwise for yaw (the `drive_p3` mixing and Javadoc agree). Phil's
+  feedback side is positive-left (`updateMotion`) and the IMU is positive-counter-clockwise, so
+  `strafe` and `turnTo` push away from the setpoint and never exit. The Pinpoint path knows this
+  and flips signs in `driveTo`. Explains why it was never used. **TODO: delete** the block
+  (`simplifiedOdometryDrive`, `strafe`, `turnTo`, `readSensors`, `startMotion`, `updateMotion`,
+  the three `ProportionalControl` fields and their constants, the duplicate inner
+  `SimplifiedOdoDriveUtilProportionalControl`, `Calibration.odometryTicksPerRev`, and the
+  common/test sample that calls it). Keep `common/ProportionalControl` only if something else uses it.
+- `driveToTagAsync` sets a state `update()` never handles, so `isBusy()` stays true forever.
+  **TODO:** implement the handler or delete the method and its six write-only fields.
+- Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
+  uses `turnCircumferenceIn` 27.5. Factor 2.7 apart. Skyline's live autos use the 27.5, so that one
+  has been on a robot. **TODO:** one field in `Calibration`, both commands derived from it.
+- Small: `turnTo` never reset `holdTimer` before its loop (moot if deleted); `PinpointPIDLoop`
+  returns 0 on the first call after every reset and `calculatePID` resets an axis whenever it is
+  inside tolerance, so an axis that drifts back out loses one loop.
+
+**Optimizations:**
+- `getOdoPosition` writes five telemetry lines per call; P3's queue auto calls it 18 times per
+  file. Move the lines into `addTelemetry`.
+- `rightRearPowerScale` 1.15 is applied before normalization, so at full stick the other three
+  wheels cap at 87%. Fine if a relative correction is the intent; every config carries it.
+- `driveTo(target, power, holdTime)` overload that reads its own pose: 491 live calls pass
+  `drive.pinpoint.getPosition()`, and 494 of the 571 direct `pinpoint` accesses are that call.
+  The public field stays.
+- Duplicates: `stopRobot`/`stopMotors`, `setMotorMode`/`setMotorRunMode`, four angle-wrap
+  implementations (`normalizeAngle`, `Angle.normDelta`, `Angle.normDeltaDeg`, the loop in
+  `ProportionalControl`).
+- Dead private code: `calculateEncoderCountsPerDegreeOfChassisRotation`, `calculateTankOutput`,
+  `sensorDistance`, enums `DriveType`/`DriveMotor`, `errorR`, `DRIVE_SPEED`, the commented Pedro
+  blocks and their three imports (`RobotConfig` also imports Pedro for `PedroPathingConfig`).
+
+**Improvements to the simple-command surface:**
+- Write the sign convention once at class level: encoder commands and the TeleOp mixer are
+  positive-right, positive-clockwise; the Pinpoint path is field-frame counter-clockwise like the SDK.
+- Add `turnLeft(degrees, speed)` / `turnRight(degrees, speed)` delegating to `drive_p3` on the one
+  turning-circle number, to match `driveRobotDistanceStrafeLeft`/`Right`.
+- Every blocking command takes an optional timeout (the encoder path now does).
+- Two heading sources: `getHeading` is IMU degrees, `getPinpointHeading` is Pinpoint radians;
+  `fieldCentricDrive` uses the Pinpoint one, so a robot without a Pinpoint silently drives
+  robot-centric. Pick one for TeleOp and say so.
+- Testability without behavior change: make `PinpointPIDLoop` a static nested class (it already
+  takes time as a parameter); extract pure `mix(drive, strafe, yaw, scale)` and
+  `ticksFor(forward, strafe, turn, cal)` functions so the sign convention and the forward-inches
+  fix get laptop tests with the existing harness.
+
+**Suggested order for the rest:** delete simplified odometry and the AprilTag stub; one
+turning-circle number; pure math seams plus tests; beginner turn commands; then the smaller items.
+
 ## Context
 
 One software mentor supports three FTC teams (GearGirls, P3, Skyline) from a single TeamCode repo at
