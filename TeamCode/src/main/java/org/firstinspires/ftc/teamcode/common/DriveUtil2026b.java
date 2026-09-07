@@ -32,22 +32,16 @@ public class DriveUtil2026b {
     // SECTION 1: CLASS MEMBERS AND CONSTANTS
     // =================================================================================
 
-    // --- Robot Physical & Tuning Constants ---
-    private static final double ROBOT_SIZE_DIAMETER = 60; //in cm
-    private static final double ENCODER_COUNTS_PER_INCH = 45.33;
-    private static final double ENCODER_RESOLUTION = 537;
-    private static final double WHEEL_DIAMETER_CM = 9.6;
-    private static final double WHEEL_DIAMETER_IN = WHEEL_DIAMETER_CM/2.54;//3.75;
-    private static final double WHEEL_RADIUS = WHEEL_DIAMETER_CM / 2;
-    private static final double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER_CM * Math.PI;
-    private static final double GEAR_REDUCTION = 1.0;
-    private static final double TRACK_WIDTH = 17.5;
-    private static final double COUNTS_PER_GEAR_REV = ENCODER_RESOLUTION * GEAR_REDUCTION;
-    private static final double COUNTS_PER_DEGREE = COUNTS_PER_GEAR_REV / 360;
-    private static final double COUNTS_PER_REV = 384.5;
-    private static final double DRIVE_SPEED = 1.0; // Default drive speed multiplier
-    private final double  AXIAL_INCHES_PER_COUNT    = (Math.PI * WHEEL_DIAMETER_IN) / COUNTS_PER_REV;
-    private final double  LATERAL_INCHES_PER_COUNT  = AXIAL_INCHES_PER_COUNT * 0.866;
+    // --- Robot Physical Constants ---
+    // All come from RobotConfig.calibration (see the robot's config file in its team folder).
+    // Assigned once in the constructor.
+    private final double ROBOT_SIZE_DIAMETER;       // cm, turning-circle diameter for rotateRobot()
+    private final double ENCODER_COUNTS_PER_INCH;   // drive-motor ticks per inch of travel
+    private final double COUNTS_PER_GEAR_REV;       // drive-motor ticks per wheel revolution
+    private final double WHEEL_CIRCUMFERENCE;       // cm
+    private final double AXIAL_INCHES_PER_COUNT;    // simplified-odometry conversions
+    private final double LATERAL_INCHES_PER_COUNT;
+    private static final double DRIVE_SPEED = 1.0;  // Default drive speed multiplier
 
     // --- Drivetrain Motor Members ---
     public DcMotorEx leftFrontMotor;
@@ -55,10 +49,7 @@ public class DriveUtil2026b {
     public DcMotorEx leftRearMotor;
     public DcMotorEx rightRearMotor;
     private List<DcMotorEx> motors;
-    public static final String FRONT_LEFT_MOTOR_NAME = "Front_Left";
-    public static final String FRONT_RIGHT_MOTOR_NAME = "Front_Right";
-    public static final String REAR_LEFT_MOTOR_NAME = "Rear_Left";
-    public static final String REAR_RIGHT_MOTOR_NAME = "Rear_Right";
+    // Device names come from RobotConfig.hardware.
 
     // --- IMU & Sensor Members ---
     public IMU imu;
@@ -161,6 +152,15 @@ public class DriveUtil2026b {
         this.telemetry = telemetry;
         this.config = config;
 
+        // Physical constants from the robot's config (defaults match the pre-R5 hardcoded values)
+        RobotConfig.Calibration cal = config.calibration;
+        ROBOT_SIZE_DIAMETER      = cal.robotDiameterCm;
+        ENCODER_COUNTS_PER_INCH  = cal.encoderCountsPerInch;
+        COUNTS_PER_GEAR_REV      = cal.encoderTicksPerRev * cal.gearReduction;
+        WHEEL_CIRCUMFERENCE      = cal.wheelDiameterCm * Math.PI;
+        AXIAL_INCHES_PER_COUNT   = (Math.PI * (cal.wheelDiameterCm / 2.54)) / cal.odometryTicksPerRev;
+        LATERAL_INCHES_PER_COUNT = AXIAL_INCHES_PER_COUNT * 0.866;
+
         // Initialize all hardware components
         initializeIMU(hardwareMap);
         initMotors(hardwareMap);
@@ -181,10 +181,10 @@ public class DriveUtil2026b {
     }
 
     private void initMotors(HardwareMap hardwareMap) {
-        leftFrontMotor = hardwareMap.get(DcMotorEx.class, FRONT_LEFT_MOTOR_NAME);
-        rightFrontMotor = hardwareMap.get(DcMotorEx.class, FRONT_RIGHT_MOTOR_NAME);
-        leftRearMotor = hardwareMap.get(DcMotorEx.class, REAR_LEFT_MOTOR_NAME);
-        rightRearMotor = hardwareMap.get(DcMotorEx.class, REAR_RIGHT_MOTOR_NAME);
+        leftFrontMotor = hardwareMap.get(DcMotorEx.class, config.hardware.leftFront);
+        rightFrontMotor = hardwareMap.get(DcMotorEx.class, config.hardware.rightFront);
+        leftRearMotor = hardwareMap.get(DcMotorEx.class, config.hardware.leftRear);
+        rightRearMotor = hardwareMap.get(DcMotorEx.class, config.hardware.rightRear);
         motors = Arrays.asList(leftFrontMotor, rightFrontMotor, leftRearMotor, rightRearMotor);
 
         // Use the injected config for directions
@@ -201,7 +201,7 @@ public class DriveUtil2026b {
     }
 
     private void initializeIMU(HardwareMap hardwareMap) {
-        imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(IMU.class, config.hardware.imu);
         // Use the injected config for IMU orientation
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(config.imu.logoDirection, config.imu.usbDirection);
@@ -209,9 +209,24 @@ public class DriveUtil2026b {
         resetHeading();
     }
 
+    /**
+     * The Pinpoint is optional. A robot without one sets hardware.pinpoint to null in its config;
+     * the encoder-based moves (drive_p3, driveRobotDistance*) and TeleOp driving still work, and
+     * the odometry-based methods (driveTo, getOdoPosition, getPinpointHeading) report zero.
+     */
     private void initOdo(HardwareMap hardwareMap) {
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        if (config.hardware.pinpoint == null) {
+            pinpoint = null;
+            telemetry.addData("DriveUtil", "No Pinpoint in this robot's config; odometry disabled");
+            return;
+        }
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, config.hardware.pinpoint);
         configurePinpoint();
+    }
+
+    /** True if this robot has a Pinpoint and it was initialized. */
+    public boolean hasPinpoint() {
+        return pinpoint != null;
     }
 
     private void configurePinpoint() {
@@ -277,7 +292,7 @@ public class DriveUtil2026b {
     }
 
     public void resetPosAndIMU() {
-        pinpoint.resetPosAndIMU();
+        if (pinpoint != null) pinpoint.resetPosAndIMU();
     }
 
     public void resetActionTimer() {
@@ -319,9 +334,11 @@ public class DriveUtil2026b {
     }
 
     public double getPinpointHeading() {
+        if (pinpoint == null) return 0.0;
         return pinpoint.getHeading(RADIANS);
     }
     public Pose2D getOdoPosition() {
+        if (pinpoint == null) return new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
         Pose2D currentPos  = pinpoint.getPosition();
         telemetry.addData("current X coordinate", currentPos.getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", currentPos.getY(DistanceUnit.INCH));
@@ -392,6 +409,11 @@ public class DriveUtil2026b {
 
     public void addTelemetry() {
         telemetry.addLine("--- drive telemetry ---");
+        telemetry.addData("robot config", config.robotName);
+        if (pinpoint == null) {
+            telemetry.addData("odometry", "none (no Pinpoint in config)");
+            return;
+        }
         telemetry.addData("current X coordinate", pinpoint.getPosition().getX(DistanceUnit.INCH));
         telemetry.addData("current Y coordinate", pinpoint.getPosition().getY(DistanceUnit.INCH));
         telemetry.addData("current Heading angle", pinpoint.getPosition().getHeading(AngleUnit.DEGREES));
@@ -484,7 +506,7 @@ public class DriveUtil2026b {
         double leftFrontPower = drive + strafe + yaw;
         double rightFrontPower = drive - strafe - yaw;
         double leftBackPower = drive - strafe + yaw;
-        double rightBackPower = (drive + strafe - yaw)*1.15;
+        double rightBackPower = (drive + strafe - yaw) * config.calibration.rightRearPowerScale;
 
         // Normalize the motor powers
         double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
@@ -641,13 +663,10 @@ public class DriveUtil2026b {
      */
     public void drive_p3(double forwardInches, double strafeInches, double turnDegrees, double speed) {
         int forwardTicks = (int) (forwardInches * ENCODER_COUNTS_PER_INCH);
-        int strafeTicks = (int) (strafeInches * ENCODER_COUNTS_PER_INCH * 1.1); // Strafe fudge factor
+        int strafeTicks = (int) (strafeInches * ENCODER_COUNTS_PER_INCH * config.calibration.strafeScale); // mecanum strafe slips
 
-        // Calculate turn ticks based on robot's track width
-        // 1. Calculate the circumference of the circle the ROBOT ITSELF makes during a full turn.
-        //    The diameter of this circle is the robot's track width.
-        //    **Crucially, TRACK_WIDTH must be in INCHES to match ENCODER_COUNTS_PER_INCH
-        double turnCircumference = Math.PI * 27.5; //ROBOT_SIZE_DIAMETER;
+        // Turn ticks: the circumference of the circle the robot sweeps in a spin turn (inches, per robot config)
+        double turnCircumference = config.calibration.turnCircumferenceIn;
         double turnDistanceInches = (turnDegrees / 360.0) * turnCircumference;
         int turnTicks = (int) (turnDistanceInches * ENCODER_COUNTS_PER_INCH);
 
@@ -685,7 +704,7 @@ public class DriveUtil2026b {
     }
 
     public void driveRobotDistanceStrafeRight(double distanceInCM, double targetSpeed) {
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * 1.1 / WHEEL_CIRCUMFERENCE * distanceInCM);
+        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {targetCount, -targetCount, -targetCount, targetCount};
         driveRobotToPosition(targetPositions, targetSpeed);
     }
@@ -696,7 +715,7 @@ public class DriveUtil2026b {
     }
 
     public void driveRobotDistanceStrafeLeft(double distanceInCM, double targetSpeed) {
-        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * 1.1 / WHEEL_CIRCUMFERENCE * distanceInCM);
+        int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {-targetCount, targetCount, targetCount, -targetCount};
         driveRobotToPosition(targetPositions, targetSpeed);
     }
@@ -729,7 +748,7 @@ public class DriveUtil2026b {
     // =================================================================================
 
     public void update() {
-        pinpoint.update();
+        if (pinpoint != null) pinpoint.update();
         switch (driveState) {
             case DRIVING_TO_POINT_PINPOINT:
                 // updateDriveToPoint(); // Logic for non-blocking drive would go here

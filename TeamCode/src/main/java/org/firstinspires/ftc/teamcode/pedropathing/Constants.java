@@ -89,10 +89,10 @@ public class Constants {
         // 2. Configure MecanumConstants from RobotConfig.drivetrain and RobotConfig.pedroPathing
         MecanumConstants driveConfig = new MecanumConstants()
                 .maxPower(1.0)
-                .rightFrontMotorName("Front_Right")
-                .rightRearMotorName("Rear_Right")
-                .leftRearMotorName("Rear_Left")
-                .leftFrontMotorName("Front_Left")
+                .rightFrontMotorName(config.hardware.rightFront)
+                .rightRearMotorName(config.hardware.rightRear)
+                .leftRearMotorName(config.hardware.leftRear)
+                .leftFrontMotorName(config.hardware.leftFront)
                 .leftFrontMotorDirection(config.drivetrain.leftFrontDirection)
                 .leftRearMotorDirection(config.drivetrain.leftRearDirection)
                 .rightFrontMotorDirection(config.drivetrain.rightFrontDirection)
@@ -105,7 +105,7 @@ public class Constants {
                 .forwardPodY(config.odometry.pinpointOffsetY_mm)
                 .strafePodX(config.odometry.pinpointOffsetX_mm)
                 .distanceUnit(DistanceUnit.MM)
-                .hardwareMapName("odo")
+                .hardwareMapName(config.hardware.pinpoint)
                 .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
                 .forwardEncoderDirection(config.odometry.pinpointXPodDirection)
                 .strafeEncoderDirection(config.odometry.pinpointYPodDirection);

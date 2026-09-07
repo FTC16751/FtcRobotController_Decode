@@ -65,19 +65,36 @@ public class VisionUtil {
 
 
     /**
-     * Initializes the Limelight 3A vision system.
+     * Initializes the Limelight 3A vision system using the default device name "limelight".
+     * Prefer the three-argument constructor with the name from the robot's RobotConfig.
      * @param hardwareMap The HardwareMap from the OpMode, used to find the Limelight.
      * @param telemetry The Telemetry object used for logging.
      */
     public VisionUtil(@NonNull HardwareMap hardwareMap, Telemetry telemetry) {
+        this(hardwareMap, telemetry, "limelight");
+    }
+
+    /**
+     * Initializes the Limelight 3A vision system.
+     * @param hardwareMap   The HardwareMap from the OpMode, used to find the Limelight.
+     * @param telemetry     The Telemetry object used for logging.
+     * @param limelightName Device name from RobotConfig.hardware.limelight. If null, this robot has
+     *                      no Limelight: every query reports "no target" and nothing throws.
+     */
+    public VisionUtil(@NonNull HardwareMap hardwareMap, Telemetry telemetry, String limelightName) {
         this.telemetry = telemetry;
+        if (limelightName == null) {
+            this.limelight = null;
+            telemetry.addData("Limelight", "none in this robot's config; vision disabled");
+            return;
+        }
         try {
-            limelight = hardwareMap.get(Limelight3A.class, "limelight");
+            limelight = hardwareMap.get(Limelight3A.class, limelightName);
             limelight.pipelineSwitch(CommonConstants.Limelight.MOTIF_PIPELINE);
             limelight.start();
             telemetry.addData("Limelight", "Initialized Successfully");
         } catch (Exception e) {
-            telemetry.addData("Limelight ERROR", "NOT found in config. Check name.");
+            telemetry.addData("Limelight ERROR", "'" + limelightName + "' NOT found in config. Check name.");
             this.limelight = null; // Ensure limelight is null if initialization fails
         }
     }
