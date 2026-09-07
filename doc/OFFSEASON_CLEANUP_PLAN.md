@@ -80,8 +80,9 @@ the motor names sit on their physical corners; SkylineBotConfig and its TeleOps 
 approach works end to end against the blue goal: DONE at 60.1 in, 0.3 in off center, 0.4 deg off
 square. Two Limelight facts learned the hard way and now in VisionUtil: its robot-space pose is in
 camera axes (X right, Y down, Z forward, rotation about the vertical arrives as pitch), and goal
-tags are only visible on their own pipeline (`selectPipelineForTag`). Still blocked on hardware:
-the Pinpoint pods are not touching the floor, so Drive Square and the pod push test wait. Remaining DriveUtil items, in order: the robot session; the
+tags are only visible on their own pipeline (`selectPipelineForTag`). The Pinpoint pods were fixed
+to touch the floor during the session, so the pod push test and Drive Square are the next robot
+items, with the measured +120/-120 mm offsets. Remaining DriveUtil items, in order: the robot session; the
 Advanced tier (`startPath`, `relocalizeFromTag`, `startMoveRelative`) once the Pinpoint square and
 the tag-approach sign check pass; the Pedro revisit from the commented blocks (hard rule 6); R13
 as a one-page table of the tiers. The detailed record of what was found and done is the section

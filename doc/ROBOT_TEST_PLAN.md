@@ -188,7 +188,7 @@ and the heading rises; a pod direction that goes the wrong way is fixed in the c
 | C1 | 2026-09-07 | Skyline | pass | launch on the left shoulder button works. |
 | D1, D2 | 2026-09-07 | Skyline | pass | flywheel velocity follows the distance table. |
 | D4, D5 | 2026-09-07 | Skyline | pass | aim LED and snap-to-target work, with the turn negation removed. |
-| Pinpoint | 2026-09-07 | Skyline | blocked | pods not making contact with the field (mechanical). Drive Square and the push test wait. |
+| Pinpoint | 2026-09-07 | Skyline | unblocked | pods were not touching the field; fixed mechanically during the session, and X/Y began tracking. The push test (forward raises X, left raises Y, a spin leaves X/Y within ~100 mm) and Drive Square are next; both need the +120/-120 mm offsets deployed. |
 | H1 | 2026-09-07 | Skyline | pass | The Limelight robot-space pose is in camera axes (X right, Y down, Z forward) and the rotation about the vertical arrives as pitch; VisionUtil remapped and all four sign constants confirmed against the blue goal tag. Goal tags need their own pipeline (VisionUtil.selectPipelineForTag). |
 | H2 | 2026-09-07 | Skyline | pass | first attempt drove backward and left (wrong axes); after the remap it drove toward the goal and centered. |
 | H3 | 2026-09-07 | Skyline | pass | from about 7 ft away and 2 ft right of the goal centerline, angled 30 deg: turned to square, drove in, centered, DONE at 60.1 in / 0.3 in / 0.4 deg (standoff 60 because the goal tag sits 31 in above the camera and leaves the frame inside about 50 in). A fair bit of hunting near the target; tolerances widened to 2 in / 3 deg and min power lowered to 0.05 afterward, not yet re-run. |
