@@ -26,6 +26,20 @@ import org.firstinspires.ftc.teamcode.pedropathing.Constants;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The shared drive utility. It exists so a new programmer can get a simple autonomous running
+ * quickly through helper functions that hide the complexity of moving a robot.
+ *
+ * START HERE: the BEGINNER COMMANDS section just below the constructor. driveForward(24),
+ * turnLeft(90), strafeRight(12), waitSeconds(0.5), stop(). Each one blocks until it is done, has a
+ * time limit so a stuck wheel cannot hang the auto, and uses the team's default speed unless you
+ * give one. Everything after that section is for later: encoder moves with three components,
+ * Pinpoint waypoints (driveTo), and the AprilTag approach.
+ *
+ * Conventions everywhere in this file: forward is positive, strafe is positive to the RIGHT,
+ * turns are positive CLOCKWISE. The beginner commands put the direction in the name so you never
+ * have to remember that.
+ */
 public class DriveUtil2026b {
     // =================================================================================
     // SECTION 1: CLASS MEMBERS AND CONSTANTS
@@ -73,6 +87,11 @@ public class DriveUtil2026b {
     private final PinpointPIDLoop xPID = new PinpointPIDLoop();
     private final PinpointPIDLoop yPID = new PinpointPIDLoop();
     private final PinpointPIDLoop hPID = new PinpointPIDLoop();
+
+    // --- Default speeds for the beginner commands. Set once by the robot class from the team's
+    //     Constants (how the robot operates), see setDefaultSpeeds(). Safe values if never set.
+    private double defaultDriveSpeed = 0.4;
+    private double defaultTurnSpeed  = 0.3;
 
     // --- General Members ---
     private Telemetry telemetry;
@@ -182,6 +201,103 @@ public class DriveUtil2026b {
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(config.odometry.pinpointXPodDirection, config.odometry.pinpointYPodDirection);
         pinpoint.resetPosAndIMU();
+    }
+
+    // =================================================================================
+    // BEGINNER COMMANDS (START HERE)
+    // =================================================================================
+    //
+    // Everything a first autonomous needs. The direction is in the name, distances are in inches,
+    // turns in degrees. Every command blocks until the move is done (or its time limit passes, or
+    // the Driver Station presses Stop) and returns true if the wheels reached their targets.
+    // Speed is optional: leave it out and the team's default is used.
+    //
+    //   robot.drive.driveForward(24);
+    //   robot.drive.turnLeft(90);
+    //   robot.drive.strafeRight(12);
+    //   robot.drive.waitSeconds(0.5);
+    //   robot.drive.stop();
+    //
+    // These are the encoder moves underneath (drive_p3 and the driveRobotDistance* family), so
+    // they use the calibration numbers measured with the Encoder Move Check OpMode. No Pinpoint
+    // or camera is needed, except by driveToTag.
+
+    /**
+     * Set the speeds the beginner commands use when no speed is given. The robot class calls
+     * this once from the team's Constants. Powers are 0 to 1.
+     */
+    public void setDefaultSpeeds(double driveSpeed, double turnSpeed) {
+        defaultDriveSpeed = driveSpeed;
+        defaultTurnSpeed  = turnSpeed;
+    }
+    public double getDefaultDriveSpeed() { return defaultDriveSpeed; }
+    public double getDefaultTurnSpeed()  { return defaultTurnSpeed; }
+
+    /** Drive straight ahead this many inches at the default speed. */
+    public boolean driveForward(double inches)                { return driveForward(inches, defaultDriveSpeed); }
+    /** Drive straight ahead this many inches. Speed is motor power, 0 to 1. */
+    public boolean driveForward(double inches, double speed)  { return driveRobotDistanceForwardInches(Math.abs(inches), speed); }
+
+    /** Drive straight back this many inches at the default speed. */
+    public boolean driveBackward(double inches)               { return driveBackward(inches, defaultDriveSpeed); }
+    /** Drive straight back this many inches. Speed is motor power, 0 to 1. */
+    public boolean driveBackward(double inches, double speed) { return driveRobotDistanceBackwardInches(Math.abs(inches), speed); }
+
+    /** Slide left this many inches without turning, at the default speed. */
+    public boolean strafeLeft(double inches)                  { return strafeLeft(inches, defaultDriveSpeed); }
+    /** Slide left this many inches without turning. Speed is motor power, 0 to 1. */
+    public boolean strafeLeft(double inches, double speed)    { return driveRobotDistanceStrafeLeftInches(Math.abs(inches), speed); }
+
+    /** Slide right this many inches without turning, at the default speed. */
+    public boolean strafeRight(double inches)                 { return strafeRight(inches, defaultDriveSpeed); }
+    /** Slide right this many inches without turning. Speed is motor power, 0 to 1. */
+    public boolean strafeRight(double inches, double speed)   { return driveRobotDistanceStrafeRightInches(Math.abs(inches), speed); }
+
+    /** Turn left (counter-clockwise) in place this many degrees, at the default turn speed. */
+    public boolean turnLeft(double degrees)                   { return turnLeft(degrees, defaultTurnSpeed); }
+    /** Turn left (counter-clockwise) in place this many degrees. Speed is motor power, 0 to 1. */
+    public boolean turnLeft(double degrees, double speed)     { return drive_p3(0, 0, -Math.abs(degrees), speed); }
+
+    /** Turn right (clockwise) in place this many degrees, at the default turn speed. */
+    public boolean turnRight(double degrees)                  { return turnRight(degrees, defaultTurnSpeed); }
+    /** Turn right (clockwise) in place this many degrees. Speed is motor power, 0 to 1. */
+    public boolean turnRight(double degrees, double speed)    { return drive_p3(0, 0, Math.abs(degrees), speed); }
+
+    /**
+     * Do nothing for this long. Ends early if the Driver Station presses Stop. Use it to let a
+     * launcher spin up or a servo finish before the next move.
+     */
+    public void waitSeconds(double seconds) {
+        sleep((long) (Math.max(0, seconds) * 1000));
+    }
+
+    /** Stop all four wheels. */
+    public void stop() {
+        stopRobot();
+    }
+
+    /**
+     * Drive to a spot in front of an AprilTag and square up to it, then stop. Blocks until the
+     * robot is there, the tag has been out of view too long, or the time limit passes. Needs the
+     * robot's camera; the gains come from the robot's config (tagApproach).
+     *
+     * @param vision         the robot's VisionUtil
+     * @param tagId          the AprilTag id to drive to
+     * @param standoffInches how far in front of the tag to stop
+     * @return true if the robot got there; false if it gave up (see getTagApproach().getState())
+     */
+    public boolean driveToTag(VisionUtil vision, int tagId, double standoffInches) {
+        driveToTagAsync(vision, tagId, standoffInches, 0.25);
+        while (isBusy()) {
+            if (Thread.currentThread().isInterrupted()) {
+                cancelDriveToTag();
+                return false;
+            }
+            vision.update();
+            update();
+            sleep(MOVE_POLL_MS);
+        }
+        return lastTagApproachSucceeded();
     }
 
     // =================================================================================
@@ -653,31 +769,6 @@ public class DriveUtil2026b {
         return drive_p3(0, 0, angleInDegrees, targetSpeed);
     }
 
-    // --- Beginner turn commands -------------------------------------------------------------
-    // The direction is in the name, so a first-week programmer never has to remember which sign
-    // is clockwise. Both take the size of the turn; a negative number is treated as positive
-    // rather than silently turning the other way. Same calibration and time limit as drive_p3.
-    // Pair with driveRobotDistanceForwardInches / BackwardInches / StrafeLeftInches / StrafeRightInches.
-
-    /**
-     * Turn left (counter-clockwise) in place by this many degrees, then stop.
-     * @param degrees size of the turn, 0 to 360; the sign is ignored
-     * @param speed   motor power 0 to 1; 0.3 is a good first value
-     * @return true if the wheels reached their targets; false if the move timed out or was stopped
-     */
-    public boolean turnLeft(double degrees, double speed) {
-        return drive_p3(0, 0, -Math.abs(degrees), speed);
-    }
-
-    /**
-     * Turn right (clockwise) in place by this many degrees, then stop.
-     * @param degrees size of the turn, 0 to 360; the sign is ignored
-     * @param speed   motor power 0 to 1; 0.3 is a good first value
-     * @return true if the wheels reached their targets; false if the move timed out or was stopped
-     */
-    public boolean turnRight(double degrees, double speed) {
-        return drive_p3(0, 0, Math.abs(degrees), speed);
-    }
 
 
     // =================================================================================

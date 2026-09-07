@@ -30,6 +30,9 @@ public class Test2027Robot {
 
         drive  = new DriveUtil2026b(hardwareMap, telemetry, null, config);
         vision = new VisionUtil(hardwareMap, telemetry, config.hardware.limelight);
+
+        // How the robot operates comes from Constants; the beginner commands read these defaults.
+        drive.setDefaultSpeeds(Test2027Constants.Drive.AUTO_DRIVE_SPEED, Test2027Constants.Drive.AUTO_TURN_SPEED);
     }
 
     /** Call in every loop() and init_loop(). Steps the Pinpoint, any async drive, and the camera. */

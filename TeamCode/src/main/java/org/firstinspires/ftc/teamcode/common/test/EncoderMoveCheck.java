@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
  *   D-pad left/right turn 90 deg left / right           (turnLeft / turnRight, the beginner commands)
  *   D-pad up         turn 360 deg CW                     (drive_p3, measures the turning circle)
  *   D-pad down       turn 180 deg CW                     (drive_p3, for when there is no room for a 360)
- *   Left/right bumper  forward / backward 12 in          (driveRobotDistance*Inches, the fixed path)
+ *   Left/right bumper  forward / backward 12 in          (driveForward / driveBackward, the beginner commands)
  *   Left/right trigger speed down / up by 0.1
  *
  * What to write down after each move is in the telemetry: whether the move reached its target or
@@ -78,8 +78,8 @@ public abstract class EncoderMoveCheck extends LinearOpMode {
             if (gamepad1.dpadRightWasPressed()) run("turn 90 right (turnRight)",       () -> drive.turnRight(90, speed));
             if (gamepad1.dpadUpWasPressed())    run("turn 360 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 360, speed));
             if (gamepad1.dpadDownWasPressed())  run("turn 180 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 180, speed));
-            if (gamepad1.leftBumperWasPressed())  run("forward 12 in (driveRobotDistanceForwardInches)",   () -> drive.driveRobotDistanceForwardInches(SHORT_IN, speed));
-            if (gamepad1.rightBumperWasPressed()) run("backward 12 in (driveRobotDistanceBackwardInches)", () -> drive.driveRobotDistanceBackwardInches(SHORT_IN, speed));
+            if (gamepad1.leftBumperWasPressed())  run("forward 12 in (driveForward)",       () -> drive.driveForward(SHORT_IN, speed));
+            if (gamepad1.rightBumperWasPressed()) run("backward 12 in (driveBackward)",     () -> drive.driveBackward(SHORT_IN, speed));
 
             showTelemetry();
             sleep(20);
@@ -129,7 +129,7 @@ public abstract class EncoderMoveCheck extends LinearOpMode {
                 cal.encoderCountsPerInch, cal.strafeScale, cal.turnCircumferenceIn);
         telemetry.addLine();
         telemetry.addLine("Y/A fwd/back 24   X/B strafe L/R 24   dpad L/R turn 90   dpad up 360   dpad down 180");
-        telemetry.addLine("LB/RB fwd/back 12 in via driveRobotDistance*Inches   LT/RT speed");
+        telemetry.addLine("LB/RB fwd/back 12 in via driveForward/driveBackward   LT/RT speed");
         telemetry.update();
     }
 }

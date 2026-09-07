@@ -164,7 +164,9 @@ works the same way once it has a TagApproach call in a TeleOp.
 ## I. test2027bot bring-up (the new-team template, `teams/testteam2027/README.md`)
 
 The README is the checklist. In short: config filled in (device names, motor directions, IMU,
-pods), `Test2027: Teleop (RUN ME)` drives, `Test2027: Encoder Move Check` measures section F,
+pods), `Test2027: Teleop (RUN ME)` drives, `Test2027: Beginner Auto (START HERE)` runs its eight
+moves from a tape mark and ends about where it started facing the same way (forward 24, left 90,
+forward 12, right 12, wait, right 90, back 12), `Test2027: Encoder Move Check` measures section F,
 `Test2027: Drive Square (Pinpoint)` returns to its mark within an inch with zero timed-out
 steps, then section H. Note anything in the README that a first-time team would have tripped on.
 

@@ -248,8 +248,31 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
   values are the pre-change tick counts). `AngleTest` covers `Angle.normDelta` in place. 102 tests
   total. The sign conventions (forward, right, clockwise) are now stated by tests, not by comments.
 
-**Suggested order for the rest:** the `getOdoPosition` telemetry; the `driveTo` overload that
-reads its own pose; then the duplicates and dead private code.
+**Beginner tier DONE 2026-09-07 (hard rule 5).** DriveUtil2026b opens with a class comment
+pointing at a BEGINNER COMMANDS section placed right after the constructor: `driveForward`,
+`driveBackward`, `strafeLeft`, `strafeRight`, `turnLeft`, `turnRight` (inches or degrees, sign
+ignored, optional speed), `waitSeconds`, `stop`, and a blocking `driveToTag(vision, id, inches)`.
+Default speeds come from `setDefaultSpeeds(drive, turn)`, which the robot class calls from the
+team's Constants, keeping "how it operates" out of RobotConfig. The long-named
+`driveRobotDistance*Inches` family stays underneath for the old autos. `Test2027BeginnerAuto` is
+the eight-move LinearOpMode a new programmer copies first; the testteam2027 README has the
+vocabulary table (Step 6b). Encoder Move Check bumpers use `driveForward`/`driveBackward`.
+
+**Tier plan agreed 2026-09-07** (mentor: an advanced programmer is still a high schooler):
+- Intermediate ("the robot knows where it is"): `move(fwd, right, turn)` naming `drive_p3`;
+  `getX/getY/getHeadingDegrees`, `setPosition`, `resetPosition`; `startDriveTo(x, y, heading)` +
+  `isBusy()` + `cancel()` reading its own pose with a timeout; `turnToHeading(deg)`;
+  `startDriveToTag`; `resetFieldForward()` for field-centric TeleOp.
+- Advanced ("follows a plan and proves it"): `startPath(List<Pose2D>)` with per-step timeouts
+  (the R9 idea, inside the drive); `relocalizeFromTag(vision)` (GGRobot2.resetOdometryToVision
+  promoted); `startMoveRelative`; the tuning surfaces; tests as the definition of correct;
+  `moveRobot`/`setMotorPowers` documented once.
+- Mentor tier already exists: pedropathing/, roadrunner/, PID internals, VisionUtil sign constants.
+- One object `robot.drive`, file ordered by tier; R13 becomes a one-page table of the tiers.
+
+**Suggested order for the rest:** Intermediate getters and `startDriveTo`; the `getOdoPosition`
+telemetry; then the duplicates and dead private code; `startPath` and `relocalizeFromTag` after
+the Pinpoint square and the tag approach have been on a stand.
 
 ## Context
 

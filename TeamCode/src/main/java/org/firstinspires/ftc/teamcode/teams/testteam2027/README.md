@@ -18,7 +18,9 @@ teams/testteam2027/
   Test2027Robot.java          The one object every OpMode creates. Owns drive and vision, updates
                               them each loop. Add game subsystems here as public fields.
   teleop/Test2027Teleop.java  Drive with the sticks; hold RB to drive to the test tag.
-  auto/Test2027DriveSquareAuto.java   Pinpoint waypoints: drives a 24 in square. The auto template.
+  auto/Test2027BeginnerAuto.java      A first auto: eight lines of driveForward / turnLeft / ...
+                              This is the file a new programmer copies first.
+  auto/Test2027DriveSquareAuto.java   Pinpoint waypoints: drives a 24 in square. The next step up.
   auto/Test2027TagApproachAuto.java   Non-blocking AprilTag approach test.
   test/Test2027EncoderMoveCheck.java  Encoder moves on buttons, for calibration measurements.
   README.md                   This file.
@@ -98,6 +100,24 @@ interactively, which is the quickest way to repeat H1 while someone adjusts the 
 constants at the top of the TagSighting section of `common/VisionUtil.java`. Those constants
 are shared by every robot, so once one robot has them right, every robot does.
 
+## Step 6b. Write the first auto (the beginner vocabulary)
+
+Copy `auto/Test2027BeginnerAuto.java`, rename it, and change the numbers. The whole vocabulary:
+
+| Command | What it does |
+|---|---|
+| `driveForward(inches)`, `driveBackward(inches)` | straight, then stop |
+| `strafeLeft(inches)`, `strafeRight(inches)` | slide sideways without turning |
+| `turnLeft(degrees)`, `turnRight(degrees)` | spin in place |
+| `waitSeconds(seconds)` | pause (a launcher spinning up, a servo finishing) |
+| `stop()` | all wheels off |
+| `driveToTag(robot.vision, tagId, inches)` | drive to a spot in front of an AprilTag |
+
+Each one finishes before the next line runs, gives up after a few seconds if a wheel is stuck,
+and returns true if it got there. Add a second number for a different speed:
+`driveForward(24, 0.3)`. The default speeds are `Drive.AUTO_DRIVE_SPEED` and
+`Drive.AUTO_TURN_SPEED` in your constants. Distances are only as accurate as Step 4's calibration.
+
 ## Step 7. Add the game
 
 - A subsystem: a class in `teams/<yourteam>/subsystems/`, built in the robot class from device
@@ -108,10 +128,6 @@ are shared by every robot, so once one robot has them right, every robot does.
   `Drive Square` does. That is exactly how the GearGirls and P3 autos work.
 - A tag to drive to: `robot.drive.driveToTagAsync(robot.vision, id, standoffInches, holdSec)`,
   then wait on `robot.drive.isBusy()` while the launcher spins up in the same loop.
-- A first auto with no Pinpoint at all: the beginner commands, each one blocking until done and
-  with the direction in its name: `driveRobotDistanceForwardInches(24, 0.4)`,
-  `driveRobotDistanceStrafeLeftInches(12, 0.4)`, `turnLeft(90, 0.3)`, `turnRight(45, 0.3)`.
-  They all read the calibration you measured in Step 4.
 
 ## Things that will bite
 

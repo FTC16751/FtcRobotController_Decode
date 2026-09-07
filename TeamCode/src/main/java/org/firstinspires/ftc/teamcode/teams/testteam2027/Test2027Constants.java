@@ -21,6 +21,9 @@ public final class Test2027Constants {
         public static final double NORMAL_SPEED   = 0.6;
         public static final double SLOW_SPEED     = 0.25;
         public static final double STICK_DEADBAND = 0.05;
+        /** Speeds the beginner auto commands use when no speed is given (driveForward(24) etc.). */
+        public static final double AUTO_DRIVE_SPEED = 0.4;
+        public static final double AUTO_TURN_SPEED  = 0.3;
     }
 
     /** The AprilTag approach test. Change TAG_ID to whatever tag is taped to the wall today. */
