@@ -50,12 +50,15 @@ Skyline is the best choice because its live autos use these moves.
       within a second and the Robot Controller app does NOT restart. Note: Skyline's autos are
       iterative OpModes, so the time limit is what ends the move there, not the interrupt check.
       Both paths are covered by this test plus B3.
-- [ ] **B5. Forward by inches drives the right distance.** No live OpMode calls
-      `driveRobotDistanceForwardInches`, so use `common/test/BasicAuto_Iterative`: remove its
-      `@Disabled`, uncomment the line `drive.driveRobotDistanceForwardInches(12, .5)`, deploy, run
-      on the floor from a tape line. Expected: 12 in. Before the fix this drove about 21 in.
-      Put `@Disabled` back afterward. (A dedicated one-button "encoder move check" OpMode would
-      make this repeatable; ask for it if you want it.)
+- [ ] **B5. Forward by inches drives the right distance.** Run the team's Encoder Move Check
+      TeleOp (`GG Encoder Move Check`, `P3 Encoder Move Check`, `SKYLINE: Encoder Move Check`, or
+      `Encoder Move Check (StandardBot)` under Common Test). Robot on the floor at a tape line,
+      press the left bumper (forward 12 in via `driveRobotDistanceForwardInches`). Expected: 12 in,
+      and telemetry says "reached target". Before the fix this drove about 21 in. Right bumper is
+      the backward twin, which was always right; the two should match.
+- [ ] **B6. The same OpMode covers B1 to B4 without an auto.** Y drives forward 24 in with
+      `drive_p3` at the speed shown (triggers change it). Hold a wheel for B3, press Stop for B4;
+      the telemetry line `result` says "TIMED OUT or stopped" and how long it took.
 
 ## C. LaunchController in Common (f054394, ba10258)
 
@@ -117,8 +120,11 @@ Each takes about two minutes with `drive_p3` from a tape line.
 | Turning circle | `drive_p3(0, 0, 360, 0.4)`, note the actual rotation. New value = 27.5 x 360 / actual degrees | `turnCircumferenceIn` (then retire `robotDiameterCm`) |
 | Right-rear correction | Drive straight at 0.5 for 8 ft with `rightRearPowerScale` set to 1.0 in the config; note the drift | Whether 1.15 belongs on this chassis at all |
 
-Use `common/test/BasicAuto_Iterative` or `MechanumWheelTestDriveUtil` (remove `@Disabled` for the
-day) as the vehicle for these calls; both already construct a DriveUtil2026b with the robot's config.
+The team's Encoder Move Check TeleOp has all of these on buttons: Y is forward 24 (use it twice
+for 48), B is strafe right 24, D-pad up is the 360 turn, and D-pad down is the `rotateRobot` 90 so
+the two turning-circle numbers can be compared in one session. After each move the telemetry shows
+the wheel ticks and what those ticks mean under the calibration in use, so the arithmetic above is
+a tape measure and one division.
 
 ## G. Known defects that are NOT fixed yet (expect these to still misbehave)
 

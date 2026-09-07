@@ -699,8 +699,10 @@ public class DriveUtil2026b {
      * @param strafeInches   Distance to move right (negative for left).
      * @param turnDegrees    Angle to rotate clockwise (negative for counter-clockwise).
      * @param speed          The motor speed (0.0 to 1.0).
+     * @return true if the motors reached their targets; false if the move timed out or the OpMode
+     *         was stopped (see driveRobotToPosition). The other encoder moves return the same flag.
      */
-    public void drive_p3(double forwardInches, double strafeInches, double turnDegrees, double speed) {
+    public boolean drive_p3(double forwardInches, double strafeInches, double turnDegrees, double speed) {
         int forwardTicks = (int) (forwardInches * ENCODER_COUNTS_PER_INCH);
         int strafeTicks = (int) (strafeInches * ENCODER_COUNTS_PER_INCH * config.calibration.strafeScale); // mecanum strafe slips
 
@@ -716,55 +718,55 @@ public class DriveUtil2026b {
 
         int[] targetPositions = {fl_ticks, fr_ticks, rl_ticks, rr_ticks};
 
-        driveRobotToPosition(targetPositions, speed);
+        return driveRobotToPosition(targetPositions, speed);
     }
-    public void driveRobotDistanceForward(double distanceInCM, double targetSpeed) {
+    public boolean driveRobotDistanceForward(double distanceInCM, double targetSpeed) {
         // Same tick math as driveRobotDistanceBackward. (An earlier version passed the tick count,
         // divided by 25.4, into drive_p3 as if it were inches, which drove about 1.8x too far.)
         int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {targetCount, targetCount, targetCount, targetCount};
-        driveRobotToPosition(targetPositions, targetSpeed);
+        return driveRobotToPosition(targetPositions, targetSpeed);
     }
 
-    public void driveRobotDistanceForwardInches(double distanceInInches, double targetSpeed) {
+    public boolean driveRobotDistanceForwardInches(double distanceInInches, double targetSpeed) {
         double distanceInCM = distanceInInches * 2.54;
-        driveRobotDistanceForward(distanceInCM, targetSpeed);
+        return driveRobotDistanceForward(distanceInCM, targetSpeed);
     }
 
-    public void driveRobotDistanceBackward(double distanceInCM, double targetSpeed) {
+    public boolean driveRobotDistanceBackward(double distanceInCM, double targetSpeed) {
         int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {-targetCount, -targetCount, -targetCount, -targetCount};
-        driveRobotToPosition(targetPositions, targetSpeed);
+        return driveRobotToPosition(targetPositions, targetSpeed);
     }
 
-    public void driveRobotDistanceBackwardInches(double distanceInInches, double targetSpeed) {
+    public boolean driveRobotDistanceBackwardInches(double distanceInInches, double targetSpeed) {
         double distanceInCM = distanceInInches * 2.54;
-        driveRobotDistanceBackward(distanceInCM, targetSpeed);
+        return driveRobotDistanceBackward(distanceInCM, targetSpeed);
     }
 
-    public void driveRobotDistanceStrafeRight(double distanceInCM, double targetSpeed) {
+    public boolean driveRobotDistanceStrafeRight(double distanceInCM, double targetSpeed) {
         int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {targetCount, -targetCount, -targetCount, targetCount};
-        driveRobotToPosition(targetPositions, targetSpeed);
+        return driveRobotToPosition(targetPositions, targetSpeed);
     }
 
-    public void driveRobotDistanceStrafeRightInches(double distanceInInches, double targetSpeed) {
+    public boolean driveRobotDistanceStrafeRightInches(double distanceInInches, double targetSpeed) {
         double distanceInCM = distanceInInches * 2.54;
-        driveRobotDistanceStrafeRight(distanceInCM, targetSpeed);
+        return driveRobotDistanceStrafeRight(distanceInCM, targetSpeed);
     }
 
-    public void driveRobotDistanceStrafeLeft(double distanceInCM, double targetSpeed) {
+    public boolean driveRobotDistanceStrafeLeft(double distanceInCM, double targetSpeed) {
         int targetCount = (int) Math.round(COUNTS_PER_GEAR_REV * config.calibration.strafeScale / WHEEL_CIRCUMFERENCE * distanceInCM);
         int[] targetPositions = {-targetCount, targetCount, targetCount, -targetCount};
-        driveRobotToPosition(targetPositions, targetSpeed);
+        return driveRobotToPosition(targetPositions, targetSpeed);
     }
 
-    public void driveRobotDistanceStrafeLeftInches(double distanceInInches, double targetSpeed) {
+    public boolean driveRobotDistanceStrafeLeftInches(double distanceInInches, double targetSpeed) {
         double distanceInCM = distanceInInches * 2.54;
-        driveRobotDistanceStrafeLeft(distanceInCM, targetSpeed);
+        return driveRobotDistanceStrafeLeft(distanceInCM, targetSpeed);
     }
 
-    public void rotateRobot(double angleInDegrees, double targetSpeed) {
+    public boolean rotateRobot(double angleInDegrees, double targetSpeed) {
         //rotate(90, 0.5);
         // Calculate the target count based on the angle and robot diameter
         double circumference = Math.PI * ROBOT_SIZE_DIAMETER;
@@ -778,7 +780,7 @@ public class DriveUtil2026b {
         int[] targetPositions = {direction * targetCount, -direction * targetCount, direction * targetCount, -direction * targetCount};
 
         // Call the helper method to execute the turn
-        driveRobotToPosition(targetPositions, targetSpeed);
+        return driveRobotToPosition(targetPositions, targetSpeed);
     }
 
 

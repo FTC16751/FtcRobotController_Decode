@@ -136,7 +136,11 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   has a time limit (three times the ideal travel time at the requested power plus 2 s, never under
   3 s; a three-argument overload takes an explicit limit). Returns true if the targets were reached.
   Needs a robot on a stand: run one `drive_p3` move and confirm nothing got slower, then hold a
-  wheel and confirm the step ends on its own.
+  wheel and confirm the step ends on its own. `drive_p3`, `rotateRobot`, and the
+  `driveRobotDistance*` family now return that reached-or-timed-out flag (void before; callers
+  that ignore it compile unchanged). `common/test/EncoderMoveCheck` is a one-button TeleOp for
+  these checks and the calibration measurements; each team has a three-line subclass with its
+  config (`GGEncoderMoveCheck`, `P3EncoderMoveCheck`, `SkylineEncoderMoveCheck`, and a StandardBot one).
 - Simplified odometry has inverted feedback on two of three axes. `moveRobot` is positive-right
   for strafe and positive-clockwise for yaw (the `drive_p3` mixing and Javadoc agree). Phil's
   feedback side is positive-left (`updateMotion`) and the IMU is positive-counter-clockwise, so
