@@ -2,7 +2,7 @@
 
 ## Status and how to resume (read this first)
 
-**Last updated 2026-09-06.** Repo: `/Users/georgemitchom/StudioProjects/FTC17651/FtcRobotController_Decode`
+**Last updated 2026-09-07 (evening).** Repo: `/Users/georgemitchom/StudioProjects/FTC17651/FtcRobotController_Decode`
 (GitHub fork `FTC16751/FtcRobotController_Decode`, default branch `master`). Work is on branch
 `offseason/common-cleanup-2026`, open as [PR #1](https://github.com/FTC16751/FtcRobotController_Decode/pull/1).
 Tag `pre-r6-reorg` marks the tree before the folder move.
@@ -63,6 +63,18 @@ from the repo root (Gradle's incremental compiler sometimes needs `:TeamCode:cle
 file). BSD sed lacks `\s` and `\b`; use perl. OpMode names contain parentheses, so any annotation
 rewrite must be quote-aware. `gh pr` needs `--repo FTC16751/FtcRobotController_Decode` and a
 `FTC16751:` head prefix because the repo is a fork.
+
+## Where things stand (end of 2026-09-07 session)
+
+DriveUtil2026b is reorganized by tier (Beginner, Intermediate, then the advanced idioms), down
+from 1450 to 1186 lines, with 102 laptop unit tests covering its math and the tag approach.
+Nothing from today has run on a robot yet; `doc/ROBOT_TEST_PLAN.md` is the ordered checklist and
+`teams/testteam2027` is the test bed (its config matches Skyline's chassis, so those OpModes run
+on Skyline's Control Hub unchanged). Remaining DriveUtil items, in order: the robot session; the
+Advanced tier (`startPath`, `relocalizeFromTag`, `startMoveRelative`) once the Pinpoint square and
+the tag-approach sign check pass; the Pedro revisit from the commented blocks (hard rule 6); R13
+as a one-page table of the tiers. The detailed record of what was found and done is the section
+below.
 
 ## Next focus (set 2026-09-07): analyze and improve `common/DriveUtil2026b`
 
