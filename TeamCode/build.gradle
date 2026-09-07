@@ -21,6 +21,13 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    // Local unit tests (TeamCode/src/test/java) run on the laptop JVM, no robot needed.
+    // Android framework calls return defaults instead of throwing, so Common classes that only
+    // touch FTC interfaces (Telemetry, HardwareMap) can be tested with fakes.
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 repositories {
@@ -36,4 +43,8 @@ dependencies {
     implementation "com.acmerobotics.roadrunner:core:1.0.1"
     implementation "com.acmerobotics.roadrunner:actions:1.0.1"
     implementation "com.acmerobotics.dashboard:dashboard:0.5.1"
+
+    // Unit tests. Run with: ./gradlew :TeamCode:testDebugUnitTest
+    // or right-click a test class in Android Studio and choose Run.
+    testImplementation 'junit:junit:4.13.2'
 }
