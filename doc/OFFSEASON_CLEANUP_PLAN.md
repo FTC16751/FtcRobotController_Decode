@@ -153,7 +153,8 @@ an encoder strafe), `driveToTagAsync` (one disabled caller), or `driveRelative`.
   The disabled `GGAutonomous001` early auto now uses `drive_p3(-24, 0, 0, 0.5)` for its one call.
   The public `heading` field stays: ten P3 autos (including the live QueueBot3) show it as
   "imu heading" in telemetry, and since only `readSensors` ever wrote it, it has always read 0.
-  R11 follow-up: switch those lines to `getHeading()`.
+  Mentor decision 2026-09-07: leave those autos alone. No action planned; the same screens already
+  show the Pinpoint heading via `getOdoPosition()`.
 - `driveToTagAsync` sets a state `update()` never handles, so `isBusy()` stays true forever.
   **TODO:** implement the handler or delete the method and its six write-only fields.
 - Two turning circles: `rotateRobot` uses `robotDiameterCm` 60 (74 in circumference), `drive_p3`
