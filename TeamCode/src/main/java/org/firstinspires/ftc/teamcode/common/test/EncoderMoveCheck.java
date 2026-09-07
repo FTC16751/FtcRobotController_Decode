@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
  * Buttons (gamepad 1):
  *   Y / A            forward / backward 24 in            (drive_p3)
  *   X / B            strafe left / right 24 in           (drive_p3)
- *   D-pad left/right turn 90 deg CCW / CW                (drive_p3, uses turnCircumferenceIn)
+ *   D-pad left/right turn 90 deg left / right           (turnLeft / turnRight, the beginner commands)
  *   D-pad up         turn 360 deg CW                     (drive_p3, measures the turning circle)
  *   D-pad down       turn 180 deg CW                     (drive_p3, for when there is no room for a 360)
  *   Left/right bumper  forward / backward 12 in          (driveRobotDistance*Inches, the fixed path)
@@ -74,8 +74,8 @@ public abstract class EncoderMoveCheck extends LinearOpMode {
             if (gamepad1.aWasPressed())         run("backward 24 in (drive_p3)",       () -> drive.drive_p3(-MOVE_IN, 0, 0, speed));
             if (gamepad1.xWasPressed())         run("strafe left 24 in (drive_p3)",    () -> drive.drive_p3(0, -MOVE_IN, 0, speed));
             if (gamepad1.bWasPressed())         run("strafe right 24 in (drive_p3)",   () -> drive.drive_p3(0,  MOVE_IN, 0, speed));
-            if (gamepad1.dpadLeftWasPressed())  run("turn 90 CCW (drive_p3)",          () -> drive.drive_p3(0, 0, -90, speed));
-            if (gamepad1.dpadRightWasPressed()) run("turn 90 CW (drive_p3)",           () -> drive.drive_p3(0, 0,  90, speed));
+            if (gamepad1.dpadLeftWasPressed())  run("turn 90 left (turnLeft)",         () -> drive.turnLeft(90, speed));
+            if (gamepad1.dpadRightWasPressed()) run("turn 90 right (turnRight)",       () -> drive.turnRight(90, speed));
             if (gamepad1.dpadUpWasPressed())    run("turn 360 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 360, speed));
             if (gamepad1.dpadDownWasPressed())  run("turn 180 CW (drive_p3)",          () -> drive.drive_p3(0, 0, 180, speed));
             if (gamepad1.leftBumperWasPressed())  run("forward 12 in (driveRobotDistanceForwardInches)",   () -> drive.driveRobotDistanceForwardInches(SHORT_IN, speed));

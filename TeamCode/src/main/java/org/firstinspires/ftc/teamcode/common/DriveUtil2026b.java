@@ -653,6 +653,32 @@ public class DriveUtil2026b {
         return drive_p3(0, 0, angleInDegrees, targetSpeed);
     }
 
+    // --- Beginner turn commands -------------------------------------------------------------
+    // The direction is in the name, so a first-week programmer never has to remember which sign
+    // is clockwise. Both take the size of the turn; a negative number is treated as positive
+    // rather than silently turning the other way. Same calibration and time limit as drive_p3.
+    // Pair with driveRobotDistanceForwardInches / BackwardInches / StrafeLeftInches / StrafeRightInches.
+
+    /**
+     * Turn left (counter-clockwise) in place by this many degrees, then stop.
+     * @param degrees size of the turn, 0 to 360; the sign is ignored
+     * @param speed   motor power 0 to 1; 0.3 is a good first value
+     * @return true if the wheels reached their targets; false if the move timed out or was stopped
+     */
+    public boolean turnLeft(double degrees, double speed) {
+        return drive_p3(0, 0, -Math.abs(degrees), speed);
+    }
+
+    /**
+     * Turn right (clockwise) in place by this many degrees, then stop.
+     * @param degrees size of the turn, 0 to 360; the sign is ignored
+     * @param speed   motor power 0 to 1; 0.3 is a good first value
+     * @return true if the wheels reached their targets; false if the move timed out or was stopped
+     */
+    public boolean turnRight(double degrees, double speed) {
+        return drive_p3(0, 0, Math.abs(degrees), speed);
+    }
+
 
     // =================================================================================
     // SECTION 5: COMPLEX AUTONOMOUS DRIVE METHODS (USING PID)

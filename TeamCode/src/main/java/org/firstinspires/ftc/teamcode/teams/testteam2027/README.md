@@ -108,6 +108,10 @@ are shared by every robot, so once one robot has them right, every robot does.
   `Drive Square` does. That is exactly how the GearGirls and P3 autos work.
 - A tag to drive to: `robot.drive.driveToTagAsync(robot.vision, id, standoffInches, holdSec)`,
   then wait on `robot.drive.isBusy()` while the launcher spins up in the same loop.
+- A first auto with no Pinpoint at all: the beginner commands, each one blocking until done and
+  with the direction in its name: `driveRobotDistanceForwardInches(24, 0.4)`,
+  `driveRobotDistanceStrafeLeftInches(12, 0.4)`, `turnLeft(90, 0.3)`, `turnRight(45, 0.3)`.
+  They all read the calibration you measured in Step 4.
 
 ## Things that will bite
 

@@ -224,7 +224,10 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
 - Write the sign convention once at class level: encoder commands and the TeleOp mixer are
   positive-right, positive-clockwise; the Pinpoint path is field-frame counter-clockwise like the SDK.
 - Add `turnLeft(degrees, speed)` / `turnRight(degrees, speed)` delegating to `drive_p3` on the one
-  turning-circle number, to match `driveRobotDistanceStrafeLeft`/`Right`.
+  turning-circle number, to match `driveRobotDistanceStrafeLeft`/`Right`. **DONE 2026-09-07.**
+  Both take the size of the turn (sign ignored, so `turnLeft(-90)` still turns left). The Encoder
+  Move Check's D-pad left/right now call them, so the stand test exercises the exact methods
+  students will use. The testteam2027 README lists the beginner vocabulary.
 - Every blocking command takes an optional timeout (the encoder path now does).
 - Two heading sources: `getHeading` is IMU degrees, `getPinpointHeading` is Pinpoint radians;
   `fieldCentricDrive` uses the Pinpoint one, so a robot without a Pinpoint silently drives
@@ -239,9 +242,8 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
   values are the pre-change tick counts). `AngleTest` covers `Angle.normDelta` in place. 102 tests
   total. The sign conventions (forward, right, clockwise) are now stated by tests, not by comments.
 
-**Suggested order for the rest:** beginner turn commands (`turnLeft`/`turnRight`); the
-`getOdoPosition` telemetry; the `driveTo` overload that reads its own pose; then the duplicates
-and dead private code.
+**Suggested order for the rest:** the `getOdoPosition` telemetry; the `driveTo` overload that
+reads its own pose; then the duplicates and dead private code.
 
 ## Context
 
