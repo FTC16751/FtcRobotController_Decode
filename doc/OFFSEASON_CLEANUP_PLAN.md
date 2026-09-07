@@ -15,7 +15,10 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
 | R6 folder reorganization + Driver Station groups | done | b72f53d, 1d9f7a7 |
 | R5 RobotConfig carries names + calibration; one config per chassis | done | c7cb5ca, 3cc8ac1 |
 | **R3 delete superseded team code** | **ON HOLD by mentor decision** | |
-| R7-R15 season abstractions, template, docs | not started | |
+| R7 LaunchController (P3, Skyline) + unit test harness | done | f054394, ba10258 |
+| R8 aiming helpers (FlywheelVelocityModel, AimLed, VisionAim) + tests | done | 6c5e053 |
+| R9 AutoSelector / AutoBase | **deferred**: build with the first new-season auto | |
+| R10 TeleOpBase, R11 live defects, R12 template, R13-R15 | not started | |
 
 **Hard rules learned from the mentor, do not violate:**
 0. Demo-safe TeleOp defaults: launcher targeting starts in MANUAL/PRESET at the CLOSE setpoint, never
@@ -351,7 +354,11 @@ Original recommendation follows.
 - `VisionAim.turnPower(vision, kp, tolDeg)` replaces the TX snap-to-target P-controller copied into
   every TeleOp and both Queue autos.
 
-**R9. `common/AutoSelector` and `common/AutoBase`.**
+**R9. `common/AutoSelector` and `common/AutoBase`.** *DEFERRED 2026-09-07 by the mentor: last
+season's autos will probably not run again, so there is no value in refactoring them. Build the
+selector and the Queue-style AutoBase when the FIRST new-season auto is written, using P3's Queue
+pattern and GearGirls v7's setPathWaypoints as the models, and give them tests then. The old autos
+stay in place until R3.* Original recommendation follows.
 - `AutoSelector` wraps the init_loop block (X=Blue, B=Red, Y=Close, A=Far, dpad cycles) plus telemetry
   and writes `SharedState.alliance` on start. Replaces 18 copies and fixes the two teams whose enabled
   autos never write SharedState (P3 Bot3 `QueueBot3`, all Skyline autos).
@@ -436,8 +443,10 @@ Done so far in PR #1: R1 (except DriveUtil2025, which stays), R2 (Road Runner mo
 3. **R5 after R6**, so the one-config-per-chassis files are created in their final home. Demo bots get
    their own RobotConfig here, which is what makes it safe for them to share DriveUtil2026b later.
 4. **R3 now**, with the tree in its final shape: delete the superseded copies, mentor-reviewed file
-   by file.
-5. R7 through R11 during the first weeks of the season, one pattern at a time, one team as pilot.
+   by file. (Still on hold as of 2026-09-07.)
+5. R7 and R8 done in the off-season. R9 deferred until the first new-season auto exists. Remaining
+   before or early in the season: R10 TeleOpBase (must carry the demo-safe default), the TeleOp
+   items of R11, R12 template.
 6. R12 template as soon as R7-R10 are stable, before the fourth team's first meeting.
 7. R13-R15 as time allows.
 
