@@ -58,7 +58,9 @@ public class GearGirlsBot2_improved extends OpMode {
     // ========================================
     // LAUNCHER SYSTEM
     // ========================================
-    private GGRobotConstants.LauncherTargetingMode targetingMode = GGRobotConstants.LauncherTargetingMode.AUTO;
+    // Default is PRESET (the CLOSE setpoint), not vision: demos and expos must not depend on seeing the goal.
+    // D-pad left cycles to AUTO (vision) when a driver wants it.
+    private GGRobotConstants.LauncherTargetingMode targetingMode = GGRobotConstants.LauncherTargetingMode.PRESET;
     private GGRobotConstants.LauncherSystemState launcherSystemState = GGRobotConstants.LauncherSystemState.IDLE;
     private GGRobotConstants.LauncherDistance launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
 
@@ -478,7 +480,7 @@ public class GearGirlsBot2_improved extends OpMode {
         launcherSystemState = GGRobotConstants.LauncherSystemState.IDLE;
         intakeState = IntakeState.OFF;
         driveMode = DriveMode.ARCADE;
-        targetingMode = GGRobotConstants.LauncherTargetingMode.AUTO;
+        targetingMode = GGRobotConstants.LauncherTargetingMode.PRESET;   // manual by default, see field comment
         launcherDistance = GGRobotConstants.LauncherDistance.CLOSE;
         flywheelsRunning = false;
     }
