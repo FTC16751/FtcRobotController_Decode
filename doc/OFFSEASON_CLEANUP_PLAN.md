@@ -229,13 +229,19 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
 - Two heading sources: `getHeading` is IMU degrees, `getPinpointHeading` is Pinpoint radians;
   `fieldCentricDrive` uses the Pinpoint one, so a robot without a Pinpoint silently drives
   robot-centric. Pick one for TeleOp and say so.
-- Testability without behavior change: make `PinpointPIDLoop` a static nested class (it already
-  takes time as a parameter); extract pure `mix(drive, strafe, yaw, scale)` and
-  `ticksFor(forward, strafe, turn, cal)` functions so the sign convention and the forward-inches
-  fix get laptop tests with the existing harness.
+- Testability without behavior change. **DONE 2026-09-07:** `common/PinpointPIDLoop` is its own
+  class (moved out verbatim; 15 tests: first-call init, clamp, accel limit, unlimited braking,
+  limited reversal, settle, integral cap, filtered D, dt floor). `common/MecanumMixer` holds
+  `mix(drive, strafe, yaw, rightRearScale)` and `fieldToRobot(fieldForward, fieldLeft, heading)`;
+  `moveRobot`, `fieldCentricDrive`, and `driveTo` call them (16 tests, including two that check
+  the new rotation against the exact old formulas of both callers). `common/EncoderMoveMath.ticksFor`
+  holds `drive_p3`'s arithmetic with its per-component truncation preserved (9 tests, expected
+  values are the pre-change tick counts). `AngleTest` covers `Angle.normDelta` in place. 102 tests
+  total. The sign conventions (forward, right, clockwise) are now stated by tests, not by comments.
 
-**Suggested order for the rest:** pure math seams plus tests; beginner turn commands; then the
-smaller items.
+**Suggested order for the rest:** beginner turn commands (`turnLeft`/`turnRight`); the
+`getOdoPosition` telemetry; the `driveTo` overload that reads its own pose; then the duplicates
+and dead private code.
 
 ## Context
 

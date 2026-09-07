@@ -401,25 +401,13 @@ public class DriveUtil2026b {
     // SECTION 4: MID-LEVEL DRIVE METHODS (TELEOP)
     // =================================================================================
 
+    /**
+     * The one place wheel powers are set from a drive command. drive +forward, strafe +right,
+     * yaw +clockwise. The mixing and normalization are MecanumMixer.mix (pure, unit-tested).
+     */
     public void moveRobot(double drive, double strafe, double yaw) {
-        double leftFrontPower = drive + strafe + yaw;
-        double rightFrontPower = drive - strafe - yaw;
-        double leftBackPower = drive - strafe + yaw;
-        double rightBackPower = (drive + strafe - yaw) * config.calibration.rightRearPowerScale;
-
-        // Normalize the motor powers
-        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-        max = Math.max(max, Math.abs(leftBackPower));
-        max = Math.max(max, Math.abs(rightBackPower));
-        if (max > 1.0) {
-            leftFrontPower /= max;
-            rightFrontPower /= max;
-            leftBackPower /= max;
-            rightBackPower /= max;
-        }
-
-        // Send powers to the wheels.
-        setMotorPowers(leftFrontPower, leftBackPower, rightBackPower, rightFrontPower);
+        MecanumMixer.Powers p = MecanumMixer.mix(drive, strafe, yaw, config.calibration.rightRearPowerScale);
+        setMotorPowers(p.leftFront, p.leftRear, p.rightRear, p.rightFront);
     }
 
     public void arcadeDrive(double strafe, double drive, double turn, double rightStickY, double speed) {
@@ -438,18 +426,14 @@ public class DriveUtil2026b {
 //            // If the follower exists, use it for smooth, stateful control.
 //            follower.setTeleOpDrive(drive, strafe, turn, false);
 //        } else {
-            // Get the robot's current heading from the IMU.
+            // Heading from the Pinpoint (radians, counter-clockwise positive). No Pinpoint: 0,
+            // and this silently becomes robot-centric driving.
             double botHeading = getPinpointHeading();
 
-            // Field-Centric Transformation
-            // Rotate the joystick inputs by the negative of the robot's heading.
-            // This cancels out the robot's rotation
-            double rotatedX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
-            double rotatedY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
-
-            // Call the existing moveRobot method with the new, "rotated" inputs.
-            // The turn input remains the same.
-            moveRobot(rotatedY * speed, rotatedX * speed, turn * speed);
+            // Rotate the stick command from the field frame into the robot frame. The stick's
+            // strafe is right-positive; fieldToRobot takes field-left, hence the minus.
+            MecanumMixer.Command c = MecanumMixer.fieldToRobot(drive, -strafe, botHeading);
+            moveRobot(c.drive * speed, c.strafeRight * speed, turn * speed);
         //}
     }
 
@@ -598,21 +582,9 @@ public class DriveUtil2026b {
      *         was stopped (see driveRobotToPosition). The other encoder moves return the same flag.
      */
     public boolean drive_p3(double forwardInches, double strafeInches, double turnDegrees, double speed) {
-        int forwardTicks = (int) (forwardInches * ENCODER_COUNTS_PER_INCH);
-        int strafeTicks = (int) (strafeInches * ENCODER_COUNTS_PER_INCH * config.calibration.strafeScale); // mecanum strafe slips
-
-        // Turn ticks: the circumference of the circle the robot sweeps in a spin turn (inches, per robot config)
-        double turnCircumference = config.calibration.turnCircumferenceIn;
-        double turnDistanceInches = (turnDegrees / 360.0) * turnCircumference;
-        int turnTicks = (int) (turnDistanceInches * ENCODER_COUNTS_PER_INCH);
-
-        int fl_ticks = forwardTicks + strafeTicks + turnTicks;
-        int fr_ticks = forwardTicks - strafeTicks - turnTicks;
-        int rl_ticks = forwardTicks - strafeTicks + turnTicks;
-        int rr_ticks = forwardTicks + strafeTicks - turnTicks;
-
-        int[] targetPositions = {fl_ticks, fr_ticks, rl_ticks, rr_ticks};
-
+        // The tick arithmetic is EncoderMoveMath.ticksFor (pure, unit-tested).
+        int[] targetPositions = EncoderMoveMath.ticksFor(forwardInches, strafeInches, turnDegrees,
+                ENCODER_COUNTS_PER_INCH, config.calibration.strafeScale, config.calibration.turnCircumferenceIn);
         return driveRobotToPosition(targetPositions, speed);
     }
     /**
@@ -766,14 +738,12 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         double yPWR = calculatePID(currentPosition, targetPosition, Direction.y);
         double hOutput = calculatePID(currentPosition, targetPosition, Direction.h);
 
+        // The PID outputs are in the field frame (x forward, y left); rotate them into the
+        // robot's frame. Heading PID output is counter-clockwise positive; moveRobot's yaw is
+        // clockwise positive, hence the minus.
         double heading = currentPosition.getHeading(AngleUnit.RADIANS);
-        double cosine = Math.cos(heading);
-        double sine = Math.sin(heading);
-
-        double xOutput = (xPWR * cosine) + (yPWR * sine);
-        double yOutput = (xPWR * sine) - (yPWR * cosine);
-
-        moveRobot(xOutput * power, yOutput * power, -(hOutput * power));
+        MecanumMixer.Command c = MecanumMixer.fieldToRobot(xPWR, yPWR, heading);
+        moveRobot(c.drive * power, c.strafeRight * power, -(hOutput * power));
 
         return false;  // Still driving
     }
@@ -1078,95 +1048,6 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
     // SECTION 6: INNER CLASSES
     // =================================================================================
 
-    public class PinpointPIDLoop {
-        private double previousError;
-        private double previousTime;
-        private double previousOutput;
-        private double integralSum;
-        private double filteredD;
-        private double errorR;
-
-        public double calculateAxisPID(double error, double pGain, double iGain, double dGain, double accel, double currentTime, double tolerance)
-        {
-
-            // First call initialization
-            if (previousTime == 0.0) {
-                previousTime = currentTime;
-                previousError = error;
-                return 0;
-            }
-
-            double cycleTime = currentTime - previousTime;
-            if (cycleTime <= 1e-3) cycleTime = 1e-3;
-
-            // Check if we're settled - partial reset to avoid pause
-            if (Math.abs(error) <= tolerance && Math.abs(previousOutput) < 0.05) {
-                previousOutput = 0;
-                integralSum = 0;
-                filteredD = 0;
-                previousError = error;
-                previousTime = currentTime;
-                return 0;
-            }
-
-            // P term
-            double p = error * pGain;
-
-            // I term with anti-windup
-            integralSum += error * cycleTime;
-            if (iGain > 1e-9) {
-                double iMaxOutput = 0.2;  // Max contribution from integral
-                double maxIntegral = iMaxOutput / iGain;
-                integralSum = Math.max(-maxIntegral, Math.min(maxIntegral, integralSum));
-            } else {
-                integralSum = 0;
-            }
-            double i = iGain * integralSum;
-
-            // D term - FIX: CORRECTED SIGN (for real this time!)
-            double rawD = (error - previousError) / cycleTime;  // Negative error rate
-            filteredD = 0.85 * filteredD + 0.15 * rawD;         // Slower filter for odometry
-            double d = dGain * filteredD;
-
-            double output = p + i + d;
-
-
-            // Asymmetric acceleration limiting
-            double dV = cycleTime * accel;
-            double outputChange = output - previousOutput;
-
-            boolean isBraking = Math.abs(output) < Math.abs(previousOutput);
-            boolean isReversing = (output * previousOutput) < 0;
-
-            if (!isBraking || isReversing) {
-                // Limit acceleration and direction changes
-                if (outputChange > dV) {
-                    output = previousOutput + dV;
-                } else if (outputChange < -dV) {
-                    output = previousOutput - dV;
-                }
-            }
-            // Allow unlimited deceleration when braking (not reversing)
-
-
-            // Final clamp to maxPower
-            output = Math.max(-1.0, Math.min(1.0, output));
-
-
-            previousOutput = output;
-            previousError = error;
-            previousTime = currentTime;
-            errorR = error;
-
-            return output;
-        }
-
-        public void pidReset() {
-            previousOutput = 0.0;
-            previousError = 0.0;
-            previousTime = 0.0;
-            integralSum = 0.0;
-            filteredD = 0.0;
-        }
-    }
+    // PinpointPIDLoop (the per-axis PID behind driveTo) moved to its own file, common/PinpointPIDLoop,
+    // on 2026-09-07 so it could be unit-tested. Nothing about it changed.
 }
