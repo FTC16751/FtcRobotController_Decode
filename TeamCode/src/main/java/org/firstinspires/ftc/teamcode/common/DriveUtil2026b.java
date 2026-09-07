@@ -54,6 +54,13 @@ public class DriveUtil2026b {
     private static final double DRIVE_MAX_INCHES_PER_SEC = 60.0;
     private static final double MOVE_MIN_TIMEOUT_SEC = 3.0;
     private static final long   MOVE_POLL_MS = 10;
+    // Stall detection for encoder moves: if no wheel has moved STALL_MIN_TICKS in STALL_SEC while
+    // the motors still report busy, something is holding a wheel (or the controller is parked at
+    // its target). End the move then, instead of waiting out the time limit. Found on the Skyline
+    // chassis 2026-09-07: a held wheel took 12 s to give up on a 360 with the time limit alone.
+    private static final double STALL_SEC          = 0.5;
+    private static final int    STALL_MIN_TICKS    = 4;
+    private static final int    NEAR_TARGET_TICKS  = 15;   // within this of target counts as reached
 
     // --- Drivetrain Motor Members ---
     public DcMotorEx leftFrontMotor;
@@ -670,7 +677,8 @@ public class DriveUtil2026b {
 
     /**
      * Same as {@link #driveRobotToPosition(int[], double)} but with an explicit time limit.
-     * The move ends early, and the motors stop, if the limit passes or the OpMode is stopped.
+     * The move ends early, and the motors stop, if no wheel has moved for half a second (a held
+     * wheel), if the limit passes, or if the OpMode is stopped.
      * Without this, a stalled wheel would keep the loop running after the Driver Station's Stop,
      * and the SDK's stuck-OpMode watchdog would restart the Robot Controller app.
      *
@@ -688,13 +696,24 @@ public class DriveUtil2026b {
             }
         }
 
-        // Wait for all motors to finish, or for the time limit, or for the OpMode to be stopped
-        // (the SDK interrupts the OpMode thread on Stop).
-        ElapsedTime moveTimer = new ElapsedTime();
+        // Wait for all motors to finish, or for a stall, or for the time limit, or for the OpMode
+        // to be stopped (the SDK interrupts the OpMode thread on Stop).
+        ElapsedTime moveTimer  = new ElapsedTime();
+        ElapsedTime stallTimer = new ElapsedTime();
+        int[] lastPositions = currentPositions();
         boolean reachedTarget = true;
         while (areMotorsBusy()) {
             if (Thread.currentThread().isInterrupted() || moveTimer.seconds() > timeoutSec) {
                 reachedTarget = false;
+                break;
+            }
+            int[] now = currentPositions();
+            if (anyMoved(lastPositions, now)) {
+                stallTimer.reset();
+                lastPositions = now;
+            } else if (stallTimer.seconds() > STALL_SEC) {
+                // Nothing has moved for a while: a held wheel, or RUN_TO_POSITION parked at target.
+                reachedTarget = allNearTarget(now, targetPositions);
                 break;
             }
             sleep(MOVE_POLL_MS);   // give the hub's I2C and the DS a turn; no need to spin
@@ -704,6 +723,29 @@ public class DriveUtil2026b {
         stopRobot();
         setMotorMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         return reachedTarget;
+    }
+
+    private int[] currentPositions() {
+        int[] p = new int[motors.size()];
+        for (int i = 0; i < motors.size(); i++) {
+            DcMotorEx m = motors.get(i);
+            p[i] = (m == null) ? 0 : m.getCurrentPosition();
+        }
+        return p;
+    }
+
+    private static boolean anyMoved(int[] before, int[] now) {
+        for (int i = 0; i < now.length; i++) {
+            if (Math.abs(now[i] - before[i]) >= STALL_MIN_TICKS) return true;
+        }
+        return false;
+    }
+
+    private static boolean allNearTarget(int[] now, int[] targets) {
+        for (int i = 0; i < now.length; i++) {
+            if (Math.abs(targets[i] - now[i]) > NEAR_TARGET_TICKS) return false;
+        }
+        return true;
     }
 
     /**

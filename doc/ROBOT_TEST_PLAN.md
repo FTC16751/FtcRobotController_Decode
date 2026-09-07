@@ -41,16 +41,16 @@ Skyline is the best choice because its live autos use these moves.
       hesitant at the end of the move, say so.
 - [x] **B2. Distance is right.** Same run. Measure the travel. Expected about 24 in, within the
       slip you saw last season. Record the number, it feeds section F.
-- [ ] **B3. Stalled wheel ends the step.** Robot on a stand. Start `SKYLINE: PARK FAR`. During the
+- [x] **B3. Stalled wheel ends the step.** Robot on a stand. Start `SKYLINE: PARK FAR`. During the
       24 in move, hold one wheel. Expected: the step ends on its own after about 4 to 5 s
       (the limit is three times the ideal travel time at 0.5 power, plus 2 s), the motors stop,
       and the auto continues to its next state. Before this change it would spin forever.
-- [ ] **B4. Stop during a move does not restart the app.** Robot on a stand. Start the same auto,
+- [x] **B4. Stop during a move does not restart the app.** Robot on a stand. Start the same auto,
       press Stop on the Driver Station while the wheels are moving. Expected: the OpMode stops
       within a second and the Robot Controller app does NOT restart. Note: Skyline's autos are
       iterative OpModes, so the time limit is what ends the move there, not the interrupt check.
       Both paths are covered by this test plus B3.
-- [ ] **B5. Forward by inches drives the right distance.** Run the team's Encoder Move Check
+- [x] **B5. Forward by inches drives the right distance.** Run the team's Encoder Move Check
       TeleOp (`GG Encoder Move Check`, `P3 Encoder Move Check`, `SKYLINE: Encoder Move Check`, or
       `Encoder Move Check (StandardBot)` under Common Test). Robot on the floor at a tape line,
       press the left bumper (forward 12 in via `driveRobotDistanceForwardInches`). Expected: 12 in,
@@ -143,17 +143,17 @@ the approach; release to cancel) and `Test2027: Tag Approach Test` for H3. Set
 `Test2027Constants.TagTest.TAG_ID` to the tag on the wall first. Any other robot on this branch
 works the same way once it has a TagApproach call in a TeleOp.
 
-- [ ] **H1. Sign check, robot on a stand, tag held in front of the camera.** Hold RB. The
+- [x] **H1. Sign check, robot on a stand, tag held in front of the camera.** Hold RB. The
       `TagApproach` telemetry lines show the three errors. Move the tag closer: forward error goes
       down. Move it to the robot's right: right error goes positive. Rotate the tag so the robot
       would have to turn left to face it squarely: yaw error goes positive. A sign that goes the
       other way is fixed by flipping the matching `TAG_*_SIGN` constant at the top of the
       TagSighting section of `common/VisionUtil.java` (or setting `TAG_SQUARE_YAW_OFFSET_DEG` to
       180 if the yaw reads 180 when square). Never change TagApproach for a sign problem.
-- [ ] **H2. Power directions, still on the stand.** Hold RB. With the tag too far away the wheels
+- [x] **H2. Power directions, still on the stand.** Hold RB. With the tag too far away the wheels
       spin forward; tag to the right, the wheels spin in the strafe-right pattern (front-left and
       rear-right forward); tag needing a left turn, the right side spins forward.
-- [ ] **H3. First live approach, tag taped to a wall, robot 3 ft away.** `maxPower` is 0.3 in
+- [x] **H3. First live approach, tag taped to a wall, robot 3 ft away.** `maxPower` is 0.3 in
       `Test2027BotConfig`. Expected: the robot ends the standoff distance (12 in) from the wall,
       centered on the tag, square, and telemetry says DONE with the time it took. Then run it
       again and cover the camera mid-approach: the robot coasts briefly and stops, telemetry says
@@ -180,9 +180,15 @@ and the heading rises; a pod direction that goes the wrong way is fixed in the c
 | A2, A3 | 2026-09-07 | Skyline | pass | `SKYLINE: Teleop (V2 RUN ME)` after the hub config was corrected and SkylineBotConfig updated (left side reversed, turn negation removed). Forward, strafes, turns as expected. |
 | B2 | 2026-09-07 | Skyline chassis, test2027bot config | pass | Encoder Move Check: with 140 mm wheels in the config, two commanded 24 in moves measured 48 in. With the 96 mm default it had driven 35 in. |
 | F ticks per inch | 2026-09-07 | Skyline | done | 31.05 (537.7 ticks/rev, 140 mm wheel), confirmed by the 48 in run. |
-| F strafe slip | 2026-09-07 | Skyline | done | commanded 24 went 28 at x1.1; scale now 0.94. |
-| F turning circle | 2026-09-07 | Skyline | done | commanded 360 turned about 135 at 27.5; now 73 in. Refine with a commanded 90. |
+| F strafe slip | 2026-09-07 | Skyline | done | commanded 24 went 28 at x1.1; scale 0.94, refined on the floor to 0.95. |
+| F turning circle | 2026-09-07 | Skyline | done | commanded 360 turned about 135 at 27.5; 73 in, refined with a commanded 90 to 79 in. |
+| B3 | 2026-09-07 | Skyline | pass, slow | rear-right wheel held during a 360: the move ended on its own, but only at the 12 s time limit (three times the ideal time for a 79 in turn, plus 2). Encoder stall detection added afterward: no wheel moving for 0.5 s ends the move. Re-tested the same session: passes, the move gives up promptly. |
+| B4 | 2026-09-07 | Skyline | pass | Stop pressed mid-move; nothing crashed, no app restart. |
+| B5 | 2026-09-07 | Skyline | pass | left bumper, `driveForward(12)`: measured 12 in. |
 | C1 | 2026-09-07 | Skyline | pass | launch on the left shoulder button works. |
 | D1, D2 | 2026-09-07 | Skyline | pass | flywheel velocity follows the distance table. |
 | D4, D5 | 2026-09-07 | Skyline | pass | aim LED and snap-to-target work, with the turn negation removed. |
 | Pinpoint | 2026-09-07 | Skyline | blocked | pods not making contact with the field (mechanical). Drive Square and the push test wait. |
+| H1 | 2026-09-07 | Skyline | pass | The Limelight robot-space pose is in camera axes (X right, Y down, Z forward) and the rotation about the vertical arrives as pitch; VisionUtil remapped and all four sign constants confirmed against the blue goal tag. Goal tags need their own pipeline (VisionUtil.selectPipelineForTag). |
+| H2 | 2026-09-07 | Skyline | pass | first attempt drove backward and left (wrong axes); after the remap it drove toward the goal and centered. |
+| H3 | 2026-09-07 | Skyline | pass | from about 7 ft away and 2 ft right of the goal centerline, angled 30 deg: turned to square, drove in, centered, DONE at 60.1 in / 0.3 in / 0.4 deg (standoff 60 because the goal tag sits 31 in above the camera and leaves the frame inside about 50 in). A fair bit of hunting near the target; tolerances widened to 2 in / 3 deg and min power lowered to 0.05 afterward, not yet re-run. |

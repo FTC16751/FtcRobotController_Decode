@@ -28,8 +28,14 @@ public final class Test2027Constants {
 
     /** The AprilTag approach test. Change TAG_ID to whatever tag is taped to the wall today. */
     public static final class TagTest {
-        public static final int    TAG_ID            = 20;
-        public static final double STANDOFF_INCHES   = 12.0;
+        public static final int    TAG_ID            = 20;   // blue goal. 24 = red goal, 21/22/23 = motif. The pipeline follows this.
+        /**
+         * Where to stop, measured along the camera's view. For the goal tags this must stay where the
+         * camera can still see the tag: on the Skyline chassis the tag sits 31 in above the camera and
+         * drops out of view inside about 50 in. 60 keeps it visible. A tag at camera height (a motif
+         * tag, or a printed tag taped to a wall) can use 12.
+         */
+        public static final double STANDOFF_INCHES   = 60.0;
         public static final double HOLD_SECONDS      = 0.5;
     }
 

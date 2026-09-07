@@ -347,13 +347,17 @@ public class VisionUtil implements AimTarget, TagSighting {
     // TagApproach telemetry moves the wrong way, flip the matching constant here. Never change
     // TagApproach for a sign problem.
     //
-    // Assumed Limelight robot space: X+ forward, Y+ to the robot's RIGHT, Z+ up, yaw about Z with
-    // the tag's yaw reading TAG_SQUARE_YAW_OFFSET_DEG when the robot faces it squarely.
+    // Limelight robot space as the FTC SDK reports it (checked on the Skyline chassis 2026-09-07,
+    // robot square in front of the blue goal): CAMERA axes, X+ to the RIGHT, Y+ DOWN, Z+ FORWARD.
+    // So forward distance is Z and lateral offset is X; Y is the tag's height above the camera and
+    // is not used. The rotation about the vertical axis arrives as PITCH (rotation about Y-down):
+    // turning the robot 30 degrees LEFT read pitch +33 while yaw and roll stayed near 0, so the
+    // square-up error is minus pitch. All four signs below were confirmed on the robot 2026-09-07.
 
     private static final double TAG_FORWARD_SIGN          = 1.0;   // flip if forward error rises as the tag gets closer
     private static final double TAG_RIGHT_SIGN            = 1.0;   // flip if a tag to the robot's right reads negative
-    private static final double TAG_SQUARE_SIGN           = 1.0;   // flip if "needs left turn" reads negative
-    private static final double TAG_SQUARE_YAW_OFFSET_DEG = 0.0;   // set to 180 if the yaw reads 180 when square
+    private static final double TAG_SQUARE_SIGN           = -1.0;  // confirmed: robot turned left, pitch went positive
+    private static final double TAG_SQUARE_YAW_OFFSET_DEG = 0.0;   // pitch reads 0 when square; no offset needed
 
     private LLResultTypes.FiducialResult sightedTag = null;   // the tag canSee() last found, this loop
 
@@ -370,20 +374,34 @@ public class VisionUtil implements AimTarget, TagSighting {
     @Override
     public double forwardInches() {
         if (sightedTag == null) return 0.0;
-        return TAG_FORWARD_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().x * METERS_TO_INCHES;
+        return TAG_FORWARD_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().z * METERS_TO_INCHES;
     }
 
     @Override
     public double rightInches() {
         if (sightedTag == null) return 0.0;
-        return TAG_RIGHT_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().y * METERS_TO_INCHES;
+        return TAG_RIGHT_SIGN * sightedTag.getTargetPoseRobotSpace().getPosition().x * METERS_TO_INCHES;
+    }
+
+    /**
+     * The raw robot-space pose of the tag canSee() last found, for the stand check: position x y z
+     * in inches and orientation yaw pitch roll in degrees, straight from the Limelight. Use it to
+     * see which orientation component moves when the tag is angled; that one is the square-up.
+     */
+    public String sightedTagRaw() {
+        if (sightedTag == null) return "none";
+        Pose3D t = sightedTag.getTargetPoseRobotSpace();
+        return String.format("x %.1f y %.1f z %.1f in | yaw %.1f pitch %.1f roll %.1f deg",
+                t.getPosition().x * METERS_TO_INCHES, t.getPosition().y * METERS_TO_INCHES, t.getPosition().z * METERS_TO_INCHES,
+                t.getOrientation().getYaw(AngleUnit.DEGREES), t.getOrientation().getPitch(AngleUnit.DEGREES), t.getOrientation().getRoll(AngleUnit.DEGREES));
     }
 
     @Override
     public double squareUpDegrees() {
         if (sightedTag == null) return 0.0;
-        double yawDeg = sightedTag.getTargetPoseRobotSpace().getOrientation().getYaw(AngleUnit.DEGREES);
-        double error = yawDeg - TAG_SQUARE_YAW_OFFSET_DEG;
+        // Rotation about the vertical axis is the PITCH component in the SDK's Limelight pose (Y is down).
+        double aboutVerticalDeg = sightedTag.getTargetPoseRobotSpace().getOrientation().getPitch(AngleUnit.DEGREES);
+        double error = aboutVerticalDeg - TAG_SQUARE_YAW_OFFSET_DEG;
         while (error > 180)  error -= 360;
         while (error < -180) error += 360;
         return TAG_SQUARE_SIGN * error;
@@ -423,6 +441,18 @@ public class VisionUtil implements AimTarget, TagSighting {
      */
     public void setMotifDetectionMode() {
         setPipeline(CommonConstants.Limelight.MOTIF_PIPELINE);
+    }
+
+    /**
+     * Switch to the pipeline that can see this tag. The Limelight only reports tags its current
+     * pipeline is configured for: 21/22/23 (motif) on pipeline 0, the red goal 24 on 1, the blue
+     * goal 20 on 2 (CommonConstants.Limelight). A tag approach to a goal tag has to call this
+     * first, or the tag is never "seen". Switching takes a moment; do it in init, not per loop.
+     */
+    public void selectPipelineForTag(int tagId) {
+        if (tagId == CommonConstants.Limelight.BLUE_GOAL_TAG)      setPipeline(CommonConstants.Limelight.BLUE_GOAL_PIPELINE);
+        else if (tagId == CommonConstants.Limelight.RED_GOAL_TAG)  setPipeline(CommonConstants.Limelight.RED_GOAL_PIPELINE);
+        else                                                       setPipeline(CommonConstants.Limelight.MOTIF_PIPELINE);
     }
 
     /**

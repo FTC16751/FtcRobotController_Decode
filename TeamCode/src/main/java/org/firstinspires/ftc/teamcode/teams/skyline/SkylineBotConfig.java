@@ -31,8 +31,11 @@ public final class SkylineBotConfig {
                         DcMotorEx.Direction.REVERSE,   // left rear
                         DcMotorEx.Direction.FORWARD    // right rear
                 ),
+                // Pinpoint pod offsets in mm, measured 2026-09-07: the X (forward) pod sits 12 cm to the
+                // LEFT of the robot's center (left is positive), the Y (sideways) pod 12 cm BEHIND it
+                // (forward is positive). Wrong offsets show up as the position drifting during turns.
                 new RobotConfig.OdometryConfig(
-                        -0.0, -150.0,                  // Pinpoint pod offsets, mm (X pod, Y pod)
+                        120.0, -120.0,
                         GoBildaPinpointDriver.EncoderDirection.FORWARD,
                         GoBildaPinpointDriver.EncoderDirection.FORWARD
                 ),
@@ -57,8 +60,8 @@ public final class SkylineBotConfig {
         // 2.7x short; last season's autos were tuned around that and will not run again.
         .withCalibration(new RobotConfig.Calibration()
                 .rightRearPowerScale(1.0)   // not measured yet; start with no correction
-                .strafeScale(0.94)
-                .turnCircumferenceIn(73.0)
+                .strafeScale(0.95)          // refined on the floor after the first 0.94 estimate
+                .turnCircumferenceIn(79.0)  // refined with a commanded 90 after the first 73 estimate
                 .encoderCountsPerInch(RobotConfig.Calibration.countsPerInch(537.7, 1.0, 140)));
     }
 }

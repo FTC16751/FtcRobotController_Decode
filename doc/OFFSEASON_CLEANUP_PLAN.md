@@ -71,9 +71,17 @@ rewrite must be quote-aware. `gh pr` needs `--repo FTC16751/FtcRobotController_D
 
 DriveUtil2026b is reorganized by tier (Beginner, Intermediate, then the advanced idioms), down
 from 1450 to 1186 lines, with 102 laptop unit tests covering its math and the tag approach.
-Nothing from today has run on a robot yet; `doc/ROBOT_TEST_PLAN.md` is the ordered checklist and
-`teams/testteam2027` is the test bed (its config matches Skyline's chassis, so those OpModes run
-on Skyline's Control Hub unchanged). Remaining DriveUtil items, in order: the robot session; the
+**Robot session, evening of 2026-09-07, on the Skyline chassis** (results in
+`doc/ROBOT_TEST_PLAN.md`): the encoder fixes, the beginner `driveForward`, stall detection (a held
+wheel now ends a move in about half a second; it took 12 s on the time limit alone), Skyline's
+TeleOp, launcher and aiming all pass. The chassis was measured (140 mm wheels, strafe 0.95,
+turning circle 79 in, pod offsets +120/-120 mm) and its Control Hub configuration corrected so
+the motor names sit on their physical corners; SkylineBotConfig and its TeleOps follow. The tag
+approach works end to end against the blue goal: DONE at 60.1 in, 0.3 in off center, 0.4 deg off
+square. Two Limelight facts learned the hard way and now in VisionUtil: its robot-space pose is in
+camera axes (X right, Y down, Z forward, rotation about the vertical arrives as pitch), and goal
+tags are only visible on their own pipeline (`selectPipelineForTag`). Still blocked on hardware:
+the Pinpoint pods are not touching the floor, so Drive Square and the pod push test wait. Remaining DriveUtil items, in order: the robot session; the
 Advanced tier (`startPath`, `relocalizeFromTag`, `startMoveRelative`) once the Pinpoint square and
 the tag-approach sign check pass; the Pedro revisit from the commented blocks (hard rule 6); R13
 as a one-page table of the tiers. The detailed record of what was found and done is the section

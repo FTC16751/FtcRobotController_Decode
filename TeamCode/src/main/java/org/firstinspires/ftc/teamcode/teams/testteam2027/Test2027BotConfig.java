@@ -42,8 +42,11 @@ public final class Test2027BotConfig {
                 ),
                 // 4. Pinpoint: pod offsets from the robot center in mm (X pod is the forward pod,
                 //    Y pod the sideways pod) and the direction each pod counts positive.
+                // Pinpoint pod offsets in mm, measured 2026-09-07: the X (forward) pod sits 12 cm to the
+                // LEFT of the robot's center (left is positive), the Y (sideways) pod 12 cm BEHIND it
+                // (forward is positive). Wrong offsets show up as the position drifting during turns.
                 new RobotConfig.OdometryConfig(
-                        0.0, -150.0,
+                        120.0, -120.0,
                         GoBildaPinpointDriver.EncoderDirection.FORWARD,
                         GoBildaPinpointDriver.EncoderDirection.FORWARD
                 ),
@@ -74,8 +77,8 @@ public final class Test2027BotConfig {
                 // strafe: commanded 24 in went 28 in with x1.1, so 1.1 x 24/28.
                 // turn: commanded 360 turned about 135 with 27.5, so 27.5 x 360/135. Refine with a
                 // commanded 90 (D-pad right): new = 73 x 90 / degrees actually turned.
-                .strafeScale(0.94)
-                .turnCircumferenceIn(73.0)
+                .strafeScale(0.95)          // refined on the floor after the first 0.94 estimate
+                .turnCircumferenceIn(79.0)  // refined with a commanded 90 after the first 73 estimate
                 // 312 rpm goBILDA motor (537.7 ticks/rev), direct drive, 140 mm goBILDA mecanum
                 // wheel. Different motor or wheel? Change these three numbers; the Encoder Move
                 // Check then measures the real value. (Found 2026-09-07: with 96 here, a commanded
@@ -83,9 +86,13 @@ public final class Test2027BotConfig {
                 .encoderCountsPerInch(RobotConfig.Calibration.countsPerInch(537.7, 1.0, 140)))
         // 6b. Tag approach (driveToTagAsync). Gentle on purpose: the robot is about to touch something.
         .withTagApproach(new TagApproach.Settings()
+                // First live run 2026-09-07: settled DONE at 60.1 in, 0.3 in off center, 0.4 deg off
+                // square, after a fair bit of hunting near the target. Hunting is the minimum power
+                // pushing across a tight tolerance band, so the band is wider and the nudge smaller.
+                // If it still swings on the way in, lower the kp gains by about a third.
                 .kpDrive(0.04).kpStrafe(0.04).kpYaw(0.015)
-                .maxPower(0.3).minPower(0.08)
-                .toleranceInches(1.0).toleranceDegrees(2.0)
-                .lostTimeoutSec(1.5).maxTimeSec(6.0));
+                .maxPower(0.3).minPower(0.05)
+                .toleranceInches(2.0).toleranceDegrees(3.0)
+                .lostTimeoutSec(1.5).maxTimeSec(10.0));   // 10 s: a goal approach can start 8 ft out at 0.3 power
     }
 }

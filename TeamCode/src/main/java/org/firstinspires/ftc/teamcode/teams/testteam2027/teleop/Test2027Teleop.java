@@ -29,6 +29,7 @@ public class Test2027Teleop extends OpMode {
     @Override
     public void init() {
         robot = new Test2027Robot(hardwareMap, telemetry);
+        robot.lookForTag(Test2027Constants.TagTest.TAG_ID);   // goal tags and motif tags are on different pipelines
         telemetry.addData("Status", "Initialized: %s", robot.config.robotName);
     }
 
@@ -68,8 +69,10 @@ public class Test2027Teleop extends OpMode {
     private void handleTagApproach() {
         if (gamepad1.right_bumper) {
             if (!tagApproachRunning) {
-                robot.drive.driveToTagAsync(robot.vision,
-                        Test2027Constants.TagTest.TAG_ID,
+                // Approach whatever tag the camera sees right now; the constant is the fallback.
+                int tagId = robot.vision.isTargetVisible() ? robot.vision.getDetectedTagId()
+                                                           : Test2027Constants.TagTest.TAG_ID;
+                robot.drive.driveToTagAsync(robot.vision, tagId,
                         Test2027Constants.TagTest.STANDOFF_INCHES,
                         Test2027Constants.TagTest.HOLD_SECONDS);
                 tagApproachRunning = true;

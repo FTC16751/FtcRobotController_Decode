@@ -36,6 +36,11 @@ public class Test2027Robot {
         drive.setDefaultHoldTime(Test2027Constants.Auto.HOLD_SEC);
     }
 
+    /** Point the camera's pipeline at this tag (goal tags and motif tags live on different pipelines). */
+    public void lookForTag(int tagId) {
+        vision.selectPipelineForTag(tagId);
+    }
+
     /** Call in every loop() and init_loop(). Steps the Pinpoint, any async drive, and the camera. */
     public void update() {
         vision.update();     // camera first, so this loop's drive step sees this loop's tag
@@ -52,6 +57,17 @@ public class Test2027Robot {
     public void addTelemetry() {
         drive.addTelemetry();
         drive.getTagApproach().addTelemetry(telemetry);
-        telemetry.addData("tag visible", vision.isTargetVisible() ? ("id " + vision.getDetectedTagId()) : "none");
+        if (vision.isTargetVisible()) {
+            int seen = vision.getDetectedTagId();
+            if (vision.canSee(seen)) {
+                telemetry.addData("sighting", "id %d  fwd %.1f in  right %.1f in  square %.1f deg",
+                        seen, vision.forwardInches(), vision.rightInches(), vision.squareUpDegrees());
+                telemetry.addData("raw", vision.sightedTagRaw());
+            } else {
+                telemetry.addData("sighting", "id %d seen, but the Limelight gave no robot-space pose (pipeline 3D setting)", seen);
+            }
+        } else {
+            telemetry.addData("sighting", "no tag in view");
+        }
     }
 }

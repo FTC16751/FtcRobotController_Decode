@@ -31,6 +31,7 @@ public class Test2027TagApproachAuto extends OpMode {
     @Override
     public void init() {
         robot = new Test2027Robot(hardwareMap, telemetry);
+        robot.lookForTag(Test2027Constants.TagTest.TAG_ID);   // goal tags and motif tags are on different pipelines
         telemetry.addData("Status", "Initialized. Tag %d, standoff %.0f in",
                 Test2027Constants.TagTest.TAG_ID, Test2027Constants.TagTest.STANDOFF_INCHES);
     }
