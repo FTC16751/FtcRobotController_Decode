@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.subsystems.P3_TurretUtil;
  * - B Button: Emergency stop
  * - D-pad Left/Right: Fine adjustment (5 degrees at a time)
  */
-@TeleOp(name="Turret Control", group="TeleOp")
+@TeleOp(name="Turret Control", group = "P3")
 @Disabled
 public class TurretTeleOp extends LinearOpMode {
 

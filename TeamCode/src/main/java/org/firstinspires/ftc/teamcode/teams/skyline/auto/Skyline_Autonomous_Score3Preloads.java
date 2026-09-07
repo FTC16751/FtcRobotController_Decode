@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.teams.skyline.Skyline_Robot;
  * This OpMode is only responsible for the high-level sequence of events.
  */
 
-@Autonomous(name="SKYLINE: Score 3 Preloads", group="SkylineBot",preselectTeleOp="SKYLINE: Teleop (V2 RUN ME)")
+@Autonomous(name="SKYLINE: Score 3 Preloads", group = "Skyline",preselectTeleOp="SKYLINE: Teleop (V2 RUN ME)")
 public class Skyline_Autonomous_Score3Preloads extends OpMode
 {
     // --- Main Robot Object ---

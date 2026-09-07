@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot;
 
-@TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
+@TeleOp(name="P3 Teleop (Coaches opmode)", group = "P3")
 @Disabled
 public class P3_CoachesTeleop extends OpMode
 {

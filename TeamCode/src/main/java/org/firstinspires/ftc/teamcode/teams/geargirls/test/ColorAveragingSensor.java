@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@TeleOp(name = "Sensor: Color Averaging", group = "Sensor")
+@TeleOp(name = "Sensor: Color Averaging", group = "GearGirls Test")
 @Disabled
 public class ColorAveragingSensor extends LinearOpMode {
 

@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author Your Team Name
  */
-@TeleOp(name = "Test: Intake Sensor FUSION", group = "Test")
+@TeleOp(name = "Test: Intake Sensor FUSION", group = "GearGirls Test")
 
 public class Test_IntakeSensorFusion extends OpMode {
 

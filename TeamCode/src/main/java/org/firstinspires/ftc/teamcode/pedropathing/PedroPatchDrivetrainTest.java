@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="Pedro Path DrivetrainTest", group="Concept")
+@TeleOp(name="Pedro Path DrivetrainTest", group = "Pedro")
 @Disabled
 public class PedroPatchDrivetrainTest extends OpMode{
     private VisionUtil vision;

@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.common.VisionUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-@Autonomous(name="GG Pinpoint Action Auto", group="GGBot")
+@Autonomous(name="GG Pinpoint Action Auto", group = "GearGirls")
 @Disabled
 public class GGAutonomous002 extends OpMode {
 

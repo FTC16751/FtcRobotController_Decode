@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @author Your Team Name
  */
-@TeleOp(name = "Test: Intake Sensors", group = "Test")
+@TeleOp(name = "Test: Intake Sensors", group = "GearGirls Test")
 @Disabled
 public class IntakeSensorTest extends OpMode {
 

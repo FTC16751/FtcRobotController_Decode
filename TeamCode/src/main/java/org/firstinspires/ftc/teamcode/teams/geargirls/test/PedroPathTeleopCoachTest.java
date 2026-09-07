@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="Coach Pedro Path DrivetrainTest", group="Concept")
+@TeleOp(name="Coach Pedro Path DrivetrainTest", group = "GearGirls Test")
 @Disabled
 public class PedroPathTeleopCoachTest extends OpMode{
     private GGRobot robot;

@@ -54,7 +54,7 @@ import org.firstinspires.ftc.teamcode.teams.skyline.Skyline_Robot;
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
-@TeleOp(name = "SKYLINE: Teleop (V2 RUN ME)", group = " _SLopmodes")
+@TeleOp(name = "SKYLINE: Teleop (V2 RUN ME)", group = "Skyline")
 //@Disabled
 public class Skyline_TeleopV2 extends OpMode {
     // --- Constants for this OpMode ---

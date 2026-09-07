@@ -29,7 +29,7 @@ import java.util.List;
  * @version 3.0 - Cleaned up and enhanced telemetry
  * @author GearGirls Team
  */
-@TeleOp(name = "Gear Girls Bot 2 (RUN ME)", group = " _GGopmodes")
+@TeleOp(name = "Gear Girls Bot 2 (RUN ME)", group = "GearGirls")
 public class GearGirlsBot2_improved extends OpMode {
 
     // ========================================

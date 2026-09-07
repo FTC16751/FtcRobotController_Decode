@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
 
 import java.util.Locale;
 
-@Autonomous(name="Modified Pinpoint Navigation Example", group="Pinpoint")
+@Autonomous(name="Modified Pinpoint Navigation Example", group = "Common Test")
 @Disabled
 public class GBPinpointDriveToPoint extends LinearOpMode {
     DriveUtil2026b drive;

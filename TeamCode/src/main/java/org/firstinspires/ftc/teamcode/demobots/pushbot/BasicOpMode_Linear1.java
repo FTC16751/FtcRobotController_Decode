@@ -37,7 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2025;
 
 
-@TeleOp(name="Basic: Linear OpMode", group="Concept")
+@TeleOp(name="Basic: Linear OpMode", group = "Demo")
 @Disabled
 public class BasicOpMode_Linear1 extends LinearOpMode {
 

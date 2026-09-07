@@ -34,7 +34,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  *
  * @author Your Team Name
  */
-@TeleOp(name = "Diagnostic: Color Sensor Tuning", group = "Diagnostic")
+@TeleOp(name = "Diagnostic: Color Sensor Tuning", group = "GearGirls Test")
 public class ColorSensorDiagnostic extends OpMode {
 
     // Hardware references

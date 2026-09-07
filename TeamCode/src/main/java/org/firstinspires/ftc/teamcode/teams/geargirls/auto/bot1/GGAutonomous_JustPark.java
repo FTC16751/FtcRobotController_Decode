@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.GGRobotConstants;
 import org.firstinspires.ftc.teamcode.common.VisionUtil;
 
 
-@Autonomous(name="GG AUTO: Just Parka", group="GGBot")
+@Autonomous(name="GG AUTO: Just Parka", group = "GearGirls")
 @Disabled
 public class GGAutonomous_JustPark extends OpMode {
 

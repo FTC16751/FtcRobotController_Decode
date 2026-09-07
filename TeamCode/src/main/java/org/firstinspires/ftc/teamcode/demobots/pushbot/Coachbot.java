@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.subsystems.LaunchIndexer;
  * 2025-2026 FIRST® Tech Challenge season DECODE™!
  */
 
-@TeleOp(name = "CoachBot", group = "Concept")
+@TeleOp(name = "CoachBot", group = "Demo")
 @Disabled
 public class Coachbot extends OpMode {
     private static final double DRIVE_SPEED = 0.5;

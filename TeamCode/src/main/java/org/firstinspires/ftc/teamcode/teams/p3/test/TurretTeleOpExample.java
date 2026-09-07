@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.subsystems.Turret;
  * - Left Stick Y: Drive forward/back (example - implement your drive here)
  * - Left Stick X: Drive strafe (example - implement your drive here)
  */
-@TeleOp(name = "Turret TeleOp Example")
+@TeleOp(name = "Turret TeleOp Example", group = "P3 Test")
 @Disabled
 public class TurretTeleOpExample extends LinearOpMode {
 

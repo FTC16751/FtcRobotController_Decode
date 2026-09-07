@@ -30,7 +30,7 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
 
 import java.util.List;
 
-@TeleOp(name="Coach Pedro Path DrivetrainTest2 ", group="Concept")
+@TeleOp(name="Coach Pedro Path DrivetrainTest2 ", group = "GearGirls Test")
 @Disabled
 public class PedroPathTeleopCoachTestDriveOnly extends OpMode{
     private static final double WHEEL_DIAMETER_IN = 9.6/2.54;

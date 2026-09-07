@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.teams.geargirls.GGRobot2;
 
-@Autonomous(name="GG AUTO: PID Tuner", group="GGBot")
+@Autonomous(name="GG AUTO: PID Tuner", group = "GearGirls")
 @Disabled
 public class GGAutonomous_PIDTuner extends OpMode {
 

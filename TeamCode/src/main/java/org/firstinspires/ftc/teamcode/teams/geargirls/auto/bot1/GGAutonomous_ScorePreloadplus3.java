@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * @author Your Team Name
  * @version 004
  */
-@Autonomous(name="GG AUTO: Score 3 preload get 3 more", group="GGBot", preselectTeleOp = "Gear Girls Telop (RUN ME)")
+@Autonomous(name="GG AUTO: Score 3 preload get 3 more", group = "GearGirls", preselectTeleOp = "Gear Girls Telop (RUN ME)")
 @Disabled
 public class GGAutonomous_ScorePreloadplus3 extends OpMode {
 

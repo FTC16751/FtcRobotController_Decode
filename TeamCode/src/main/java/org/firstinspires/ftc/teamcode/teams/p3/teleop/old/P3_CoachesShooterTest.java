@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.teams.p3.subsystems.P3_LauncherUtil;
 
-@TeleOp(name="P3 Teleop (Coaches shooter opmode)", group=" _P3opmodes")
+@TeleOp(name="P3 Teleop (Coaches shooter opmode)", group = "P3")
 @Disabled
 public class P3_CoachesShooterTest extends OpMode
 {

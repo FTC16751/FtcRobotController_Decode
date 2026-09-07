@@ -25,7 +25,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
  * 2. Can you move it by hand? (Should have STRONG resistance)
  * 3. Does position value in telemetry match what you command?
  */
-@TeleOp(name = "DEBUG: Minimal Servo Test", group = "Diagnostics")
+@TeleOp(name = "DEBUG: Minimal Servo Test", group = "P3 Test")
 @Disabled
 public class MinimalServoTest extends LinearOpMode {
 

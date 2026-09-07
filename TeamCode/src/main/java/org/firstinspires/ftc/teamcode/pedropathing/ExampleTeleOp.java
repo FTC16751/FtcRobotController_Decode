@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.function.Supplier;
 @Configurable
-@TeleOp(name="Example PedroPath Teleop", group="PedroPath")
+@TeleOp(name="Example PedroPath Teleop", group = "Pedro")
 
 public class ExampleTeleOp extends OpMode {
 

@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.common.VisionUtil;
  * @author Your Team Name
  * @version 004
  */
-@Autonomous(name="GG AUTO: Score 6", group="GGBot")
+@Autonomous(name="GG AUTO: Score 6", group = "GearGirls")
 @Disabled
 public class GGAutonomous_ScorePreloadPlusSpikeMark1 extends OpMode {
 

@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedropathing.Constants;
 
-@Autonomous(name = "P3 Pedro Path Auto", group = "Examples")
+@Autonomous(name = "P3 Pedro Path Auto", group = "P3")
 @Disabled
 public class P3PedroPathAuto extends OpMode{
 

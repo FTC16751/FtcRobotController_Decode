@@ -36,7 +36,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.subsystems.LauncherMotors;
  * - DPAD RIGHT: Increase flipper hold time
  * - BACK/SELECT: Reset flipper hold time to default
  */
-@TeleOp(name = "GG Combined System Test", group = " _GGopmodes")
+@TeleOp(name = "GG Combined System Test", group = "GearGirls Test")
 @Disabled
 public class GGCombinedSystemTest extends OpMode {
 

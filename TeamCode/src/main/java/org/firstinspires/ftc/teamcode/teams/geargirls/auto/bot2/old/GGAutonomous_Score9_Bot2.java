@@ -35,7 +35,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * @author GearGirls Team
  * @version 1.0 - Sensor-Based
  */
-@Autonomous(name="GG AUTO: Score 9 (SENSOR)", group="GGBot", preselectTeleOp = "Gear Girls Bot 2 (RUN ME)")
+@Autonomous(name="GG AUTO: Score 9 (SENSOR)", group = "GearGirls", preselectTeleOp = "Gear Girls Bot 2 (RUN ME)")
 @Disabled
 public class GGAutonomous_Score9_Bot2 extends OpMode {
 

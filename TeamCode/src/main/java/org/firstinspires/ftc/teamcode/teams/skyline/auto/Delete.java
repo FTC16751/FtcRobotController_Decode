@@ -62,7 +62,7 @@ import org.firstinspires.ftc.teamcode.teams.skyline.Skyline_Robot;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-@Autonomous(name="SKYLINE AUTO", group="StarterBot")
+@Autonomous(name="SKYLINE AUTO", group = "Skyline")
 @Disabled
 public class Delete extends OpMode
 {

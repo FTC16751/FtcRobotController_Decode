@@ -68,7 +68,7 @@ import java.util.List;
  * @version 2.4 - Refactored to match Bot1 structure
  * @author GearGirls Team
  */
-@TeleOp(name = "Gear Girls Bot 2 (test)", group = " _GGopmodes")
+@TeleOp(name = "Gear Girls Bot 2 (test)", group = "GearGirls")
 @Disabled
 public class GearGirlsBot2_test extends OpMode {
 

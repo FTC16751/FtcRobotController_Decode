@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * @author GearGirls Team
  * @version 5.1 - Flat variables, no PathConfig class
  */
-@Autonomous(name="GG AUTO: Score 9 (Bot2)", group="GGBot", preselectTeleOp = "GearGirlsBot2_test")
+@Autonomous(name="GG AUTO: Score 9 (Bot2)", group = "GearGirls", preselectTeleOp = "GearGirlsBot2_test")
 @Disabled
 public class GGAutonomous_Score9_v5 extends OpMode {
 

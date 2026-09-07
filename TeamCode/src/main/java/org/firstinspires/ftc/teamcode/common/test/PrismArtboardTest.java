@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.common.prismled.GoBildaPrismDriver;
 
-@TeleOp(name = "TEST: Prism Artboards (goBILDA Driver)", group = "Test")
+@TeleOp(name = "TEST: Prism Artboards (goBILDA Driver)", group = "Common Test")
 @Disabled
 public class PrismArtboardTest extends LinearOpMode {
 

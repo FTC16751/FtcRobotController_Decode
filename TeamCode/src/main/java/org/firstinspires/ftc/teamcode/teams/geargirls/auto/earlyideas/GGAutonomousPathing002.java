@@ -45,7 +45,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.GGRobot;
 import java.util.Locale;
 
 
-@Autonomous(name="GG Auto Pathing using Pinpoint", group="StarterBot")
+@Autonomous(name="GG Auto Pathing using Pinpoint", group = "GearGirls")
 @Disabled
 public class GGAutonomousPathing002 extends OpMode
 {

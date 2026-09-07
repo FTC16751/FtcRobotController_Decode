@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.common.VisionUtil;
 
 import java.util.function.Supplier;
 @Configurable
-@TeleOp(name="Example PedroPath Teleop George", group="PedroPath")
+@TeleOp(name="Example PedroPath Teleop George", group = "Pedro")
 
 public class ExampleTeleOp_george extends OpMode {
     private Follower follower;

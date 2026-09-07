@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.subsystems.IntakeUtilV2;
 /**
  * Example OpMode demonstrating the usage of the IntakeUtil subsystem.
 */
-@TeleOp(name = "GG IntakeUtil Test", group = "Test")
+@TeleOp(name = "GG IntakeUtil Test", group = "GearGirls Test")
 @Disabled
 public class IntakeUtilTestOpMode extends OpMode {
 

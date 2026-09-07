@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.common.RobotConfig;
 
-@Autonomous(name="Basic Auto", group="StarterBot")
+@Autonomous(name="Basic Auto", group = "Common Test")
 @Disabled
 public class BasicAuto_Iterative extends OpMode
 {

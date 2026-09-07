@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot;
 import java.util.LinkedList;
 import java.util.Queue;
 
-@Autonomous(name="P3 AUTO Bot2: Queue Version", group="P3Bot2", preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO Bot2: Queue Version", group = "P3", preselectTeleOp = "P3: Teleop (Team Version)")
 @Disabled
 public class P3Autonomous_Queue extends OpMode {
 

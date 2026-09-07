@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-@TeleOp(name = "FlywheelTunerTutorial", group = " _GGopmodes")
+@TeleOp(name = "FlywheelTunerTutorial", group = "GearGirls Test")
 
 public class FlywheelTunerTutorial extends OpMode {
     public DcMotorEx flywheelMotor_l,flywheelMotor_r;

@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.common.prismled.*;
 
-@TeleOp(name = "TEST: Prism LED Artboards", group = "Test")
+@TeleOp(name = "TEST: Prism LED Artboards", group = "Common Test")
 @Disabled
 public class PrismLedTestOpMode extends LinearOpMode {
 

@@ -25,7 +25,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 
 import java.util.List;
 
-@TeleOp(name = "Concept: Vision Color-Locator (Circle) - Improved", group = "Concept")
+@TeleOp(name = "Concept: Vision Color-Locator (Circle) - Improved", group = "GearGirls Test")
 @Disabled
 public class ConceptVisionColorLocator_Circle extends LinearOpMode {
     private GGRobot robot;

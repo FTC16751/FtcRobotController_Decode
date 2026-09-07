@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot;
 import org.firstinspires.ftc.teamcode.common.SharedState;
 //import org.firstinspires.ftc.teamcode.common.SharedState;
 
-@Autonomous(name="P3 AUTO: bot2 Alliance Selection Test", group="P3Bot2",preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO: bot2 Alliance Selection Test", group = "P3",preselectTeleOp = "P3: Teleop (Team Version)")
 @Disabled
 public class P3Autonomous_ALLIANCESELECTIONTEST extends OpMode {
 

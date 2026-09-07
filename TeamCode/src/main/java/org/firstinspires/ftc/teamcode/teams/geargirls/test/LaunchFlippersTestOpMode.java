@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.teams.geargirls.subsystems.LaunchFlippers;
  * - Gamepad1.LEFT_BUMPER: Increase servo travel time (when in adjustment mode)
  * - Gamepad1.RIGHT_BUMPER: Decrease servo travel time (when in adjustment mode)
  */
-@TeleOp(name = "LaunchFlippers Test", group = "Test")
+@TeleOp(name = "LaunchFlippers Test", group = "GearGirls Test")
 @Disabled
 public class LaunchFlippersTestOpMode extends OpMode {
 

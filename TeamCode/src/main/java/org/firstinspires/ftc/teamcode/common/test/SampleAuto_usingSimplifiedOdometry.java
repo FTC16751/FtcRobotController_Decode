@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
  * The IMU gyro is used to stabilize the heading during all motions
  */
 
-@Autonomous(name="Sample Autonomous UsingSimplifiedOdometry", group = "Mr. Phil")
+@Autonomous(name="Sample Autonomous UsingSimplifiedOdometry", group = "Common Test")
 @Disabled
 public class SampleAuto_usingSimplifiedOdometry extends LinearOpMode
 {

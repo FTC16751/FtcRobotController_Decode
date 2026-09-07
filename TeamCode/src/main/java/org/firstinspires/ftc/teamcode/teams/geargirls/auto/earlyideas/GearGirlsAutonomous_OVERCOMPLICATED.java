@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
 import java.util.ArrayList;
 import java.util.List;
 
-@Autonomous(name="GEAR GIRLS AUTO: Shoot 3 Preloads", group="GGBot")
+@Autonomous(name="GEAR GIRLS AUTO: Shoot 3 Preloads", group = "GearGirls")
 @Disabled
 public class GearGirlsAutonomous_OVERCOMPLICATED extends OpMode {
 

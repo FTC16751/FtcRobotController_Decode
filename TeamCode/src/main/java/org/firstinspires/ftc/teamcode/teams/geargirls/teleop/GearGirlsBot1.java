@@ -65,7 +65,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * Driver Station via the doTelemetry() method for debugging and monitoring.
  *
  */
-@TeleOp(name = "Gear Girls Bot 1 Telop (RUN ME)", group = " _GGopmodes")
+@TeleOp(name = "Gear Girls Bot 1 Telop (RUN ME)", group = "GearGirls")
 
 public class GearGirlsBot1 extends OpMode {
     //Declare SubSystems

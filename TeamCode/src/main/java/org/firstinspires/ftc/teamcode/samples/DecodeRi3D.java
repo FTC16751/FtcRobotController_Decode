@@ -41,7 +41,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * 2025-2026 FIRST® Tech Challenge season DECODE™!
  */
 
-@TeleOp(name = "DECODE Ri3D", group = "Concept")
+@TeleOp(name = "DECODE Ri3D", group = "Sample")
 @Disabled
 public class DecodeRi3D extends OpMode {
     final double FEED_TIME_SECONDS = 0.80; //The feeder servos run this long when a shot is requested.

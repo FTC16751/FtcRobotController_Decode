@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  */
 
 @Configurable
-@TeleOp(name="P3: Robot 3 TeleOp (RUN ME)", group="_P3opmodes")
+@TeleOp(name="P3: Robot 3 TeleOp (RUN ME)", group = "P3")
 public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
 
     // Vision snap-to-target tuning

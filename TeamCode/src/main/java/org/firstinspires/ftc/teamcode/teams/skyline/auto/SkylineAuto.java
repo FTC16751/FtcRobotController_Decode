@@ -63,7 +63,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-@Autonomous(name="StarterBotAuto-Skyline", group="StarterBot")
+@Autonomous(name="StarterBotAuto-Skyline", group = "Skyline")
 @Disabled
 public class SkylineAuto extends OpMode
 {

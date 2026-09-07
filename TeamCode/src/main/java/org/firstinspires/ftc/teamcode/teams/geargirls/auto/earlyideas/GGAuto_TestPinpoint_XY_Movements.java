@@ -9,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.teams.geargirls.GGRobot;
 
-@Autonomous(name="GG Pinpoint Action xy tet", group="GGBot")
+@Autonomous(name="GG Pinpoint Action xy tet", group = "GearGirls")
 @Disabled
 public class GGAuto_TestPinpoint_XY_Movements extends OpMode {
 

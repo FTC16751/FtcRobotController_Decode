@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * @author GearGirls Team
  * @version 4.0 - Clean ShotSequenceController Implementation
  */
-@Autonomous(name="GG AUTO: Score 9 (v4 volley ctrl)", group="GGBot", preselectTeleOp = "GearGirlsBot2_test")
+@Autonomous(name="GG AUTO: Score 9 (v4 volley ctrl)", group = "GearGirls", preselectTeleOp = "GearGirlsBot2_test")
 @Disabled
 public class GGAutonomous_Score9_v4 extends OpMode {
 

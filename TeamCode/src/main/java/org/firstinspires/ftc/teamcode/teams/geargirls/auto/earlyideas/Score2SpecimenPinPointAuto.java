@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
 
 
-@Autonomous(name="Score 2 Specimen", group="Right", preselectTeleOp = "Driver Control - Into The Deep")
+@Autonomous(name="Score 2 Specimen", group = "GearGirls", preselectTeleOp = "Driver Control - Into The Deep")
 @Disabled
 public class Score2SpecimenPinPointAuto extends LinearOpMode {
     GoBildaPinpointDriver pinpoint;

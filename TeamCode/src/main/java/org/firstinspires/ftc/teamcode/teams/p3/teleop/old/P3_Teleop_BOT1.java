@@ -50,7 +50,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot_Bot1;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="P3: BOT1 Teleop (Team Version)", group=" _P3opmodes")
+@TeleOp(name="P3: BOT1 Teleop (Team Version)", group = "P3")
 @Disabled
 public class P3_Teleop_BOT1 extends OpMode
 {

@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
  * - Y: Jump to position 1.00 (max)
  * - X: Mark current position as "home candidate"
  */
-@TeleOp(name = "Turret Calibration", group = "Setup")
+@TeleOp(name = "Turret Calibration", group = "P3 Test")
 public class TurretCalibration extends LinearOpMode {
 
     private ServoImplEx turretServo;

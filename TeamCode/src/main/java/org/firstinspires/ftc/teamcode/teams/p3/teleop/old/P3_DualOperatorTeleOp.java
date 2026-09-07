@@ -59,7 +59,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-@TeleOp(name="P3: Dual Operator TeleOp", group=" _P3opmodes")
+@TeleOp(name="P3: Dual Operator TeleOp", group = "P3")
 @Disabled
 public class P3_DualOperatorTeleOp extends OpMode {
 

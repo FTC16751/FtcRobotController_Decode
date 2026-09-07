@@ -39,7 +39,7 @@ import org.firstinspires.ftc.teamcode.common.DriveUtil2025;
 /*
  * Demonstrates an empty iterative OpMode
  */
-@TeleOp(name = "Basic Drive op mode", group = "Concept")
+@TeleOp(name = "Basic Drive op mode", group = "Demo")
 @Disabled
 public class BasicDriveTeleop extends OpMode {
   private static final double DRIVE_SPEED = .85;

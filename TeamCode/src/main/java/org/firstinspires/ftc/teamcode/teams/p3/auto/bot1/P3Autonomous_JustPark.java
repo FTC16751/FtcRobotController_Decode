@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot_Bot1;
 import org.firstinspires.ftc.teamcode.common.SharedState;
 //import org.firstinspires.ftc.teamcode.common.SharedState;
 
-@Autonomous(name="P3 AUTO: bot1 Just Park", group="P3Bot1",preselectTeleOp = "P3: Teleop (Team Version)")
+@Autonomous(name="P3 AUTO: bot1 Just Park", group = "P3",preselectTeleOp = "P3: Teleop (Team Version)")
 @Disabled
 public class
 P3Autonomous_JustPark extends OpMode {

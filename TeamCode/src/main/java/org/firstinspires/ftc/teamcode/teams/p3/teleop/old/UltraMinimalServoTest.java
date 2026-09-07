@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
  *   - Stick Right → Servo position INCREASES (0.5 → 0.6 → 0.7)
  *   - Stick Left → Servo position DECREASES (0.5 → 0.4 → 0.3)
  */
-@TeleOp(name = "ULTRA MINIMAL Servo Test", group = "Diagnostics")
+@TeleOp(name = "ULTRA MINIMAL Servo Test", group = "P3")
 @Disabled
 public class UltraMinimalServoTest extends LinearOpMode {
 

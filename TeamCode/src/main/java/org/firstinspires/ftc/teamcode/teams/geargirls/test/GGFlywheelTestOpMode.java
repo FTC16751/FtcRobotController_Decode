@@ -39,7 +39,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  * Test Flywheels
  *
  */
-@TeleOp(name = "GG Test Flywheels", group = " _GGopmodes")
+@TeleOp(name = "GG Test Flywheels", group = "GearGirls Test")
 @Disabled
 //@Disabled
 public class GGFlywheelTestOpMode extends OpMode {

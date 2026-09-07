@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  *
  * @version 7.1 - Added purge mode selection
  */
-@Autonomous(name="GG AUTO: Bot 2 (RUN ME)", group="GGBot", preselectTeleOp = "Gear Girls Bot 2 (RUN ME)")
+@Autonomous(name="GG AUTO: Bot 2 (RUN ME)", group = "GearGirls", preselectTeleOp = "Gear Girls Bot 2 (RUN ME)")
 public class GGAutonomous_Score9_v7 extends OpMode {
 
     private GGRobot2 robot;

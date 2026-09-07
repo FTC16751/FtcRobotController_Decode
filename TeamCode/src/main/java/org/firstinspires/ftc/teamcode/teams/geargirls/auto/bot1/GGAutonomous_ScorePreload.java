@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.common.VisionUtil;
  * @author Your Team Name
  * @version 004
  */
-@Autonomous(name="GG AUTO: Score 3 (Simplified State Machine)", group="GGBot")
+@Autonomous(name="GG AUTO: Score 3 (Simplified State Machine)", group = "GearGirls")
 @Disabled
 public class GGAutonomous_ScorePreload extends OpMode {
 

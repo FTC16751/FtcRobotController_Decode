@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name="GG Sample Decode Auto", group="GGBot")
+@Autonomous(name="GG Sample Decode Auto", group = "GearGirls")
 @Disabled
 public class GGAutonomous001 extends OpMode
 {

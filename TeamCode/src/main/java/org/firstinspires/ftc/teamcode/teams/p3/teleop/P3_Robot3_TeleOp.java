@@ -85,7 +85,7 @@ import org.firstinspires.ftc.teamcode.common.SharedState;
  */
 
 @Configurable
-@TeleOp(name="P3: Robot 3 TeleOp + Turret", group="_P3opmodes")
+@TeleOp(name="P3: Robot 3 TeleOp + Turret", group = "P3")
 @Disabled
 public class P3_Robot3_TeleOp extends OpMode {
 
