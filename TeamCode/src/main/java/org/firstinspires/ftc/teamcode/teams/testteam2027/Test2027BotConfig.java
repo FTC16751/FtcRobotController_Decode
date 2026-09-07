@@ -31,13 +31,14 @@ public final class Test2027BotConfig {
 
     public static RobotConfig create() {
         return new RobotConfig(
-                // 2. Motor directions. A goBILDA mecanum chassis with motors facing outward usually
-                //    needs the right side reversed, as here.
+                // 2. Motor directions. Verified on the Skyline chassis 2026-09-07: forward, both
+                //    strafes, and both turns all go the right way with the left side reversed. Which
+                //    side needs reversing depends on how the motors face; test, do not assume.
                 new RobotConfig.DrivetrainConfig(
-                        DcMotorEx.Direction.FORWARD,   // left front
-                        DcMotorEx.Direction.REVERSE,   // right front
-                        DcMotorEx.Direction.FORWARD,   // left rear
-                        DcMotorEx.Direction.REVERSE    // right rear
+                        DcMotorEx.Direction.REVERSE,   // left front
+                        DcMotorEx.Direction.FORWARD,   // right front
+                        DcMotorEx.Direction.REVERSE,   // left rear
+                        DcMotorEx.Direction.FORWARD    // right rear
                 ),
                 // 4. Pinpoint: pod offsets from the robot center in mm (X pod is the forward pod,
                 //    Y pod the sideways pod) and the direction each pod counts positive.
