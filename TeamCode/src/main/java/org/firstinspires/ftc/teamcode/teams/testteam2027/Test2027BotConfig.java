@@ -70,8 +70,12 @@ public final class Test2027BotConfig {
         // 5. Calibration. Defaults were tuned on one robot years ago; measure this one.
         .withCalibration(new RobotConfig.Calibration()
                 .rightRearPowerScale(1.0)   // start with no correction; measure drift first
-                .strafeScale(1.1)
-                .turnCircumferenceIn(27.5)  // almost certainly small; measure with the 360 turn
+                // Measured on the Skyline chassis 2026-09-07 with the Encoder Move Check:
+                // strafe: commanded 24 in went 28 in with x1.1, so 1.1 x 24/28.
+                // turn: commanded 360 turned about 135 with 27.5, so 27.5 x 360/135. Refine with a
+                // commanded 90 (D-pad right): new = 73 x 90 / degrees actually turned.
+                .strafeScale(0.94)
+                .turnCircumferenceIn(73.0)
                 // 312 rpm goBILDA motor (537.7 ticks/rev), direct drive, 140 mm goBILDA mecanum
                 // wheel. Different motor or wheel? Change these three numbers; the Encoder Move
                 // Check then measures the real value. (Found 2026-09-07: with 96 here, a commanded
