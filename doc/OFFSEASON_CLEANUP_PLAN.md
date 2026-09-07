@@ -50,6 +50,63 @@ file). BSD sed lacks `\s` and `\b`; use perl. OpMode names contain parentheses, 
 rewrite must be quote-aware. `gh pr` needs `--repo FTC16751/FtcRobotController_Decode` and a
 `FTC16751:` head prefix because the repo is a fork.
 
+## Next focus (set 2026-09-07): analyze and improve `common/DriveUtil2026b`
+
+The mentor's next session is a dedicated look at the shared drive utility. Start from these facts,
+gathered by the 2026-09-06 audit and the R1/R5 work, rather than re-discovering them.
+
+**What it is.** `common/DriveUtil2026b.java`, 1,407 lines, 94 public members, the only drive class
+live team code uses (DriveUtil2025 is a 137-line legacy stub for the demo pushbots). Every robot
+class builds it as `new DriveUtil2026b(hardwareMap, telemetry, null, config)` and calls
+`drive.update()` each loop. It bundles four generations of ideas in one file:
+1. TeleOp mixing: `moveRobot` (with `config.calibration.rightRearPowerScale`), `arcadeDrive`,
+   `fieldCentricDrive`.
+2. Encoder RUN_TO_POSITION moves: `drive_p3`, `driveRobotDistance*`, `rotateRobot`,
+   `driveRobotToPosition` (Skyline's autos use only these).
+3. Phil Malone "simplified odometry" blocking moves: `simplifiedOdometryDrive`/`strafe`/`turnTo`
+   using `ProportionalControl` (extracted in R1) and 4-wheel encoder dead reckoning.
+4. Pinpoint point-to-point PID: `driveTo(current, target, power, holdTime)` + `PinpointPIDLoop`
+   (P/I/D, filtered D, asymmetric accel limit, heading wrap). This is the idiom the autos live on:
+   GearGirls 347 `driveTo` calls, P3 135. Tuned per robot via `RobotConfig.pointToPointTuning`.
+Plus `driveRelative`, `calculateAutoAimTurn`, `Angle`/`Vec2` helpers, and an `update()` state machine
+that is mostly comments.
+
+**Known problems, with evidence (line numbers as of commit 2b13e01; grep to confirm):**
+- Blocking helpers (`driveRobotToPosition`, `simplifiedOdometryDrive`, `strafe`, `turnTo`) loop on
+  `while (areMotorsBusy())` / `while (readSensors())` with no `opModeIsActive()` check, because the
+  OpMode parameter is always null. A stalled motor hangs the OpMode until the Driver Station stops it.
+- `driveToTagAsync` sets `driveState = ALIGNING_TO_APRILTAG` but `update()` has no handler for it
+  (only a comment), so `isBusy()` stays true forever after one call.
+- `getOdoPosition()` writes five telemetry lines every call; P3 autos call it up to 19 times per
+  file as a plain getter. GearGirls bypass it and reach into the public `drive.pinpoint` field
+  directly (571 accesses), so the odometry device is effectively public API.
+- `arcadeDrive(strafe, drive, turn, rightStickY, speed)` changed meaning between generations
+  (DriveUtil2025 negated Y internally; 2026b does not). Each TeleOp compensates differently: P3
+  passes `-driveInput` at speed 0.25, Skyline negates turn at 0.80, GearGirls negates the stick at
+  1.0 with a deadband. Not a bug, but a trap for a fourth team. Do NOT change gamepad layouts to fix it.
+- Two turning-circle numbers for the same robot: `robotDiameterCm` 60 (used by `rotateRobot`) vs
+  `turnCircumferenceIn` 27.5 (used by `drive_p3`); and two ticks-per-rev values (537 for the 312 rpm
+  drive motors, 384.5 for the 435 rpm simplified-odometry path). Both now live in
+  `RobotConfig.Calibration` but every robot still carries the shared defaults; nobody has measured.
+- `rightRearPowerScale` 1.15 is applied in `moveRobot` for every robot; it was tuned on one.
+- Inner class `SimplifiedOdoDriveUtilProportionalControl` (after `PinpointPIDLoop`) duplicates the
+  extracted `ProportionalControl`; check whether anything uses it.
+- Commented-out Pedro follower blocks and three Pedro imports remain (the only Common-to-Pedro coupling).
+- Public mutable fields (`driveController`, `strafeController`, `yawController`, `pinpoint`, motors).
+- `pidReset()` at class level is an empty stub.
+
+**Constraints to respect:** Pinpoint is optional (`hasPinpoint()`, R5); encoder-only robots must
+keep working; GG autos read `drive.pinpoint` directly so that field cannot silently go away; Java 8;
+demo season, so behavior changes need a robot on a stand; do not change gamepad layouts.
+
+**Testing angle:** the pure math (`PinpointPIDLoop.calculateAxisPID`, `Angle.normDelta`, the
+`moveRobot` mixing, `drive_p3` tick math) is unit-testable today with the R7/R8 pattern once seams
+exist; `driveTo` can be tested with a fake pose source. Tests first, then restructure.
+
+**A reasonable shape to aim for** (decide in the session, not here): split by idiom into
+`MecanumMixer` (TeleOp math), `EncoderMoves` (RUN_TO_POSITION), `PointToPointDrive` (Pinpoint PID),
+with `DriveUtil2026b` kept as a thin facade so the 480+ call sites do not change.
+
 ## Context
 
 One software mentor supports three FTC teams (GearGirls, P3, Skyline) from a single TeamCode repo at
