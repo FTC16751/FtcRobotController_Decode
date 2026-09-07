@@ -18,7 +18,8 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
 | R7 LaunchController (P3, Skyline) + unit test harness | done | f054394, ba10258 |
 | R8 aiming helpers (FlywheelVelocityModel, AimLed, VisionAim) + tests | done | 6c5e053 |
 | R9 AutoSelector / AutoBase | **deferred**: build with the first new-season auto | |
-| R10 TeleOpBase, R11 live defects, R12 template, R13-R15 | not started | |
+| R10 TeleOpBase / ButtonEdge | **closed**, will not be done; gamepad layouts stay as drivers learned them | |
+| R11 live defects (TeleOp-side items), R12 template, R13-R15 | not started | |
 
 **Hard rules learned from the mentor, do not violate:**
 0. Demo-safe TeleOp defaults: launcher targeting starts in MANUAL/PRESET at the CLOSE setpoint, never
@@ -368,7 +369,16 @@ stay in place until R3.* Original recommendation follows.
   `setPathWaypoints`. Also replaces Skyline's near/far copy-paste pairs (Park vs Park_Far differ in
   4 of 139 lines) with one auto and a `Location` parameter.
 
-**R10. `common/TeleOpBase` and `common/ButtonEdge`.**
+**R10. `common/TeleOpBase` and `common/ButtonEdge`.** *CLOSED 2026-09-07, will not be done.* The three
+current TeleOps differ in exactly the things a driver feels (speed scalar 0.25 / 0.80 / 1.0, Skyline
+negates turn, GearGirls has a deadband, alliance override is on a different button per robot because
+the bumpers already do team-specific things). A base class would take all of those as parameters to
+save ~15 readable lines per TeleOp, and would put Skyline's turn sign at risk during demo season.
+`ButtonEdge` is unnecessary: the SDK's `xWasPressed()` family already exists and P3/Skyline use it.
+**Gamepad layouts are NOT to be standardized**: drivers have learned them and changing buttons now
+means relearning. R13 docs may record each robot's current layout as-is, nothing more. TeleOps stay
+plain OpModes a student can read top to bottom; the R12 template TeleOp is the "base" by copying.
+Original recommendation follows for the record.
 - `TeleOpBase` provides `handleDriveControls` (arcade with field-centric toggle, slow mode, R3 TX snap),
   the LB/RB alliance override that reconfigures vision, and a telemetry footer. Teams override
   `handleSubsystemControls()`. Replaces the 15-file skeleton.
@@ -444,9 +454,9 @@ Done so far in PR #1: R1 (except DriveUtil2025, which stays), R2 (Road Runner mo
    their own RobotConfig here, which is what makes it safe for them to share DriveUtil2026b later.
 4. **R3 now**, with the tree in its final shape: delete the superseded copies, mentor-reviewed file
    by file. (Still on hold as of 2026-09-07.)
-5. R7 and R8 done in the off-season. R9 deferred until the first new-season auto exists. Remaining
-   before or early in the season: R10 TeleOpBase (must carry the demo-safe default), the TeleOp
-   items of R11, R12 template.
+5. R7 and R8 done in the off-season. R9 deferred until the first new-season auto exists. R10 closed.
+   Remaining before or early in the season: the TeleOp items of R11, R12 template (a plain TeleOp
+   carrying the demo-safe default), R13 docs (record layouts as-is).
 6. R12 template as soon as R7-R10 are stable, before the fourth team's first meeting.
 7. R13-R15 as time allows.
 
