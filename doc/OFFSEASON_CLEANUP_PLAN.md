@@ -18,6 +18,9 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
 | R7-R15 season abstractions, template, docs | not started | |
 
 **Hard rules learned from the mentor, do not violate:**
+0. Demo-safe TeleOp defaults: launcher targeting starts in MANUAL/PRESET at the CLOSE setpoint, never
+   vision; flywheel idle until the driver spins it up; vision is opt-in by a button. (Set 2026-09-07.
+   GearGirls Bot 2 TeleOp fixed; P3 Bot 3 and Skyline V2 already complied.)
 1. `@Disabled` means "hidden from the Driver Hub for event day," never "dead." Delete only files with
    zero callers or a newer replacement for the same robot, confirmed by diff, and ask first.
 2. Prior-season robots are kept for demos. Road Runner, DriveUtil2025, the Into The Deep auto, the
