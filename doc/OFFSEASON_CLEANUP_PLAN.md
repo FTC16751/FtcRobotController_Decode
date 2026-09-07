@@ -34,6 +34,12 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
    Two files per team. Never merge them.
 4. R3 does not start until the mentor says so. Superseded files were moved with their teams
    (`old/`, `earlyideas/`, `bot1/`, `legacy/intothedeep/`) and are waiting.
+5. **DriveUtil's reason to exist is a new programmer's first auto.** (Restated 2026-09-07.) It was
+   started many seasons ago so helper functions would hide the complexity of moving a robot and a
+   student could have a simple autonomous running quickly. Every change to it is judged by that:
+   does the beginner's auto get simpler or stay simple? Direction in the name, inches, one speed,
+   blocking with a time limit, a reached flag. The advanced idioms (`driveTo` waypoints, `drive_p3`,
+   the tag approach) stay, but nobody should need them to write "drive forward 24, turn left 90."
 
 **Open items from R5 for the mentor:** GGRobot (Bot 1) shares GGBot2Config; P3_Robot (Bot 2) shares
 P3Bot3Config; every chassis still has the shared default Calibration (1.15 right-rear scale etc.) and
