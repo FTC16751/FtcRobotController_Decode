@@ -229,10 +229,14 @@ thing. Still owed: everything in doc/ROBOT_TEST_PLAN.md sections B, F, H on the 
   The public field stays.
 - Duplicates: `stopRobot`/`stopMotors`, `setMotorMode`/`setMotorRunMode`, four angle-wrap
   implementations (`normalizeAngle`, `Angle.normDelta`, `Angle.normDeltaDeg`, the loop in
-  `ProportionalControl`).
+  `ProportionalControl`). **DONE 2026-09-07:** `stopMotors` is an alias of `stopRobot`,
+  `setMotorRunMode` folded into `setMotorMode`, only `Angle.normDelta` remains (tested).
 - Dead private code: `calculateEncoderCountsPerDegreeOfChassisRotation`, `calculateTankOutput`,
-  `sensorDistance`, enums `DriveType`/`DriveMotor`, `errorR`, `DRIVE_SPEED`, the commented Pedro
-  blocks and their three imports (`RobotConfig` also imports Pedro for `PedroPathingConfig`).
+  `sensorDistance`, enums `DriveType`/`DriveMotor`, `errorR`, `DRIVE_SPEED`. **DONE 2026-09-07**,
+  plus the empty class-level `pidReset`, `resetActionTimer`, the `pathComplete` triad, the
+  never-checked `InBounds` enum (`inBounds` now returns a boolean), and the superseded
+  commented-out copy of `driveTo`. Per hard rule 6 the `OpMode` hook and every Pedro block and
+  import stay. `driveRelative` stays for the Advanced tier. File is 1186 lines, no behavior change.
 
 **Improvements to the simple-command surface:**
 - Write the sign convention once at class level: encoder commands and the TeleOp mixer are
@@ -291,9 +295,9 @@ call sites are untouched. `driveToTagAsync` now replaces a running move instead 
 `Test2027DriveSquareAuto` rewritten in this vocabulary; README Step 6c is the table. No Pinpoint:
 getters return 0 and start* moves finish at once, failed.
 
-**Suggested order for the rest:** the duplicates and dead private code; `startPath` and
-`relocalizeFromTag` (Advanced tier) after the Pinpoint square and the tag approach have been on
-a stand.
+**Suggested order for the rest:** `startPath` and `relocalizeFromTag` (Advanced tier) after the
+Pinpoint square and the tag approach have been on a stand. Then the Pedro revisit the mentor
+plans, starting from the commented blocks.
 
 ## Context
 

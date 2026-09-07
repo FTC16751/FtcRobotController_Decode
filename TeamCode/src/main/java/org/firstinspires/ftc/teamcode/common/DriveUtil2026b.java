@@ -9,7 +9,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -49,7 +48,6 @@ public class DriveUtil2026b {
     // All come from RobotConfig.calibration (see the robot's config file in its team folder).
     // Every encoder move converts through this one number; turns add calibration.turnCircumferenceIn.
     private final double ENCODER_COUNTS_PER_INCH;   // drive-motor ticks per inch of travel
-    private static final double DRIVE_SPEED = 1.0;  // Default drive speed multiplier
     // Encoder-move time limits (driveRobotToPosition). 60 in/s is a little under what a goBILDA
     // 312 rpm motor on a 96 mm wheel free-runs, so the estimate errs long; the limit is a safety
     // net, not a stopwatch.
@@ -67,7 +65,6 @@ public class DriveUtil2026b {
 
     // --- IMU & Sensor Members ---
     public IMU imu;
-    private DistanceSensor sensorDistance;
     private double headingOffset = 0;
 
     // --- GoBilda Pinpoint Odometry Members ---
@@ -112,10 +109,7 @@ public class DriveUtil2026b {
     private RobotConfig config; // The injected robot configuration object
 
     // --- Enums ---
-    public enum DriveType { MECANUM, TANK }
-    public enum DriveMotor { LEFT_FRONT, RIGHT_FRONT, LEFT_BACK, RIGHT_BACK }
     private enum Direction { x, y, h }
-    private enum InBounds { NOT_IN_BOUNDS, IN_X_Y, IN_HEADING, IN_BOUNDS }
     private enum DriveState { IDLE, DRIVING_TO_POINT_PINPOINT, ALIGNING_TO_APRILTAG }
     private DriveState driveState = DriveState.IDLE;
 
@@ -484,20 +478,9 @@ public class DriveUtil2026b {
             motor.setPower(0);
         }
     }
+    /** Same as stopRobot(); kept for the GearGirls callers. */
     public void stopMotors() {
-        // Stop all motors by setting their power to 0.0
-        for (DcMotorEx motor : motors) {
-            if (motor != null) {
-                motor.setPower(0.0);
-            }
-        }
-    }
-    private void setMotorRunMode(DcMotorEx.RunMode runMode) {
-        for (DcMotorEx motor : motors) {
-            if (motor != null) {
-                motor.setMode(runMode);
-            }
-        }
+        stopRobot();
     }
     public void resetEncoders() {
         // Stop and reset encoders for all motors
@@ -505,7 +488,7 @@ public class DriveUtil2026b {
             if (motor != null) motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         }
         // Set all motors to RUN_USING_ENCODER mode
-        setMotorRunMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        setMotorMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
     public void resetHeading() {
@@ -514,10 +497,6 @@ public class DriveUtil2026b {
 
     public void resetPosAndIMU() {
         if (pinpoint != null) pinpoint.resetPosAndIMU();
-    }
-
-    public void resetActionTimer() {
-        GBholdTimer.reset();
     }
 
      public void resetYaw() {
@@ -571,13 +550,6 @@ public class DriveUtil2026b {
     public boolean isBusy() {
         return driveState != DriveState.IDLE;
     }
-    public boolean pathComplete = false;
-    public boolean pathComplete() {
-        return pathComplete;
-    }
-    public void setPathComplete(boolean complete) {
-        pathComplete = complete;
-    }
 
     public void addTelemetry() {
         telemetry.addLine("--- drive telemetry ---");
@@ -612,63 +584,6 @@ public class DriveUtil2026b {
     public double inchesToEncoderTicks(double distanceInches) {
         return distanceInches * ENCODER_COUNTS_PER_INCH;
     }
-
-    /**
-     * Calculates the number of encoder counts per degree of chassis rotation.
-     *
-     * @param wheelDiameter The diameter of the wheels, in inches.
-     * @param encoderTicksPerRevolution The number of ticks the encoder registers for one full motor revolution.
-     * @param gearRatio The ratio of motor revolutions to wheel revolutions (e.g., a 2:1 ratio means this value is 2.0).
-     * @param trackWidth The distance between the center of the left and right wheels, in inches.
-     * @return The number of encoder counts required to rotate the chassis by one degree.
-     */
-    private double calculateEncoderCountsPerDegreeOfChassisRotation(
-            double wheelDiameter,
-            int encoderTicksPerRevolution,
-            double gearRatio,
-            double trackWidth) {
-
-        // 1. Calculate the circumference of the wheel.
-        final double wheelCircumference = Math.PI * wheelDiameter;
-
-        // 2. Calculate the number of encoder ticks for one full wheel revolution.
-        final double ticksPerWheelRevolution = encoderTicksPerRevolution * gearRatio;
-
-        // 3. Calculate the distance the wheel travels per single encoder tick.
-        final double distancePerTick = wheelCircumference / ticksPerWheelRevolution;
-
-        // 4. Calculate the circumference of the circle the robot travels during a 360-degree turn.
-        // This assumes the robot pivots around its center point.
-        final double chassisTurnCircumference = Math.PI * trackWidth;
-
-        // 5. Calculate the total number of encoder ticks needed for a full 360-degree chassis turn.
-        final double totalTicksFor360Turn = chassisTurnCircumference / distancePerTick;
-
-        // 6. Calculate the number of ticks per degree of chassis rotation.
-        return totalTicksFor360Turn / 360.0;
-    }
-
-    /**
-     * Normalizes an angle to be within the range of -180 to +180 degrees.
-     * This is useful for processing heading or bearing values to ensure consistency
-     * and prevent issues with angle wrapping (e.g., 359 degrees vs -1 degree).
-     *
-     * @param angle The angle in degrees to normalize.
-     * @return The normalized angle, which will be between -180 (exclusive) and +180 (inclusive).
-     */
-    private double normalizeAngle(double angle) {
-        while (angle > 180) {
-            angle -= 360;
-        }
-        while (angle <= -180) {
-            angle += 360;
-        }
-        return angle;
-    }
-
-
-
-
 
     // =================================================================================
     // SECTION 4: MID-LEVEL DRIVE METHODS (TELEOP)
@@ -787,7 +702,7 @@ public class DriveUtil2026b {
 
         // Stop the robot and reset run mode
         stopRobot();
-        setMotorRunMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        setMotorMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         return reachedTarget;
     }
 
@@ -967,42 +882,11 @@ public class DriveUtil2026b {
 //        }
     }
 
-//    public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
-//        boolean atTarget;
-//        double xPWR = calculatePID(currentPosition, targetPosition, Direction.x);
-//        double yPWR = calculatePID(currentPosition, targetPosition, Direction.y);
-//        double hOutput = calculatePID(currentPosition, targetPosition, Direction.h);
-//
-//        double heading = currentPosition.getHeading(AngleUnit.RADIANS);
-//        double cosine = Math.cos(heading);
-//        double sine = Math.sin(heading);
-//
-//        double xOutput = (xPWR * cosine) + (yPWR * sine);
-//        double yOutput = (xPWR * sine) - (yPWR * cosine);
-//
-//        moveRobot(xOutput * power, yOutput * power, -(hOutput * power));
-//        //moveRobot(xOutput * power, yOutput * power, 0);
-//
-//        if(inBounds(currentPosition,targetPosition) == InBounds.IN_BOUNDS){
-//            atTarget = true;
-//        }
-//        else {
-//            GBholdTimer.reset();
-//            atTarget = false;
-//        }
-//
-//        if(atTarget && GBholdTimer.time() > holdTime){
-//            return true;
-//        }
-//        return false;
-//    }
 public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
     boolean atTarget;
 
     // Check if we're at target FIRST
-    InBounds boundsStatus = inBounds(currentPosition, targetPosition);
-
-    if(boundsStatus == InBounds.IN_BOUNDS){
+    if (inBounds(currentPosition, targetPosition)) {
         // We're at target - STOP ALL MOTORS
         moveRobot(0, 0, 0);
         atTarget = true;
@@ -1032,19 +916,6 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         return false;  // Still driving
     }
 }
-    private void calculateTankOutput(double forward, double yaw){
-        double left = forward - yaw;
-        double right = forward + yaw;
-
-        double max = Math.max(Math.abs(left),Math.abs(right));
-
-        if (max > 1.0) {
-            left /= max;
-            right /= max;
-        }
-
-        setMotorPowers(left,left,right,right);
-    }
 
 
     private double calculatePID(Pose2D currentPosition, Pose2D targetPosition, Direction direction){
@@ -1098,7 +969,7 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         return 0;
     }
 
-    private InBounds inBounds (Pose2D currPose, Pose2D trgtPose){
+    private boolean inBounds(Pose2D currPose, Pose2D trgtPose){
         boolean xInBounds = currPose.getX(MM) > (trgtPose.getX(MM) - config.pointToPointTuning.xyTolerance) && currPose.getX(MM) < (trgtPose.getX(MM) + config.pointToPointTuning.xyTolerance);
         boolean yInBounds = currPose.getY(MM) > (trgtPose.getY(MM) - config.pointToPointTuning.xyTolerance) && currPose.getY(MM) < (trgtPose.getY(MM) + config.pointToPointTuning.xyTolerance);
         double targetH = trgtPose.getHeading(RADIANS);
@@ -1108,19 +979,9 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
         //boolean hInBounds = currPose.getHeading(RADIANS) > (trgtPose.getHeading(RADIANS) - config.yawTolerance) &&
         //        currPose.getHeading(RADIANS) < (trgtPose.getHeading(RADIANS) + config.yawTolerance);
 
-        if (xInBounds && yInBounds && hInBounds){
-            return InBounds.IN_BOUNDS;
-        } else if (xInBounds && yInBounds){
-            return InBounds.IN_X_Y;
-        } else if (hInBounds){
-            return InBounds.IN_HEADING;
-        } else
-            return InBounds.NOT_IN_BOUNDS;
+        return xInBounds && yInBounds && hInBounds;
     }
 
-    public void pidReset() {
-
-    }
     public double calculateTargetHeading(Pose2D currPose, Pose2D trgtPose){
         double xDelta = trgtPose.getX(MM) - currPose.getX(MM);
         double yDelta = trgtPose.getY(MM) - currPose.getY(MM);
@@ -1165,13 +1026,6 @@ public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double pow
             while (radians > Math.PI)  radians -= 2 * Math.PI;
             while (radians < -Math.PI) radians += 2 * Math.PI;
             return radians;
-        }
-
-        /** Degrees version if you ever need it. */
-        public double normDeltaDeg(double degrees) {
-            while (degrees > 180)  degrees -= 360;
-            while (degrees < -180) degrees += 360;
-            return degrees;
         }
     }
     public static class Vec2 {
