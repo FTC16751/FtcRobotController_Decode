@@ -1,0 +1,62 @@
+package org.firstinspires.ftc.teamcode.teams.p3.teleop.old;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.teams.p3.subsystems.P3_LauncherUtil;
+
+@TeleOp(name="P3 Teleop (Coaches shooter opmode)", group=" _P3opmodes")
+@Disabled
+public class P3_CoachesShooterTest extends OpMode
+{
+    // Declare OpMode members.
+    private ElapsedTime runtime = new ElapsedTime();
+    private P3_LauncherUtil launcher;
+
+    private double launcherVelocity = 0;
+
+
+    @Override
+    public void init() {
+        launcher = new P3_LauncherUtil(hardwareMap);
+    }
+
+    @Override
+    public void init_loop() {}
+
+    @Override
+    public void start() {}
+
+    @Override
+    public void loop() {
+        handleLauncherControls();
+        doTelemetry();
+        telemetry.update();
+    }
+
+    @Override
+    public void stop() {
+        requestOpModeStop();
+    }
+    private void handleLauncherControls() {
+        if (gamepad1.yWasPressed()) {
+            launcherVelocity = 1200;
+            launcher.setShooterMotorVelocity(launcherVelocity);
+        } else if (gamepad1.aWasPressed()) {
+            launcherVelocity = 0;
+            launcher.setShooterMotorVelocity(launcherVelocity);
+        } else if (gamepad1.xWasPressed()) {
+            launcherVelocity = launcherVelocity-100;
+            launcher.setShooterMotorVelocity(launcherVelocity);
+        } else if (gamepad1.bWasPressed()) {
+            launcherVelocity = launcherVelocity+100;
+            launcher.setShooterMotorVelocity(launcherVelocity);
+        }
+    }
+    private void doTelemetry() {
+        telemetry.addData("requested velocity: ", launcherVelocity);
+        telemetry.addData("launcher velocity: ", launcher.getShooterMotorVelocity());
+    }
+}

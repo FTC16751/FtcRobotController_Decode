@@ -1,0 +1,220 @@
+package org.firstinspires.ftc.teamcode.teams.p3.teleop.old;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+// LIMELIGHT imports
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.teams.p3.P3_Robot;
+
+@TeleOp(name="P3 Teleop (Coaches opmode)", group=" _P3opmodes")
+@Disabled
+public class P3_CoachesTeleop extends OpMode
+{
+    public static final double TX_ALIGN_KP = 0.02;
+    public final double TX_ALIGN_TOLERANCE_DEG = 1.0;
+    // Declare OpMode members.
+    private ElapsedTime runtime = new ElapsedTime();
+    private P3_Robot robot;
+    private double lastTagDistanceMeters = -1.0;
+    private int lastTagId = -1;
+
+    // --- OPMODE STATE VARIABLES ---
+    private enum AllianceColor { RED, BLUE }
+    private AllianceColor alliance = AllianceColor.RED;
+    private enum DriveMode { FIELD_CENTRIC, ARCADE }
+    private DriveMode DRIVEMODE = DriveMode.ARCADE;
+    private enum IntakeState { ON, OFF, REVERSE }
+    private IntakeState intakeState = IntakeState.OFF;
+    private boolean isShooterOn = false;
+    private static final double DRIVE_SPEED = 1.0;
+    private static final double JOYSTICK_DEADBAND = 0.05;
+    private static final double INTAKE_POWER = 1.0;
+    private double targetVelocityForDistance;
+    private double lastKnownGoodVelocity = 0.0;
+    //private static final double JOYSTICK_DEADBAND = 0.05;
+    // --- NEW: Slew Rate Limiter Variables ---
+    // This constant defines how much the motor power can change per second.
+    // A value of 3.0 means it takes 1/3 of a second to go from 0% to 100% power.
+    // Smaller values = smoother/slower ramp. Larger values = more responsive.
+    private static final double SLEW_RATE_LIMIT = 5.0; // Units: Power per Second
+
+    // Variables to store the previous loop's power commands
+    private double prevSmoothedDrive = 0.0;
+    private double prevSmoothedStrafe = 0.0;
+    private double prevSmoothedTurn = 0.0;
+    private final ElapsedTime loopTimer = new ElapsedTime(); // Timer to measure loop time
+
+    @Override
+    public void init() {
+        robot = new P3_Robot(hardwareMap,telemetry);
+
+
+        telemetry.addData("Status", "Initialized P3 Robot");
+    }
+
+    @Override
+    public void init_loop() {
+        // You can add alliance selection logic here
+        if (gamepad1.x) { alliance = AllianceColor.BLUE; }
+        if (gamepad1.b) { alliance = AllianceColor.RED; }
+        telemetry.addData("Selected Alliance", alliance);
+    }
+
+    @Override
+    public void start() {
+        runtime.reset();
+    }
+
+    @Override
+    public void loop() {
+        // 1. Always update the robot's state first
+        robot.update();
+
+        // 2. Delegate all control logic to helper methods
+        doDriveControls();
+        handleIntakeControls();
+        handleLauncherControls();
+        calcShooterVelocity();
+        // 3. Display telemetry
+        robot.addTelemetry();
+        doTelemetry();
+        telemetry.update();
+    }
+
+    private void doTelemetry() {
+//        telemetry.addData("targetVelocityForDistance", targetVelocityForDistance);
+        telemetry.addData("distanceToTagMeters", robot.vision.getDistanceToTagMeters());
+        telemetry.addData("distanceToTagInces", robot.vision.getDistanceToTagMeters()*39.3701);
+//        telemetry.addData("distanceToTagInches", calcShooterVelocity());
+        telemetry.addData("calculated velocity: ", robot.getFlywheelRpmForDistance((robot.vision.getDistanceToTagMeters()*39.3701)));
+        telemetry.addData("current X coordinate", robot.drive.getOdoPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("current Y coordinate", robot.drive.getOdoPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("current Heading angle", robot.drive.getOdoPosition().getHeading(AngleUnit.DEGREES));
+        robot.vision.addTelemetry();
+    }
+
+    @Override
+    public void stop() {
+        robot.stopAll();
+        requestOpModeStop();
+    }
+
+    private void doDriveControls() {
+        if (gamepad1.startWasPressed()) {
+            //robot.drive.resetPosAndIMU();
+            robot.drive.pinpoint.setHeading(robot.vision.getTargetAngleX()-154, AngleUnit.DEGREES);
+        }
+        //i want to use the gamepad1.back button to toggle between using drivemode of arcadeDrive and fieldCentricDrive toogle drive mode should be within this telop
+        if (gamepad1.backWasPressed()) {
+            toggleDriveMode();
+        }
+
+
+        double driveInput = gamepad1.left_stick_y;
+        double strafeInput = -gamepad1.left_stick_x;
+        double turnInput = gamepad1.right_stick_x;
+
+        boolean isSnappingToTarget = gamepad1.right_stick_button && robot.vision.isTargetVisible();
+        if (isSnappingToTarget) {
+            double txError = robot.vision.getTargetAngleX();;
+            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                turnInput = 0.0;
+            } else {
+                turnInput = TX_ALIGN_KP * txError;
+            }
+            telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);
+        } else {
+            // normal right-stick turning
+            turnInput = gamepad1.right_stick_x;
+        }
+        // --- Apply Deadband ---
+        // If the raw input is less than the deadband, treat it as zero.
+        double deadbandedDrive = Math.abs(driveInput) > JOYSTICK_DEADBAND ? driveInput : 0.0;
+        double deadbandedStrafe = Math.abs(strafeInput) > JOYSTICK_DEADBAND ? strafeInput : 0.0;
+        double deadbandedTurn = Math.abs(turnInput) > JOYSTICK_DEADBAND ? turnInput : 0.0;
+
+        // --- Apply Scaling Curve (Cubic) for Smoothing ---
+        // Cubing the input provides finer control at low speeds.
+        double smoothedDrive = Math.pow(deadbandedDrive, 3);
+        double smoothedStrafe = Math.pow(deadbandedStrafe,3);
+        double smoothedTurn = Math.pow(deadbandedTurn, 3);
+
+
+
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            robot.drive.arcadeDrive(strafeInput, driveInput, turnInput, 0, 1.0);
+        } else if (DRIVEMODE == DriveMode.FIELD_CENTRIC) {
+            robot.drive.fieldCentricDrive(strafeInput, driveInput, turnInput, 1.0);
+        }
+
+        // Add telemetry to see the effect
+        telemetry.addData("Raw Drive", "%.2f", driveInput);
+        telemetry.addData("Smoothed Drive", "%.2f", smoothedDrive);
+        telemetry.addData("drive mode: ", DRIVEMODE);
+    }
+
+    private void toggleDriveMode() {
+        if (DRIVEMODE == DriveMode.ARCADE) {
+            DRIVEMODE = DriveMode.FIELD_CENTRIC;;
+        } else {
+            DRIVEMODE = DriveMode.ARCADE;
+        }
+    }
+
+    private void handleIntakeControls() {
+        if (gamepad1.aWasPressed()) {
+            intakeState = (intakeState == IntakeState.ON) ? IntakeState.OFF : IntakeState.ON;
+        }
+
+        if (gamepad1.xWasPressed()) {
+            intakeState = (intakeState == IntakeState.REVERSE) ? IntakeState.OFF : IntakeState.REVERSE;
+        }
+
+        switch (intakeState) {
+            case ON:      robot.intake.setIntakePower(INTAKE_POWER);  break;
+            case REVERSE: robot.intake.setIntakePower(-INTAKE_POWER); break;
+            case OFF:     robot.intake.setIntakePower(0);             break;
+        }
+    }
+
+    private double calcShooterVelocity() {
+        if (robot.vision.isTargetVisible()) {
+            double distanceInches = robot.vision.getDistanceToTagMeters()* 39.3701;;
+            targetVelocityForDistance = robot.getTargetVelocityForDistance(distanceInches);
+            lastKnownGoodVelocity = targetVelocityForDistance;
+            return targetVelocityForDistance;
+        } else {
+            return lastKnownGoodVelocity;
+        }
+    }
+
+    private void handleLauncherControls() {
+        if (gamepad1.right_trigger > 0.8) {
+            robot.launcher.setIndexerServoPower(-1.0);
+            robot.launcher.setShootingPosition();
+        } else if (gamepad1.left_trigger > 0.8) {
+            robot.launcher.setIndexerServoPower(1.0);
+        } else {
+            robot.launcher.setIndexerServoPower(0.0);
+            robot.launcher.setStopPosition();
+        }
+
+        if (gamepad1.yWasPressed()) { isShooterOn = true; }
+        if (gamepad1.bWasPressed()) { isShooterOn = false; }
+
+        if (isShooterOn) {
+            // TODO: Replace 1000 with a call to a dynamic velocity calculation method
+            robot.launcher.setShooterMotorVelocity(1250);
+           // robot.launcher.setShooterMotorVelocity(calcShooterVelocity());
+
+
+        } else {
+            robot.launcher.setShooterMotorVelocity(0);
+        }
+    }
+}
