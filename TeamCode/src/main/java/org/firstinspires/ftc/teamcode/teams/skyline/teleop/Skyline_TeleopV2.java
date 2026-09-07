@@ -32,6 +32,8 @@
 
 package org.firstinspires.ftc.teamcode.teams.skyline.teleop;
 
+import org.firstinspires.ftc.teamcode.common.VisionAim;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -140,11 +142,7 @@ public class Skyline_TeleopV2 extends OpMode {
         boolean isSnappingToTarget = gamepad1.right_stick_button && robot.vision.isTargetVisible();
         double txError = robot.vision.getTargetAngleX();;
 
-        if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
-            angleOnTarget = 0.0;
-        } else {
-            angleOnTarget = TX_ALIGN_KP * txError;
-        }
+        angleOnTarget = VisionAim.turnPower(txError, TX_ALIGN_KP, TX_ALIGN_TOLERANCE_DEG);
         if (isSnappingToTarget) {
             turnInput = angleOnTarget;
             telemetry.addData("TX Align", "ON | Error: %.1f deg", txError);

@@ -7,9 +7,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.common.AimLed;
 import org.firstinspires.ftc.teamcode.common.CommonConstants;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.common.Feeder;
+import org.firstinspires.ftc.teamcode.common.FlywheelVelocityModel;
 import org.firstinspires.ftc.teamcode.common.Flywheel;
 import org.firstinspires.ftc.teamcode.common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.common.LaunchController;
@@ -33,8 +35,8 @@ public class Skyline_Robot {
 
     // --- Launch sequence: shared common.LaunchController with Skyline's launcher and feeder plugged in ---
     public final LaunchController launchController;
-    private InterpolatingLookupTable flywheelTable;
-    private double lastKnownGoodVelocity = 0.0;
+    private final FlywheelVelocityModel flywheelModel;   // distance -> velocity, remembers last good
+    private final AimLed aimLed;                         // LED shows lined up / left / right / none
     public Skyline_Robot(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         RobotConfig config = SkylineBotConfig.create();
@@ -66,20 +68,14 @@ public class Skyline_Robot {
                         .keepSpinning(true),
                 telemetry);
 
-        flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 1200.0*1.045);
-        flywheelTable.add(40.0, 1200.0*1.045);
-        flywheelTable.add(50.0, 1230.0*1.045);
-        flywheelTable.add(60.0, 1260.0*1.05);
-        flywheelTable.add(70.0, 1285.0*1.05);
-        flywheelTable.add(80.0, 1340.0*1.045);
-        flywheelTable.add(90.0, 1420.0*1.04);
-        flywheelTable.add(100.0, 1460.0*1.04);
-        flywheelTable.add(110.0, 1480.0*1.04);
-        flywheelTable.add(120.0, 1560.0*1.04);
-        flywheelTable.add(130.0, 1640.0*1.04);
-        flywheelTable.add(140.0, 1720.0*1.04);
-        flywheelTable.add(150.0, 1760.0);
+        // Aiming helpers: the table and LED settings live in SkylineConstants
+        flywheelModel = new FlywheelVelocityModel(
+                SkylineConstants.Launcher.FLYWHEEL_TABLE,
+                SkylineConstants.Launcher.FLYWHEEL_INITIAL_FALLBACK);
+        aimLed = new AimLed(led, vision, SkylineConstants.Aim.LED_TOLERANCE_DEG,
+                new AimLed.Colors()
+                        .goalToRight(SkylineConstants.Aim.LED_GOAL_RIGHT)
+                        .goalToLeft(SkylineConstants.Aim.LED_GOAL_LEFT));
     }
 
     /**
@@ -120,47 +116,15 @@ public class Skyline_Robot {
     }
 
     public double updateAndGetTargetVelocity() {
-        final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
-        String dataSource; // For telemetry
-        double newVelocity; // A temporary variable for the new calculation
-
-        if (vision.isTargetVisible()) {
-            // Limelight Vision
-            dataSource = "VISION";
-            double distanceInches = vision.getDistanceToTagInches();
-            newVelocity = getTargetVelocityForDistance(distanceInches);
-
-            // We have a high-confidence value, so we update our fallback state.
-            this.lastKnownGoodVelocity = newVelocity;
-
-        }
-        else {
-            dataSource = "LAST KNOWN";
-            // DO NOT calculate a new value. Use the last one we successfully stored.
-            newVelocity = this.lastKnownGoodVelocity;
-        }
-
-        telemetry.addData("Aiming Data Source", dataSource);
-        return newVelocity; // Return the result of this loop's calculation.
+        double velocity = flywheelModel.update(vision);
+        telemetry.addData("Aiming Data Source", flywheelModel.getLastSource());
+        return velocity;
     }
     public double getTargetVelocityForDistance(double distanceInches) {
-        return flywheelTable.get(distanceInches);
+        return flywheelModel.velocityForDistance(distanceInches);
     }
 
     private void updateLedStatus() {
-        if (!vision.isTargetVisible()) {
-            led.setColor(LedUtil.Color.OFF);
-            return;
-        }
-
-        double headingError = vision.getTargetAngleX();
-        final double AIMING_TOLERANCE_DEG = 2.0;
-        if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.GREEN);
-        } else if (headingError > AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.ORANGE);
-        } else if (headingError < -AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.BLUE);
-        }
+        aimLed.update();
     }
 }

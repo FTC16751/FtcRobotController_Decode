@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teams.p3.teleop;
 
+import org.firstinspires.ftc.teamcode.common.VisionAim;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -143,11 +145,7 @@ public class P3_Robot3_TeleOp_SingleDriver extends OpMode {
         double txError = robot.vision.getTargetAngleX();
 
         if (isSnappingToTarget) {
-            if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
-                angleOnTarget = 0.0;
-            } else {
-                angleOnTarget = TX_ALIGN_KP * txError;
-            }
+            angleOnTarget = VisionAim.turnPower(txError, TX_ALIGN_KP, TX_ALIGN_TOLERANCE_DEG);
             turnInput = angleOnTarget;
         } else {
             angleOnTarget = 0.0;

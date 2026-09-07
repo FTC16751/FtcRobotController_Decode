@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teams.geargirls;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.common.LedUtil;
 
 public class GGRobotConstants {
 
@@ -27,6 +28,35 @@ public class GGRobotConstants {
         public static final double AUTO_TARGET_VELOCITY = 1850; //in ticks/second for the close goal.
         public static final double AUTO_MIN_VELOCITY = AUTO_TARGET_VELOCITY-50;//minimum required to start a shot for close goal.
         public static final double TIME_BETWEEN_SHOTS = 0.5;
+
+        /**
+         * Distance to the goal (inches) -> flywheel velocity (ticks/sec), used by FlywheelVelocityModel.
+         * TODO: re-tune for the 72mm wheels; these values are from the 96mm wheel configuration.
+         */
+        public static final double[][] FLYWHEEL_TABLE = {
+                { 30.0, 1290.0},
+                { 40.0, 1370.0},
+                { 50.0, 1440.0},
+                { 60.0, 1500.0},
+                { 70.0, 1540.0},
+                { 80.0, 1600.0},
+                { 90.0, 1700.0},
+                {100.0, 1760.0},
+                {110.0, 1880.0},
+                {120.0, 1950.0},
+                {130.0, 2030.0},
+                {140.0, 2100.0},
+                {160.0, 2250.0},
+        };
+        /** Velocity to shoot at before the goal has ever been seen (the close-range table value). */
+        public static final double FLYWHEEL_INITIAL_FALLBACK = 1290.0;
+    }
+
+    /** Aim feedback on the status LED (AimLed). */
+    public static final class Aim {
+        public static final double LED_TOLERANCE_DEG = 2.0;
+        public static final double LED_GOAL_RIGHT = LedUtil.Color.YELLOW;
+        public static final double LED_GOAL_LEFT  = LedUtil.Color.BLUE;
     }
 
     public enum LauncherDistance {

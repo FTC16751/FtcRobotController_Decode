@@ -27,7 +27,7 @@ import java.util.List;
  * 4. At the end of your OpMode, call the {@link #stop()} method to release resources.
  * </p>
  */
-public class VisionUtil {
+public class VisionUtil implements AimTarget {
 
     private Limelight3A limelight;
     private final Telemetry telemetry;

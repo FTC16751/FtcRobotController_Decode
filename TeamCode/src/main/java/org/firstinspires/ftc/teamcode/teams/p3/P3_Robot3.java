@@ -12,9 +12,11 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.common.AimLed;
 import org.firstinspires.ftc.teamcode.common.CommonConstants;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.common.Feeder;
+import org.firstinspires.ftc.teamcode.common.FlywheelVelocityModel;
 import org.firstinspires.ftc.teamcode.common.Flywheel;
 import org.firstinspires.ftc.teamcode.common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.common.LaunchController;
@@ -59,14 +61,14 @@ public class P3_Robot3 {
     // ========================================
     // FLYWHEEL VELOCITY MANAGEMENT
     // ========================================
-    private final InterpolatingLookupTable flywheelTable;
+    private final FlywheelVelocityModel flywheelModel;   // distance -> velocity, remembers last good
+    private final AimLed aimLed;                         // LED shows lined up / left / right / none
 
     /**
      * Stores the last successfully calculated target velocity.
      * Used as a fallback when vision is unavailable.
      * Initialized to a safe mid-range value rather than 0.
      */
-    private double lastKnownGoodVelocity = 1000.0;  // Default to reasonable mid-range velocity
 
     // ========================================
     // CONSTRUCTOR
@@ -124,20 +126,14 @@ public class P3_Robot3 {
 
         // Initialize flywheel velocity lookup table (distance in inches -> velocity in ticks/sec)
         // These values are empirically tuned for the P3 robot
-        flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 950.0*1.10);
-        flywheelTable.add(40.0, 960.0*1.10);
-        flywheelTable.add(50.0, 1080.0*1.10);
-        flywheelTable.add(60.0, 1120.0*1.10);
-        flywheelTable.add(70.0, 1080.0*1.10);   // 1180 - 100
-        flywheelTable.add(80.0, 1120.0*1.10);   // 1220 - 100
-        flywheelTable.add(90.0, 1220.0*1.10);   // 1320 - 100
-        flywheelTable.add(100.0, 1300.0*1.10);  // 1400 - 100
-        flywheelTable.add(110.0, 1340.0*1.10);  // 1440 - 100
-        flywheelTable.add(120.0, 1380.0*1.10);  // 1480 - 100
-        flywheelTable.add(130.0, 1420.0*1.10);  // 1520 - 100
-        flywheelTable.add(140.0, 1460.0*1.10);  // 1560 - 100
-        flywheelTable.add(150.0, 1500.0*1.10);  // 1600 - 100
+        // Aiming helpers: the table and LED settings live in P3RobotConstants
+        flywheelModel = new FlywheelVelocityModel(
+                P3RobotConstants.Launcher.FLYWHEEL_TABLE,
+                P3RobotConstants.Launcher.FLYWHEEL_INITIAL_FALLBACK);
+        aimLed = new AimLed(led, vision, P3RobotConstants.Aim.LED_TOLERANCE_DEG,
+                new AimLed.Colors()
+                        .goalToRight(P3RobotConstants.Aim.LED_GOAL_RIGHT)
+                        .goalToLeft(P3RobotConstants.Aim.LED_GOAL_LEFT));
     }
 
     // ========================================
@@ -241,15 +237,7 @@ public class P3_Robot3 {
      * @return Target velocity in ticks per second
      */
     public double updateAndGetTargetVelocity() {
-        if (vision.isTargetVisible()) {
-            // Target visible - calculate velocity from distance
-            double distanceInches = vision.getDistanceToTagInches();
-            lastKnownGoodVelocity = flywheelTable.get(distanceInches);
-            return lastKnownGoodVelocity;
-        } else {
-            // Target not visible - use last known good velocity
-            return lastKnownGoodVelocity;
-        }
+        return flywheelModel.update(vision);
     }
 
     /**
@@ -259,7 +247,7 @@ public class P3_Robot3 {
      * @return Last known good velocity in ticks per second
      */
     public double getLastKnownGoodVelocity() {
-        return lastKnownGoodVelocity;
+        return flywheelModel.getLastKnownGoodVelocity();
     }
 
     // ========================================
@@ -286,26 +274,7 @@ public class P3_Robot3 {
      * Call this in the periodic update() method.
      */
     private void updateLedStatus() {
-
-        if (led == null) {
-            return;
-        }
-
-        if (!vision.isTargetVisible()) {
-            led.setColor(LedUtil.Color.OFF);
-            return;
-        }
-
-        double headingError = vision.getTargetAngleX();
-        final double AIMING_TOLERANCE_DEG = 4.0;
-
-        if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.GREEN);  // On target
-        } else if (headingError > AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.YELLOW); // Turn right
-        } else {
-            led.setColor(LedUtil.Color.BLUE);   // Turn left
-        }
+        aimLed.update();   // no-op if this robot has no LED
     }
 
     // ========================================

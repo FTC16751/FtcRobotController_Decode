@@ -21,7 +21,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.common.AimLed;
 import org.firstinspires.ftc.teamcode.common.CommonConstants;
+import org.firstinspires.ftc.teamcode.common.FlywheelVelocityModel;
 import org.firstinspires.ftc.teamcode.common.DriveUtil2026b;
 import org.firstinspires.ftc.teamcode.common.InterpolatingLookupTable;
 import org.firstinspires.ftc.teamcode.common.LedUtil;
@@ -93,11 +95,9 @@ public class GGRobot2 {
     private DriveAndIntakeState driveAndIntakeState = DriveAndIntakeState.IDLE;
     private ElapsedTime intakeSubActionTimer = new ElapsedTime();
 
-    // === LOOKUP TABLE ===
-    // NOTE: These values may need to be updated for the new 72mm wheels
-    // Original values were for 96mm wheels
-    private InterpolatingLookupTable flywheelTable;
-    private double lastKnownGoodVelocity = 0.0;
+    // === AIMING (shared Common helpers, GearGirls numbers from GGRobotConstants) ===
+    private final FlywheelVelocityModel flywheelModel;   // distance -> velocity, remembers last good
+    private final AimLed aimLed;                         // LED shows lined up / left / right / none
 
     /**
      * The constructor for the Robot class.
@@ -124,24 +124,14 @@ public class GGRobot2 {
 
 
 
-        // Flywheel lookup table
-        // TODO: These values need to be re-tuned for the 72mm wheels!
-        // Current values are from the 96mm wheel configuration
-        // Expected: multiply all velocities by approximately 1.33x or more
-        flywheelTable = new InterpolatingLookupTable();
-        flywheelTable.add(30.0, 1290.0);
-        flywheelTable.add(40.0, 1370.0);
-        flywheelTable.add(50.0, 1440.0);
-        flywheelTable.add(60.0, 1500.0);
-        flywheelTable.add(70.0, 1540.0);
-        flywheelTable.add(80.0, 1600.0);
-        flywheelTable.add(90.0, 1700.0);
-        flywheelTable.add(100.0, 1760.0);
-        flywheelTable.add(110.0, 1880.0);
-        flywheelTable.add(120.0, 1950.0);
-        flywheelTable.add(130.0, 2030.0);
-        flywheelTable.add(140.0, 2100.0);
-        flywheelTable.add(160.0, 2250.0);
+        // Aiming helpers: the table and LED settings live in GGRobotConstants
+        flywheelModel = new FlywheelVelocityModel(
+                GGRobotConstants.Launcher.FLYWHEEL_TABLE,
+                GGRobotConstants.Launcher.FLYWHEEL_INITIAL_FALLBACK);
+        aimLed = new AimLed(led, vision, GGRobotConstants.Aim.LED_TOLERANCE_DEG,
+                new AimLed.Colors()
+                        .goalToRight(GGRobotConstants.Aim.LED_GOAL_RIGHT)
+                        .goalToLeft(GGRobotConstants.Aim.LED_GOAL_LEFT));
 
 
 
@@ -213,20 +203,7 @@ public class GGRobot2 {
      * Updates LED color based on vision targeting status.
      */
     private void updateLedStatus() {
-        if (!vision.isTargetVisible()) {
-            led.setColor(LedUtil.Color.OFF);
-            return;
-        }
-
-        double headingError = vision.getTargetAngleX();
-        final double AIMING_TOLERANCE_DEG = 2.0;
-        if (Math.abs(headingError) <= AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.GREEN);
-        } else if (headingError > AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.YELLOW);
-        } else if (headingError < -AIMING_TOLERANCE_DEG) {
-            led.setColor(LedUtil.Color.BLUE);
-        }
+        aimLed.update();
     }
 
     /**
@@ -299,35 +276,9 @@ public class GGRobot2 {
      * @return The calculated target velocity in RPM
      */
     public double updateAndGetTargetVelocity() {
-        final double METERS_TO_INCHES = CommonConstants.METERS_TO_INCHES;
-        String dataSource;
-        double newVelocity;
-
-        // --- The Waterfall Logic ---
-        if (vision.isTargetVisible()) {
-            // PRIMARY: Vision is available and is our most trusted source
-            dataSource = "VISION";
-            double distanceInches = vision.getDistanceToTagInches();
-            newVelocity = getTargetVelocityForDistance(distanceInches);
-
-            // Update fallback state with high-confidence value
-            this.lastKnownGoodVelocity = newVelocity;
-        }
-        // Odometry fallback commented out - uncomment if needed
-        // else if (drive.pinpoint.getLoopTime() > 0) {
-        //     dataSource = "ODOMETRY";
-        //     double distanceInches = getDistanceToGoal();
-        //     newVelocity = getTargetVelocityForDistance(distanceInches);
-        //     this.lastKnownGoodVelocity = newVelocity;
-        // }
-        else {
-            // TERTIARY: Both vision and odometry failed, use last known good
-            dataSource = "LAST KNOWN";
-            newVelocity = this.lastKnownGoodVelocity;
-        }
-
-        telemetry.addData("Aiming Data Source", dataSource);
-        return newVelocity;
+        double velocity = flywheelModel.update(vision);
+        telemetry.addData("Aiming Data Source", flywheelModel.getLastSource());
+        return velocity;
     }
 
     /**
@@ -354,7 +305,7 @@ public class GGRobot2 {
      * @return The calculated target velocity in RPM
      */
     public double getTargetVelocityForDistance(double distanceInches) {
-        return flywheelTable.get(distanceInches);
+        return flywheelModel.velocityForDistance(distanceInches);
     }
 
     /**

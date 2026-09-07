@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teams.geargirls.teleop;
 
+import org.firstinspires.ftc.teamcode.common.VisionAim;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -140,8 +142,7 @@ public class GearGirlsBot2_improved extends OpMode {
 
         // Auto-aim override
         if (gamepad1.right_stick_button && robot.vision.isTargetVisible()) {
-            double txError = robot.vision.getTargetAngleX();
-            turnInput = (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) ? 0.0 : TX_ALIGN_KP * txError;
+            turnInput = VisionAim.turnPower(robot.vision, TX_ALIGN_KP, TX_ALIGN_TOLERANCE_DEG);
         }
 
         // Execute drive command

@@ -329,7 +329,18 @@ flippers + spinner, P3 an indexer, Skyline two feeder servos. Replaces six hand-
 drifted defaults (tolerance 2.0 vs 4.0, `lastKnownGoodVelocity` 0.0 vs 1000.0, no timeout at all in
 `Skyline_Robot:89-96` and GearGirls).
 
-**R8. `common/FlywheelVelocityModel`, `common/AimLed`, `common/VisionAim`.**
+**R8. `common/FlywheelVelocityModel`, `common/AimLed`, `common/VisionAim`.** *DONE 2026-09-07 with
+tests (20 new, 34 total), build verified, tables verified equal to the old inline values by script.*
+`common/AimTarget` is the interface (VisionUtil implements it; tests use FakeAimTarget).
+FlywheelVelocityModel takes the team's `double[][]` table plus an initial fallback; AimLed takes led,
+target, tolerance and a Colors bag; VisionAim is static `turnPower`/`onTarget`. Tables and aim
+settings moved to `GGRobotConstants.Launcher/Aim`, `P3RobotConstants.Launcher/Aim`, and a NEW
+`SkylineConstants` (Skyline's first Constants class). Migrated: GGRobot2, P3_Robot3, Skyline_Robot
+(public method names unchanged), and the snap-to-target in P3_Robot3_TeleOp_SingleDriver,
+Skyline_TeleopV2, GearGirlsBot2_improved, P3Autonomous_QueueBot3. Behavior change on purpose:
+GearGirls and Skyline initial fallback velocity is now their close-range table value (1290 / 1254)
+instead of 0, matching P3's approach. Older robot classes and OpModes untouched (R3 scope).
+Original recommendation follows.
 - `FlywheelVelocityModel(InterpolatingLookupTable)` with `update(vision)` and last-known-good fallback.
   Replaces `updateAndGetTargetVelocity` in 5 classes. Table data moves to each team's Constants as
   a `double[][]` instead of 12 `add()` calls inside a constructor.

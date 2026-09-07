@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teams.p3.auto.bot3;
 
+import org.firstinspires.ftc.teamcode.common.VisionAim;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -645,15 +647,14 @@ public class P3Autonomous_QueueBot3 extends OpMode {
 
                     txError += allianceOffSet;
 
-                    if (Math.abs(txError) <= TX_ALIGN_TOLERANCE_DEG) {
+                    if (VisionAim.onTarget(txError, TX_ALIGN_TOLERANCE_DEG)) {
                         // Aim is good! Stop turning and move to the next state (SHOOTING).
                         turnPower = 0.0;
                         robot.drive.stopRobot(); // Explicitly stop the robot
                         currentState = getNextState(); // Move on to SHOOT_PRELOAD
                     } else {
-                        // Aim is not good. Calculate a correction power.
-                        // We reuse the exact same logic from TeleOp.
-                        turnPower = txError * TX_ALIGN_KP;
+                        // Aim is not good. Same proportional correction the TeleOps use.
+                        turnPower = VisionAim.turnPower(txError, TX_ALIGN_KP, TX_ALIGN_TOLERANCE_DEG);
                     }
                 } else {
                     // We can't see the tag. For safety, stop turning.

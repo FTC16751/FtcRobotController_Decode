@@ -30,6 +30,32 @@ public class P3RobotConstants {
         public static final double AUTO_TARGET_VELOCITY = 1000; //in ticks/second for the close goal.
         public static final double AUTO_MIN_VELOCITY = AUTO_TARGET_VELOCITY-25;//minimum required to start a shot for close goal.
         public static final double TIME_BETWEEN_SHOTS = 1.0;
+
+        /** Distance to the goal (inches) -> flywheel velocity (ticks/sec), used by FlywheelVelocityModel. Bot 3 values. */
+        public static final double[][] FLYWHEEL_TABLE = {
+                { 30.0,  950.0*1.10},
+                { 40.0,  960.0*1.10},
+                { 50.0, 1080.0*1.10},
+                { 60.0, 1120.0*1.10},
+                { 70.0, 1080.0*1.10},   // 1180 - 100
+                { 80.0, 1120.0*1.10},   // 1220 - 100
+                { 90.0, 1220.0*1.10},   // 1320 - 100
+                {100.0, 1300.0*1.10},   // 1400 - 100
+                {110.0, 1340.0*1.10},   // 1440 - 100
+                {120.0, 1380.0*1.10},   // 1480 - 100
+                {130.0, 1420.0*1.10},   // 1520 - 100
+                {140.0, 1460.0*1.10},   // 1560 - 100
+                {150.0, 1500.0*1.10},   // 1600 - 100
+        };
+        /** Velocity to shoot at before the goal has ever been seen (a safe mid-range value). */
+        public static final double FLYWHEEL_INITIAL_FALLBACK = 1000.0;
+    }
+
+    /** Aim feedback on the status LED (AimLed). */
+    public static final class Aim {
+        public static final double LED_TOLERANCE_DEG = 4.0;
+        public static final double LED_GOAL_RIGHT = org.firstinspires.ftc.teamcode.common.LedUtil.Color.YELLOW;
+        public static final double LED_GOAL_LEFT  = org.firstinspires.ftc.teamcode.common.LedUtil.Color.BLUE;
     }
 
     public enum LauncherDistance {
