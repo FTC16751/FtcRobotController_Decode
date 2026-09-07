@@ -39,7 +39,8 @@ P3Bot3Config; every chassis still has the shared default Calibration (1.15 right
 should measure its own; Skyline has no Constants class; no PushbotConfig (pushbots stay on
 DriveUtil2025 with phantom `limelight`/`odo` config entries, mentor is fine with that).
 
-**Hardware checks still owed** (PR #1 test plan): each competition robot drives with its RUN ME TeleOp
+**Hardware checks still owed:** see `doc/ROBOT_TEST_PLAN.md` (added 2026-09-07) for the full
+checklist with expected values. In short: each competition robot drives with its RUN ME TeleOp
 and shows the right `robot config` name in telemetry; auto with BLUE hands BLUE to the following TeleOp
 and the Limelight targets the blue goal; a pushbot and a StarterBot show up under `Demo` and drive.
 
