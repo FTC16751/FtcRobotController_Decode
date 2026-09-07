@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.common;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
@@ -39,6 +37,19 @@ public class LaunchController {
     /** Where the sequence is. IDLE means ready for a new shot. */
     public enum State { IDLE, SPIN_UP, FEEDING, COOLDOWN }
 
+    /**
+     * Source of time in seconds. The robot uses the system clock; unit tests supply a fake clock
+     * they can advance by hand, so timeouts and feed windows can be tested without sleeping.
+     */
+    public interface Clock {
+        double seconds();
+    }
+
+    /** Real time, for use on the robot. */
+    public static final Clock SYSTEM_CLOCK = new Clock() {
+        @Override public double seconds() { return System.nanoTime() / 1e9; }
+    };
+
     /** Timings and thresholds. These are "how it operates" values and belong in the team's Constants. */
     public static class Settings {
         /** How long the feeder runs per shot, seconds. */
@@ -65,10 +76,11 @@ public class LaunchController {
     private final Flywheel flywheel;
     private final Feeder feeder;
     private final Telemetry telemetry;   // may be null
+    private final Clock clock;
     public final Settings settings;
 
     private State state = State.IDLE;
-    private final ElapsedTime timer = new ElapsedTime();
+    private double stateStartSec = 0.0;  // clock reading when the current state began
     private double targetVelocity = 0.0;
     private double minReadyVelocity = 0.0;   // absolute override for the ready check; 0 = use readyFraction
 
@@ -78,10 +90,25 @@ public class LaunchController {
     private String lastAbortReason = "";
 
     public LaunchController(Flywheel flywheel, Feeder feeder, Settings settings, Telemetry telemetry) {
+        this(flywheel, feeder, settings, telemetry, SYSTEM_CLOCK);
+    }
+
+    /** Constructor with an explicit clock; unit tests use this with a fake clock. */
+    public LaunchController(Flywheel flywheel, Feeder feeder, Settings settings, Telemetry telemetry, Clock clock) {
         this.flywheel = flywheel;
         this.feeder = feeder;
         this.settings = settings != null ? settings : new Settings();
         this.telemetry = telemetry;
+        this.clock = clock != null ? clock : SYSTEM_CLOCK;
+    }
+
+    /** Seconds since the current state began. */
+    private double elapsed() {
+        return clock.seconds() - stateStartSec;
+    }
+
+    private void restartTimer() {
+        stateStartSec = clock.seconds();
     }
 
     /**
@@ -106,7 +133,7 @@ public class LaunchController {
                     this.targetVelocity = targetVelocity;
                     this.minReadyVelocity = minReadyVelocity;
                     flywheel.setVelocity(targetVelocity);
-                    timer.reset();
+                    restartTimer();
                     state = State.SPIN_UP;
                     shotsAttempted++;
                 }
@@ -114,13 +141,13 @@ public class LaunchController {
 
             case SPIN_UP:
                 flywheel.setVelocity(this.targetVelocity);   // keep commanding it until it gets there
-                if (settings.spinUpTimeoutSec > 0 && timer.seconds() > settings.spinUpTimeoutSec) {
+                if (settings.spinUpTimeoutSec > 0 && elapsed() > settings.spinUpTimeoutSec) {
                     abort("flywheel did not reach speed in " + settings.spinUpTimeoutSec + "s");
                     break;
                 }
                 if (isFlywheelReady()) {
                     state = State.FEEDING;
-                    timer.reset();
+                    restartTimer();
                 }
                 break;
 
@@ -131,7 +158,7 @@ public class LaunchController {
                     abort("velocity collapsed while feeding");
                     break;
                 }
-                if (timer.seconds() >= settings.feedTimeSec) {
+                if (elapsed() >= settings.feedTimeSec) {
                     feeder.stop();
                     shotsFired++;
                     if (settings.cooldownSec <= 0) {
@@ -139,13 +166,13 @@ public class LaunchController {
                         return true;
                     }
                     state = State.COOLDOWN;
-                    timer.reset();
+                    restartTimer();
                 }
                 break;
 
             case COOLDOWN:
                 flywheel.setVelocity(settings.keepSpinning ? this.targetVelocity : 0.0);
-                if (timer.seconds() >= settings.cooldownSec) {
+                if (elapsed() >= settings.cooldownSec) {
                     finishShot();
                     return true;
                 }

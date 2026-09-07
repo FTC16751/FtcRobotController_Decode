@@ -510,6 +510,35 @@ Open questions for the mentor before moving:
 Mechanics: `git mv` per folder, then rewrite `package` and `import` lines with perl (BSD sed lacks
 `\s`/`\b`), compile, `git status` must show only R (rename) plus package/import diffs.
 
+## Unit tests (added 2026-09-07)
+
+TeamCode has a local JUnit 4 test source set at `TeamCode/src/test/java`, run on the laptop JVM with
+no robot attached:
+
+```bash
+cd /Users/georgemitchom/StudioProjects/FTC17651/FtcRobotController_Decode && JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :TeamCode:testDebugUnitTest
+```
+
+or right-click a test class in Android Studio and choose Run. Results land in
+`TeamCode/build/test-results/testDebugUnitTest/*.xml`. `testOptions.unitTests.returnDefaultValues`
+is on so Android framework calls return defaults instead of throwing.
+
+First test: `common/LaunchControllerTest` (14 tests) drives `LaunchController` with a fake Flywheel,
+fake Feeder, and a hand-advanced fake `LaunchController.Clock`, covering ready threshold, absolute
+minimum velocity, spin-up timeout (and disabling it), feed window, cooldown, keepSpinning, stall
+abort (and disabling it), repeated fire, stop(), and counter reset. Note the controller starts the
+feeder on the loop AFTER it sees the flywheel ready, and applies keepSpinning on the first COOLDOWN
+loop, exactly as the original P3 code did; the tests document that.
+
+**The testing pattern for Common:** put an interface in front of hardware (Flywheel, Feeder) and
+of time (Clock), hand the class fakes in the test, assert what it commanded. Anything that moves
+into Common in R8-R10 should arrive with a test written this way. OpModes and the per-team
+adapters stay hardware-bound and are covered by the on-robot checks instead.
+
+Simulators looked at 2026-09-07 (none adopted): Beta8397 virtual_robot (desktop JavaFX, paste
+OpModes into its project), Pedro Pathing Visualizer and MeepMeep (path drawing, not physics),
+Webots via team 6448's FTC bridge (full physics, heavy setup).
+
 ## Verification
 
 After each step, run the command-line compile check confirmed working earlier in this session:
