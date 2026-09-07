@@ -153,8 +153,10 @@ public class Skyline_TeleopV2 extends OpMode {
         // Arcade drive with inverted Y and X for standard control
         robot.drive.arcadeDrive(
                 strafeInput,  // Strafing
-                -driveInput, // Forward/Backward
-                -turnInput, // Turning
+                -driveInput, // Forward/Backward (the stick reports forward as negative)
+                turnInput,   // Turning. Was -turnInput until 2026-09-07, compensating for drive
+                             // motors wired to the diagonal-opposite ports; the hub config and
+                             // SkylineBotConfig now describe the chassis truthfully. Stick right = turn right.
                 0, // Unused parameter
                 DRIVE_SPEED
         );

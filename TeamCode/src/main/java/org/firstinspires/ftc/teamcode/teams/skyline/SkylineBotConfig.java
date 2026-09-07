@@ -13,8 +13,8 @@ import org.firstinspires.ftc.teamcode.common.RobotConfig;
  * Pinpoint is moved, or the hub is remounted. Speeds, feed times and launcher presets belong in
  * a SkylineConstants class (Skyline does not have one yet; today they are inline in Skyline_Robot).
  *
- * Values here are exactly what RobotConfig.createDefaultSkyLineConfig() held before 2026-09-06.
- * Skyline does not use Pedro Pathing, so that section is null.
+ * Motor directions and calibration were measured on the robot 2026-09-07 (see the comments at
+ * each). Skyline does not use Pedro Pathing, so that section is null.
  */
 public final class SkylineBotConfig {
 
@@ -22,11 +22,14 @@ public final class SkylineBotConfig {
 
     public static RobotConfig create() {
         return new RobotConfig(
+                // 2026-09-07: the Control Hub configuration was corrected so each motor's name is on
+                // its physical corner (they had been on the diagonal-opposite ports, which is why the
+                // TeleOps used to negate the turn input). With the names right, the LEFT side reverses.
                 new RobotConfig.DrivetrainConfig(
-                        DcMotorEx.Direction.FORWARD,   // left front
-                        DcMotorEx.Direction.REVERSE,   // right front
-                        DcMotorEx.Direction.FORWARD,   // left rear
-                        DcMotorEx.Direction.REVERSE    // right rear
+                        DcMotorEx.Direction.REVERSE,   // left front
+                        DcMotorEx.Direction.FORWARD,   // right front
+                        DcMotorEx.Direction.REVERSE,   // left rear
+                        DcMotorEx.Direction.FORWARD    // right rear
                 ),
                 new RobotConfig.OdometryConfig(
                         -0.0, -150.0,                  // Pinpoint pod offsets, mm (X pod, Y pod)
@@ -47,8 +50,15 @@ public final class SkylineBotConfig {
         .withHardware(new RobotConfig.HardwareNames()
                 // drive motors, imu, pinpoint and limelight use the default names
                 .led("led_servo"))
-        // Calibration defaults are the values that were shared by every robot before 2026-09-06.
-        // Measure this chassis and set its own: rightRearPowerScale, strafeScale, turnCircumferenceIn.
-        .withCalibration(new RobotConfig.Calibration());
+        // Measured on this chassis 2026-09-07 with the Encoder Move Check (see
+        // doc/ROBOT_TEST_PLAN.md section F). 140 mm goBILDA mecanum wheels on 312 rpm motors:
+        // 48 in commanded measured 48. Strafe 24 went 28 at x1.1. A 360 turned about 135 at 27.5.
+        // The old shared defaults (96 mm wheels, 27.5 in turn) made every auto drive 1.46x and turn
+        // 2.7x short; last season's autos were tuned around that and will not run again.
+        .withCalibration(new RobotConfig.Calibration()
+                .rightRearPowerScale(1.0)   // not measured yet; start with no correction
+                .strafeScale(0.94)
+                .turnCircumferenceIn(73.0)
+                .encoderCountsPerInch(RobotConfig.Calibration.countsPerInch(537.7, 1.0, 140)));
     }
 }

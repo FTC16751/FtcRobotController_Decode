@@ -48,8 +48,11 @@ Tag `pre-r6-reorg` marks the tree before the folder move.
    Neither is "dead code" for cleanup purposes.
 
 **Open items from R5 for the mentor:** GGRobot (Bot 1) shares GGBot2Config; P3_Robot (Bot 2) shares
-P3Bot3Config; every chassis still has the shared default Calibration (1.15 right-rear scale etc.) and
-should measure its own; Skyline has no Constants class; no PushbotConfig (pushbots stay on
+P3Bot3Config; GearGirls and P3 still have the shared default Calibration (1.15 right-rear scale etc.)
+and should measure their own (Skyline was measured 2026-09-07: 140 mm wheels, strafe 0.94, turning
+circle 73 in, left side reversed after the hub config was corrected; its TeleOps no longer negate
+the turn; its last-season autos were tuned around the old errors and, per the mentor, will not run
+again, so they were left as they are); Skyline has no Constants class; no PushbotConfig (pushbots stay on
 DriveUtil2025 with phantom `limelight`/`odo` config entries, mentor is fine with that).
 
 **Hardware checks still owed:** see `doc/ROBOT_TEST_PLAN.md` (added 2026-09-07) for the full
