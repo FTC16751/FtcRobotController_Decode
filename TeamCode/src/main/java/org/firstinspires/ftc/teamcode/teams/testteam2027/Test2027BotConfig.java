@@ -72,9 +72,11 @@ public final class Test2027BotConfig {
                 .rightRearPowerScale(1.0)   // start with no correction; measure drift first
                 .strafeScale(1.1)
                 .turnCircumferenceIn(27.5)  // almost certainly small; measure with the 360 turn
-                // 312 rpm goBILDA motor, direct drive, 96 mm wheel. Different motor or wheel? Change
-                // these three numbers; the Encoder Move Check then measures the real value.
-                .encoderCountsPerInch(RobotConfig.Calibration.countsPerInch(537.7, 1.0, 96)))
+                // 312 rpm goBILDA motor (537.7 ticks/rev), direct drive, 140 mm goBILDA mecanum
+                // wheel. Different motor or wheel? Change these three numbers; the Encoder Move
+                // Check then measures the real value. (Found 2026-09-07: with 96 here, a commanded
+                // 24 in drove 35 in, exactly the 140/96 wheel ratio.)
+                .encoderCountsPerInch(RobotConfig.Calibration.countsPerInch(537.7, 1.0, 140)))
         // 6b. Tag approach (driveToTagAsync). Gentle on purpose: the robot is about to touch something.
         .withTagApproach(new TagApproach.Settings()
                 .kpDrive(0.04).kpStrafe(0.04).kpYaw(0.015)
